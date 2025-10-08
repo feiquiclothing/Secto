@@ -8,7 +8,7 @@ import React, { useMemo, useReducer, useState, useEffect } from "react";
 
 // ====== CONFIG ======
 const PHONE_URUGUAY = "091980245"; // WhatsApp destino (solo dígitos, sin +598)
-const MP_ENDPOINT = "https://script.google.com/macros/s/AKfycby6NjbwqduiwRLPTE_em0-t0TL-NsSzI-7zsSL5vl78pQX5jntHXj7Xdvk34nxpzoIY4g/exec"; // Si tenés GAS de Mercado Pago, pegá la URL acá. Si está vacío, se oculta el botón MP.
+const MP_ENDPOINT = "https://script.google.com/macros/s/AKfycbxSsx8LL11V2S1wjytNzzNTBVwnk_9P1SE37UGynJMq4IEWXdtmEoE0bL3CukF4rHsQfg/exec"; // Si tenés GAS de Mercado Pago, pegá la URL acá. Si está vacío, se oculta el botón MP.
 
 // Galería de fotos (urls absolutas o /photos/*.jpg). Puede quedar vacío y no rompe.
 const GALLERY = [

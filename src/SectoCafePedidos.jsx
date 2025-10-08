@@ -207,20 +207,22 @@ export default function SectoCafePedidos() {
       </header>
 
       {/* Galería en columnas (sin comentarios HTML) */}
-      {GALLERY.length > 0 && (
-        <section className="max-w-6xl mx-auto px-4 pt-6">
-          <div className="columns-1 sm:columns-2 lg:columns-3 gap-4">
-            {GALLERY.map((src, i) => (
-              <img
-                key={i}
-                src={src}
-                alt="Secto Café"
-                className="mb-4 w-full rounded-2xl border border-neutral-900 object-cover hover:opacity-90 transition"
-              />
-            ))}
-          </div>
-        </section>
-      )}
+      {/* Galería en columnas (masonry simple) */}
+{GALLERY.length > 0 && (
+  <section className="max-w-6xl mx-auto px-4 pt-6">
+    <div className="columns-1 sm:columns-2 lg:columns-3 gap-4">
+      {GALLERY.map((src, i) => (
+        <img
+          key={i}
+          src={src}
+          alt="Secto Café"
+          className="mb-4 w-full rounded-2xl border border-neutral-900 object-cover hover:opacity-90 transition"
+        />
+      ))}
+    </div>
+  </section>
+)}
+
 
       {/* Contenido principal */}
       <main className="max-w-6xl mx-auto px-4 py-8 grid grid-cols-1 lg:grid-cols-3 gap-8">

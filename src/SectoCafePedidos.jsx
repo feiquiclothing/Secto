@@ -207,7 +207,8 @@ export default function SectoCafePedidos() {
 
   // ====== UI ======
   return (
-    <div className="min-h-screen bg-black text-neutral-300">
+    <div className="min-h-screen bg-white text-neutral-800">
+
       {/* Header */}
       <header className="sticky top-0 z-40 border-b border-neutral-900 bg-black/85 backdrop-blur">
         <div className="max-w-6xl mx-auto px-4 py-3 flex items-center justify-between">

@@ -144,50 +144,47 @@ export default function SectoCafePedidos() {
     window.open(`https://wa.me/598${PHONE_URUGUAY.replace(/\D/g, "")}?text=${encoded}`, "_blank");
   };
 
-  const payWithMP = async () => {
-    if (!MP_ENDPOINT) return;
-    try {
-      const order = getOrder();
-      sessionStorage.setItem("secto_order", JSON.stringify(order));
-      const res = await fetch(MP_ENDPOINT, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          items: order.items.map(({ item, qty }) => ({
-            title: item.name,
-            unit_price: item.price,
-            quantity: qty,
-          })),
-          total: order.total,
-          name: order.name,
-          phone: order.phone,
-          method: order.method,
-          zone: order.zone,
-          address: order.address,
-          notes: order.notes,
-          time: order.time,
-          back_urls: {
-            success: window.location.origin + "?mp=success",
-            failure: window.location.origin + "?mp=failure",
-          },
-        }),
-      });
-      const data = await res.json();
-      if (data.init_point) window.location.href = data.init_point;
-      else alert("No se pudo iniciar el pago.");
-    } catch (e) {
-      alert("Error conectando con Mercado Pago.");
-    }
+  const payWithMP = () => {
+  if (!MP_ENDPOINT) { alert("Pago online no configurado."); return; }
+
+  const order = getOrder();
+  sessionStorage.setItem("secto_order", JSON.stringify(order));
+
+  const payload = {
+    items: order.items.map(({ item, qty }) => ({
+      title: item.name,
+      unit_price: item.price,
+      quantity: qty,
+    })),
+    total: order.total,
+    name: order.name,
+    phone: order.phone,
+    method: order.method,
+    zone: order.zone,
+    address: order.address,
+    notes: order.notes,
+    time: order.time,
+    back_urls: {
+      success: window.location.origin + "?mp=success",
+      failure: window.location.origin + "?mp=failure",
+    },
   };
 
-  useEffect(() => {
-    const params = new URLSearchParams(window.location.search);
-    if (params.get("mp") === "success") {
-      const saved = sessionStorage.getItem("secto_order");
-      if (saved) sendOrder(true);
-      sessionStorage.removeItem("secto_order");
-    }
-  }, []);
+  // 👉 Evita CORS: navegación con <form>, NO fetch
+  const form = document.createElement("form");
+  form.method = "POST";
+  form.action = MP_ENDPOINT;
+  form.style.display = "none";
+
+  const input = document.createElement("input");
+  input.type = "hidden";
+  input.name = "data"; // el Apps Script lee este campo
+  input.value = JSON.stringify(payload);
+
+  form.appendChild(input);
+  document.body.appendChild(form);
+  form.submit();
+};
 
   // ====== UI ======
   return (

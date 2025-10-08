@@ -1,23 +1,25 @@
 import React, { useMemo, useReducer, useState, useEffect } from "react";
 
 /**
- * Secto Café – Sushi · UI estilo feiqui.com
- * Paleta gris/negro, columnas para fotos, carrito + WhatsApp.
- * (Mercado Pago opcional con MP_ENDPOINT)
+ * Secto Café – Sushi (modo claro)
+ * - Galería opcional
+ * - Menú por categorías
+ * - Carrito + WhatsApp
+ * - Pago con MP vía Apps Script (POST por <form> para evitar CORS)
  */
 
 // ====== CONFIG ======
 const PHONE_URUGUAY = "091980245"; // WhatsApp destino (solo dígitos, sin +598)
-const MP_ENDPOINT = "https://script.google.com/macros/s/AKfycbxSsx8LL11V2S1wjytNzzNTBVwnk_9P1SE37UGynJMq4IEWXdtmEoE0bL3CukF4rHsQfg/exec"; // Si tenés GAS de Mercado Pago, pegá la URL acá. Si está vacío, se oculta el botón MP.
+const MP_ENDPOINT =
+  "https://script.google.com/macros/s/AKfycbxSsx8LL11V2S1wjytNzzNTBVwnk_9P1SE37UGynJMq4IEWXdtmEoE0bL3CukF4rHsQfg/exec";
 
-// Galería de fotos (urls absolutas o /photos/*.jpg). Puede quedar vacío y no rompe.
+// Galería (dejar vacío si no hay fotos)
 const GALLERY = [
   // "/photos/secto_01.jpg",
   // "/photos/secto_02.jpg",
-  // "/photos/secto_03.jpg",
 ];
 
-// Menú
+// ====== MENÚ ======
 const MENU = [
   {
     id: "rolls",
@@ -47,10 +49,12 @@ const MENU = [
   {
     id: "nigiri",
     name: "NIGIRIS",
-    items: [{ id: "n01", name: "Nigiri salmón 2 piezas", price: 190, img: "" }],
-    items: [{ id: "n02", name: "Nigiri salmón tataki 2 piezas", price: 220, img: "" }],
-    items: [{ id: "n03", name: "Nigiri atún 2 piezas", price: 220, img: "" }],
-    items: [{ id: "n04", name: "Nigiri langostino 2 piezas", price: 220, img: "" }],
+    items: [
+      { id: "n01", name: "Nigiri salmón 2 piezas", price: 190, img: "" },
+      { id: "n02", name: "Nigiri salmón tataki 2 piezas", price: 220, img: "" },
+      { id: "n03", name: "Nigiri atún 2 piezas", price: 220, img: "" },
+      { id: "n04", name: "Nigiri langostino 2 piezas", price: 220, img: "" },
+    ],
   },
   {
     id: "extras",
@@ -61,7 +65,9 @@ const MENU = [
       { id: "e03", name: "Wasabi extra", price: 30 },
       { id: "e04", name: "Salsa de soja extra", price: 30 },
     ],
-  id: "bebidas",
+  },
+  {
+    id: "bebidas",
     name: "BEBIDAS",
     items: [
       { id: "b01", name: "Agua Salus sin gas", price: 120, img: "" },
@@ -69,10 +75,8 @@ const MENU = [
       { id: "b03", name: "Pepsi 500cc", price: 120, img: "" },
       { id: "b04", name: "Pepsi black 500cc", price: 120, img: "" },
       { id: "b05", name: "Cerveza Índica West Coast IPA", price: 250, img: "" },
-  
     ],
   },
-  {},
 ];
 
 // Zonas y costos de envío
@@ -164,102 +168,95 @@ export default function SectoCafePedidos() {
   };
 
   const payWithMP = () => {
-  if (!MP_ENDPOINT) { alert("Pago online no configurado."); return; }
+    if (!MP_ENDPOINT) {
+      alert("Pago online no configurado.");
+      return;
+    }
+    const order = getOrder();
+    sessionStorage.setItem("secto_order", JSON.stringify(order));
 
-  const order = getOrder();
-  sessionStorage.setItem("secto_order", JSON.stringify(order));
+    const payload = {
+      items: order.items.map(({ item, qty }) => ({
+        title: item.name,
+        unit_price: item.price,
+        quantity: qty,
+      })),
+      total: order.total,
+      name: order.name,
+      phone: order.phone,
+      method: order.method,
+      zone: order.zone,
+      address: order.address,
+      notes: order.notes,
+      time: order.time,
+      back_urls: {
+        success: window.location.origin + "?mp=success",
+        failure: window.location.origin + "?mp=failure",
+      },
+    };
 
-  const payload = {
-    items: order.items.map(({ item, qty }) => ({
-      title: item.name,
-      unit_price: item.price,
-      quantity: qty,
-    })),
-    total: order.total,
-    name: order.name,
-    phone: order.phone,
-    method: order.method,
-    zone: order.zone,
-    address: order.address,
-    notes: order.notes,
-    time: order.time,
-    back_urls: {
-      success: window.location.origin + "?mp=success",
-      failure: window.location.origin + "?mp=failure",
-    },
+    // Navegación por <form> para evitar CORS
+    const form = document.createElement("form");
+    form.method = "POST";
+    form.action = MP_ENDPOINT;
+    form.style.display = "none";
+
+    const input = document.createElement("input");
+    input.type = "hidden";
+    input.name = "data"; // GAS lee este campo
+    input.value = JSON.stringify(payload);
+
+    document.body.appendChild(form);
+    form.appendChild(input);
+    form.submit();
   };
-
-  // 👉 Evita CORS: navegación con <form>, NO fetch
-  const form = document.createElement("form");
-  form.method = "POST";
-  form.action = MP_ENDPOINT;
-  form.style.display = "none";
-
-  const input = document.createElement("input");
-  input.type = "hidden";
-  input.name = "data"; // el Apps Script lee este campo
-  input.value = JSON.stringify(payload);
-
-  form.appendChild(input);
-  document.body.appendChild(form);
-  form.submit();
-};
 
   // ====== UI ======
   return (
-  <div className="min-h-screen bg-white text-neutral-800">
-    {/* Header */}
-    <header className="sticky top-0 z-40 border-b border-neutral-200 bg-white/90 backdrop-blur">
-      <div className="max-w-6xl mx-auto px-4 py-3 flex items-center justify-between">
-        {/* Logo + texto */}
-        <div className="flex items-center gap-3">
-          <a href="/" aria-label="Inicio Secto Café">
-            {/* Asegurate de tener /public/logo-secto.png en el repo */}
-            <img
-              src="/logo-secto.png"
-              alt="Secto Café"
-              className="h-10 w-auto"
-              loading="eager"
-              decoding="async"
-            />
-          </a>
-          <div className="leading-tight">
-            <p className="text-xs tracking-[0.25em] text-neutral-500">SECTO</p>
-            <h1 className="text-lg text-neutral-900">Café · Sushi</h1>
+    <div className="min-h-screen bg-white text-neutral-800">
+      {/* Header */}
+      <header className="sticky top-0 z-40 border-b border-neutral-200 bg-white/90 backdrop-blur">
+        <div className="max-w-6xl mx-auto px-4 py-3 flex items-center justify-between">
+          {/* Logo + texto */}
+          <div className="flex items-center gap-3">
+            <a href="/" aria-label="Inicio Secto Café">
+              <img
+                src="/logo-secto.png" // /public/logo-secto.png
+                alt="Secto Café"
+                className="h-10 w-auto"
+                loading="eager"
+                decoding="async"
+              />
+            </a>
+            <div className="leading-tight">
+              <p className="text-xs tracking-[0.25em] text-neutral-500">SECTO</p>
+              <h1 className="text-lg text-neutral-900">Café · Sushi</h1>
+            </div>
+          </div>
+
+          {/* Horario */}
+          <div className="hidden sm:block text-sm text-neutral-500">
+            SECTO CAFÉ — Piedras 276 · Mar–Dom 12:00–00:00
           </div>
         </div>
+      </header>
 
-        {/* Horario */}
-        <div className="hidden sm:block text-sm text-neutral-500">
-          SECTO CAFÉ — Piedras 276 · Mar–Dom 12:00–00:00
-        </div>
-      </div>
-    </header>
-
-  </div>
-);
-
-
-
-      {/* Galería en columnas (sin comentarios HTML) */}
-      {/* Galería en columnas (masonry simple) */}
-{GALLERY?.length > 0 && (
-  <section className="max-w-6xl mx-auto px-4 pt-6">
-    <div className="columns-1 sm:columns-2 lg:columns-3 gap-4">
-      {/* masonry */}
-      {GALLERY.map((src, i) => (
-        <img
-          key={i}
-          src={src}
-          alt="Secto Café"
-          className="mb-4 w-full rounded-2xl border border-neutral-200 object-cover hover:opacity-90 transition"
-        />
-      ))}
-    </div>
-  </section>
-)}
-
-
+      {/* Galería (sin comentarios HTML) */}
+      {GALLERY.length > 0 && (
+        <section className="max-w-6xl mx-auto px-4 pt-6">
+          <div className="columns-1 sm:columns-2 lg:columns-3 gap-4">
+            {/* masonry */}
+            {GALLERY.map((src, i) => (
+              <img
+                key={i}
+                src={src}
+                alt="Secto Café"
+                className="mb-4 w-full rounded-2xl border border-neutral-200 object-cover hover:opacity-90 transition"
+              />
+            ))}
+          </div>
+        </section>
+      )}
 
       {/* Contenido principal */}
       <main className="max-w-6xl mx-auto px-4 py-8 grid grid-cols-1 lg:grid-cols-3 gap-8">
@@ -268,13 +265,16 @@ export default function SectoCafePedidos() {
           {MENU.map((cat) => (
             <div key={cat.id}>
               <div className="flex items-baseline justify-between mb-3">
-                <h2 className="text-sm tracking-[0.2em] text-neutral-400">{cat.name}</h2>
-                <span className="h-[1px] flex-1 ml-4 bg-neutral-900" />
+                <h2 className="text-sm tracking-[0.2em] text-neutral-500">{cat.name}</h2>
+                <span className="h-[1px] flex-1 ml-4 bg-neutral-200" />
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 {cat.items.map((item) => (
-                  <article key={item.id} className="group border border-neutral-900 rounded-2xl overflow-hidden bg-neutral-950">
+                  <article
+                    key={item.id}
+                    className="group border border-neutral-200 rounded-2xl overflow-hidden bg-white"
+                  >
                     {item.img ? (
                       <div className="aspect-[4/3] overflow-hidden">
                         <img
@@ -286,20 +286,22 @@ export default function SectoCafePedidos() {
                     ) : null}
                     <div className="p-4 flex items-start justify-between gap-4">
                       <div>
-                        <h3 className="text-neutral-100 leading-tight">{item.name}</h3>
+                        <h3 className="text-neutral-900 leading-tight">{item.name}</h3>
                         <p className="text-sm text-neutral-500 mt-1">{currency(item.price)}</p>
                       </div>
                       <div className="flex items-center gap-2">
                         <button
                           onClick={() => dispatch({ type: "remove", item })}
-                          className="px-3 py-2 rounded-xl border border-neutral-800 hover:border-neutral-700"
+                          className="px-3 py-2 rounded-xl border border-neutral-200 hover:bg-neutral-100"
                         >
                           −
                         </button>
-                        <span className="w-6 text-center text-neutral-400">{cart[item.id]?.qty || 0}</span>
+                        <span className="w-6 text-center text-neutral-600">
+                          {cart[item.id]?.qty || 0}
+                        </span>
                         <button
                           onClick={() => dispatch({ type: "add", item })}
-                          className="px-3 py-2 rounded-xl bg-white/10 hover:bg-white/15"
+                          className="px-3 py-2 rounded-xl border border-neutral-200 bg-neutral-50 hover:bg-neutral-100"
                         >
                           ＋
                         </button>
@@ -314,33 +316,39 @@ export default function SectoCafePedidos() {
 
         {/* Checkout */}
         <aside className="lg:col-span-1">
-          <div className="border border-neutral-900 rounded-2xl p-4 sticky top-20 bg-neutral-950">
-            <h2 className="text-sm tracking-[0.2em] text-neutral-400 mb-3">TU PEDIDO</h2>
+          <div className="border border-neutral-200 rounded-2xl p-4 sticky top-20 bg-white">
+            <h2 className="text-sm tracking-[0.2em] text-neutral-500 mb-3">TU PEDIDO</h2>
 
             <div className="space-y-3 max-h-[45vh] overflow-auto pr-1">
-              {items.length === 0 && <p className="text-sm text-neutral-600">Agregá items del catálogo.</p>}
+              {items.length === 0 && (
+                <p className="text-sm text-neutral-500">Agregá items del catálogo.</p>
+              )}
               {items.map(({ item, qty }) => (
                 <div key={item.id} className="flex items-center justify-between text-sm">
                   <div className="pr-2">
-                    <p className="text-neutral-200">{item.name}</p>
+                    <p className="text-neutral-800">{item.name}</p>
                     <p className="text-neutral-500">x{qty}</p>
                   </div>
-                  <div className="text-neutral-300">{currency(item.price * qty)}</div>
+                  <div className="text-neutral-700">{currency(item.price * qty)}</div>
                 </div>
               ))}
             </div>
 
-            <hr className="my-4 border-neutral-900" />
+            <hr className="my-4 border-neutral-200" />
 
             <div className="grid grid-cols-2 gap-2 text-sm mb-3">
               <button
-                className={`rounded-xl p-2 border ${method === "delivery" ? "bg-white/10 border-neutral-700" : "border-neutral-900"}`}
+                className={`rounded-xl p-2 border ${
+                  method === "delivery" ? "bg-neutral-100 border-neutral-300" : "border-neutral-200"
+                }`}
                 onClick={() => setMethod("delivery")}
               >
                 Delivery
               </button>
               <button
-                className={`rounded-xl p-2 border ${method === "pickup" ? "bg-white/10 border-neutral-700" : "border-neutral-900"}`}
+                className={`rounded-xl p-2 border ${
+                  method === "pickup" ? "bg-neutral-100 border-neutral-300" : "border-neutral-200"
+                }`}
                 onClick={() => setMethod("pickup")}
               >
                 Retiro
@@ -353,7 +361,7 @@ export default function SectoCafePedidos() {
                 <select
                   value={zone}
                   onChange={(e) => setZone(e.target.value)}
-                  className="w-full bg-black border border-neutral-900 rounded-xl p-2"
+                  className="w-full bg-white border border-neutral-200 rounded-xl p-2"
                 >
                   {ZONES.map((z) => (
                     <option key={z.id} value={z.id}>
@@ -367,7 +375,7 @@ export default function SectoCafePedidos() {
                   value={address}
                   onChange={(e) => setAddress(e.target.value)}
                   placeholder="Calle, número, apto, referencia"
-                  className="w-full bg-black border border-neutral-900 rounded-xl p-2 placeholder-neutral-700"
+                  className="w-full bg-white border border-neutral-200 rounded-xl p-2 placeholder-neutral-400"
                 />
               </div>
             )}
@@ -379,7 +387,7 @@ export default function SectoCafePedidos() {
                   value={name}
                   onChange={(e) => setName(e.target.value)}
                   placeholder="Tu nombre"
-                  className="w-full bg-black border border-neutral-900 rounded-xl p-2 placeholder-neutral-700"
+                  className="w-full bg-white border border-neutral-200 rounded-xl p-2 placeholder-neutral-400"
                 />
               </div>
               <div>
@@ -388,7 +396,7 @@ export default function SectoCafePedidos() {
                   value={phone}
                   onChange={(e) => setPhone(e.target.value)}
                   placeholder="09xxxxxxx"
-                  className="w-full bg-black border border-neutral-900 rounded-xl p-2 placeholder-neutral-700"
+                  className="w-full bg-white border border-neutral-200 rounded-xl p-2 placeholder-neutral-400"
                 />
               </div>
             </div>
@@ -398,7 +406,7 @@ export default function SectoCafePedidos() {
               <select
                 value={time}
                 onChange={(e) => setTime(e.target.value)}
-                className="w-full bg-black border border-neutral-900 rounded-xl p-2"
+                className="w-full bg-white border border-neutral-200 rounded-xl p-2"
               >
                 <option value="">Lo antes posible</option>
                 {HOURS.map((h) => (
@@ -415,7 +423,7 @@ export default function SectoCafePedidos() {
                 value={notes}
                 onChange={(e) => setNotes(e.target.value)}
                 placeholder="Sin sésamo, timbre roto, etc."
-                className="w-full bg-black border border-neutral-900 rounded-xl p-2 placeholder-neutral-700"
+                className="w-full bg-white border border-neutral-200 rounded-xl p-2 placeholder-neutral-400"
                 rows={2}
               />
             </div>
@@ -431,7 +439,7 @@ export default function SectoCafePedidos() {
                   <span>{currency(fee)}</span>
                 </div>
               )}
-              <div className="flex justify-between text-neutral-100 font-medium">
+              <div className="flex justify-between text-neutral-900 font-medium">
                 <span>Total</span>
                 <span>{currency(total)}</span>
               </div>
@@ -442,7 +450,9 @@ export default function SectoCafePedidos() {
                 onClick={() => sendOrder(false)}
                 disabled={!canSend}
                 className={`w-full rounded-2xl py-3 text-center transition ${
-                  canSend ? "bg-white text-black hover:bg-neutral-200" : "bg-neutral-900 text-neutral-600 cursor-not-allowed"
+                  canSend
+                    ? "bg-black text-white hover:opacity-90"
+                    : "bg-neutral-100 text-neutral-400 cursor-not-allowed"
                 }`}
               >
                 Enviar pedido por WhatsApp
@@ -453,7 +463,9 @@ export default function SectoCafePedidos() {
                   onClick={payWithMP}
                   disabled={!canSend}
                   className={`w-full rounded-2xl py-3 text-center border transition ${
-                    canSend ? "border-neutral-700 hover:bg-white/10" : "border-neutral-900 text-neutral-600 cursor-not-allowed"
+                    canSend
+                      ? "border-neutral-300 hover:bg-neutral-100"
+                      : "border-neutral-200 text-neutral-400 cursor-not-allowed"
                   }`}
                 >
                   Pagar con Mercado Pago
@@ -462,12 +474,12 @@ export default function SectoCafePedidos() {
 
               <button
                 onClick={() => dispatch({ type: "clear" })}
-                className="w-full rounded-2xl py-2 text-sm border border-neutral-900 hover:border-neutral-800"
+                className="w-full rounded-2xl py-2 text-sm border border-neutral-200 hover:bg-neutral-50"
               >
                 Vaciar carrito
               </button>
 
-              <p className="text-xs text-neutral-600 mt-1">
+              <p className="text-xs text-neutral-500 mt-1">
                 Pagás al recibir (efectivo/QR/POS). Si querés pagar online, activamos Mercado Pago.
               </p>
             </div>
@@ -476,8 +488,8 @@ export default function SectoCafePedidos() {
       </main>
 
       {/* Footer */}
-      <footer className="max-w-6xl mx-auto px-4 pb-10 text-xs text-neutral-600">
-        <hr className="border-neutral-900 mb-4" />
+      <footer className="max-w-6xl mx-auto px-4 pb-10 text-xs text-neutral-500">
+        <hr className="border-neutral-200 mb-4" />
         © {new Date().getFullYear()} Secto Café
       </footer>
     </div>

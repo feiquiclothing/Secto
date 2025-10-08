@@ -7,8 +7,8 @@ import React, { useMemo, useReducer, useState, useEffect } from "react";
  */
 
 // ====== CONFIG ======
-const PHONE_URUGUAY = "091388682"; // WhatsApp destino (solo dígitos, sin +598)
-const MP_ENDPOINT = ""; // Si tenés GAS de Mercado Pago, pegá la URL acá. Si está vacío, se oculta el botón MP.
+const PHONE_URUGUAY = "091980245"; // WhatsApp destino (solo dígitos, sin +598)
+const MP_ENDPOINT = "link.mercadopago.com.uy/sectocafe"; // Si tenés GAS de Mercado Pago, pegá la URL acá. Si está vacío, se oculta el botón MP.
 
 // Galería de fotos (urls absolutas o /photos/*.jpg). Puede quedar vacío y no rompe.
 const GALLERY = [

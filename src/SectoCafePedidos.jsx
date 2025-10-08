@@ -21,7 +21,7 @@ const GALLERY = [
 const MENU = [
   {
     id: "rolls",
-    name: "ROLLS (8u)",
+    name: "ROLLS (10 piezas)",
     items: [
       { id: "r01", name: "Tomate seco / Ciboulette / Phila", price: 320, img: "" },
       { id: "r02", name: "Salmón / Phila / Mango / Quinoa frita", price: 520, img: "" },
@@ -35,14 +35,14 @@ const MENU = [
     ],
   },
   {
-    id: "geishas",
-    name: "GEISHAS (4u)",
-    items: [{ id: "g01", name: "Salmón / Palta / Phila (base arroz)", price: 360, img: "" }],
+    id: "temakis",
+    name: "TEMAKI (4u)",
+    items: [{ id: "t01", name: "Salmón / Palta / Phila", price: 240, img: "" }],
   },
   {
     id: "sashimi",
     name: "SASHIMI",
-    items: [{ id: "s01", name: "Salmón x3 lonjas", price: 290, img: "" }],
+    items: [{ id: "s01", name: "Salmón 4 piezas", price: 390, img: "" }],
   },
   {
     id: "extras",
@@ -199,7 +199,7 @@ export default function SectoCafePedidos() {
               <h1 className="text-lg text-neutral-100">Café · Sushi</h1>
             </div>
           </div>
-          <div className="hidden sm:block text-sm text-neutral-500">Piedras 276 · Mar – Dom 19:00–00:00</div>
+          <div className="hidden sm:block text-sm text-neutral-500">SECTO CAFÉ - Piedras 276 · Mar – Dom 12:00–00:00</div>
         </div>
       </header>
 
@@ -438,7 +438,7 @@ export default function SectoCafePedidos() {
       {/* Footer */}
       <footer className="max-w-6xl mx-auto px-4 pb-10 text-xs text-neutral-600">
         <hr className="border-neutral-900 mb-4" />
-        © {new Date().getFullYear()} Secto Café · sitio oficial de pedidos.
+        © {new Date().getFullYear()} Secto Café
       </footer>
     </div>
   );

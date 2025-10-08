@@ -154,7 +154,7 @@ export default function SectoCafePedidos() {
       <header className="sticky top-0 bg-black/80 backdrop-blur border-b border-neutral-800 z-30">
         <div className="max-w-5xl mx-auto px-4 py-3 flex justify-between items-center">
           <h1 className="text-lg font-medium">SECTO CAFÉ – Sushi</h1>
-          <span className="text-sm text-neutral-400">Reconquista 601 · 19:00–00:00</span>
+          <span className="text-sm text-neutral-400">Piedras 276 · 19:00 – 00:00</span>
         </div>
       </header>
 
@@ -212,7 +212,7 @@ export default function SectoCafePedidos() {
 
       <footer className="max-w-5xl mx-auto px-4 py-8 text-xs text-neutral-500">
         <hr className="border-neutral-800 mb-3" />
-        © {new Date().getFullYear()} Secto Café · sitio oficial de pedidos.
+        © {new Date().getFullYear()} Secto Café
       </footer>
     </div>
   );

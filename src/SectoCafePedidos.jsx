@@ -210,18 +210,33 @@ export default function SectoCafePedidos() {
     <div className="min-h-screen bg-white text-neutral-800">
 
       {/* Header */}
-      <header className="sticky top-0 z-40 border-b border-neutral-900 bg-black/85 backdrop-blur">
-        <div className="max-w-6xl mx-auto px-4 py-3 flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="w-8 h-8 rounded bg-neutral-950 border border-neutral-800 flex items-center justify-center">◎</div>
-            <div className="leading-tight">
-              <p className="text-xs tracking-[0.25em] text-neutral-500">SECTO</p>
-              <h1 className="text-lg text-neutral-100">Café · Sushi</h1>
-            </div>
-          </div>
-          <div className="hidden sm:block text-sm text-neutral-500">SECTO CAFÉ - Piedras 276 · Mar – Dom 12:00–00:00</div>
-        </div>
-      </header>
+      {/* Header */}
+<header className="sticky top-0 z-40 border-b border-neutral-200 bg-white/90 backdrop-blur">
+  <div className="max-w-6xl mx-auto px-4 py-3 flex items-center justify-between">
+    {/* Logo + texto */}
+    <div className="flex items-center gap-3">
+      <a href="/" aria-label="Inicio Secto Café">
+        <img
+          src="/logo-secto.png"   // ⬅️ asegurate de tener este archivo en /public/logo-secto.png
+          alt="Secto Café"
+          className="h-10 w-auto"
+          loading="eager"
+          decoding="async"
+        />
+      </a>
+      <div className="leading-tight">
+        <p className="text-xs tracking-[0.25em] text-neutral-500">SECTO</p>
+        <h1 className="text-lg text-neutral-900">Café · Sushi</h1>
+      </div>
+    </div>
+
+    {/* Horario */}
+    <div className="hidden sm:block text-sm text-neutral-500">
+      Reconquista 601 · Mar–Dom 19:00–00:00
+    </div>
+  </div>
+</header>
+
 
       {/* Galería en columnas (sin comentarios HTML) */}
       {/* Galería en columnas (masonry simple) */}

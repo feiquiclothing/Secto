@@ -498,7 +498,7 @@ export default function SectoCafePedidos() {
       {/* Hero / Galería en columnas */}
       {GALLERY?.length > 0 && (
         <section className="max-w-6xl mx-auto px-4 pt-6">
-          <div className="columns-1 sm:columns-2 lg:columns-3 gap-4 [column-fill:_balance]"><!-- masonry -->
+<div className="columns-1 sm:columns-2 lg:columns-3 gap-4 [column-fill:balance]">{/* masonry */}
             {GALLERY.map((src, i) => (
               <img key={i} src={src} alt="Secto Café" className="mb-4 w-full rounded-2xl border border-neutral-900 object-cover hover:opacity-90 transition" />
             ))}

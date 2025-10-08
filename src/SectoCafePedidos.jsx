@@ -45,6 +45,14 @@ const MENU = [
     items: [{ id: "s01", name: "Salmón 4 piezas", price: 390, img: "" }],
   },
   {
+    id: "nigiri",
+    name: "NIGIRIS",
+    items: [{ id: "n01", name: "Nigiri salmón 2 piezas", price: 190, img: "" }],
+    items: [{ id: "n02", name: "Nigiri salmón tataki 2 piezas", price: 220, img: "" }],
+    items: [{ id: "n03", name: "Nigiri atún 2 piezas", price: 220, img: "" }],
+    items: [{ id: "n04", name: "Nigiri langostino 2 piezas", price: 220, img: "" }],
+  },
+  {
     id: "extras",
     name: "EXTRAS",
     items: [
@@ -53,7 +61,18 @@ const MENU = [
       { id: "e03", name: "Wasabi extra", price: 30 },
       { id: "e04", name: "Salsa de soja extra", price: 30 },
     ],
+  id: "bebidas",
+    name: "BEBIDAS",
+    items: [
+      { id: "b01", name: "Agua Salus sin gas", price: 120, img: "" },
+      { id: "b02", name: "Agua Salus con gas", price: 120, img: "" },
+      { id: "b03", name: "Pepsi 500cc", price: 120, img: "" },
+      { id: "b04", name: "Pepsi black 500cc", price: 120, img: "" },
+      { id: "b05", name: "Cerveza Índica West Coast IPA", price: 250, img: "" },
+  
+    ],
   },
+  {},
 ];
 
 // Zonas y costos de envío

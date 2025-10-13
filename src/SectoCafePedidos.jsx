@@ -192,8 +192,8 @@ export default function SectoCafePedidos() {
               <img src="/logo-secto.png" alt="Secto Cafe" className="h-10 w-auto" />
             </a>
             <div className="leading-tight">
-              <p className="text-xs tracking-[0.25em] text-neutral-500"></p>
-              <h1 className="text-lg text-neutral-900"></h1>
+              <p className="text-xs tracking-[0.25em] text-neutral-500">kkk</p>
+              <h1 className="text-lg text-neutral-900">lll</h1>
             </div>
           </div>
           <div className="hidden sm:block text-sm text-neutral-500">SECTO CAFE — Piedras 276 · Mar a Dom 12:00 a 00:00</div>

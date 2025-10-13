@@ -56,7 +56,7 @@ const MENU = [
     id: "extras",
     name: "EXTRAS",
     items: [
-      { id: "e01", name: "Palitos", price: 0 },
+      { id: "e01", name: "Palitos", price: 5 },
       { id: "e02", name: "Jengibre extra", price: 30 },
       { id: "e03", name: "Wasabi extra", price: 30 },
       { id: "e04", name: "Salsa de soja extra", price: 30 },
@@ -367,7 +367,7 @@ export default function SectoCafePedidos() {
               </button>
 
               <p className="text-xs text-neutral-500 mt-1">
-                Pagas al recibir en efectivo, QR o POS. Si preferis pagar online, activamos Mercado Pago.
+                Pagas por transferencia, al recibir (efectivo o POS)i preferis pagar online, activamos Mercado Pago.
               </p>
             </div>
           </div>
@@ -377,7 +377,7 @@ export default function SectoCafePedidos() {
       {/* Footer */}
       <footer className="max-w-6xl mx-auto px-4 pb-10 text-xs text-neutral-500">
         <hr className="border-neutral-200 mb-4" />
-        © {new Date().getFullYear()} Secto Cafe
+        © {new Date().getFullYear()} - Secto Cafe
       </footer>
     </div>
   );

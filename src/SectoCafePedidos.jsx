@@ -11,7 +11,7 @@ const MP_ENDPOINT = "https://script.google.com/macros/s/AKfycbxSsx8LL11V2S1wjytN
 
 // Galeria de fotos
 const GALLERY = [
-  "/Photos/01.JPG",
+  
   // "/photos/secto_02.jpg",
 ];
 

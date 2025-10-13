@@ -11,7 +11,7 @@ const MP_ENDPOINT = "https://script.google.com/macros/s/AKfycbxSsx8LL11V2S1wjytN
 
 // Galeria de fotos
 const GALLERY = [
-  // "/photos/secto_01.jpg",
+  "/Photos/01.JPG",
   // "/photos/secto_02.jpg",
 ];
 
@@ -21,7 +21,7 @@ const MENU = [
     id: "rolls",
     name: "ROLLS 10 piezas",
     items: [
-      { id: "r01", name: "01 - Salmón | Palta | Queso", price: 420, img: "Photos/01.JPG" },
+      { id: "r01", name: "01 - Salmón | Palta | Queso", price: 420, img: "/Photos/01.JPG" },
       { id: "r02", name: "02 - Atún | Palta | Queso", price: 440 },
       { id: "r03", name: "03 - Atun | Mango | Pepino | Crema palta | Cilantro", price: 440 },
       { id: "r04", name: "04 - Salmon | Mango | Ciboulette | Queso | Quinoa frita", price: 440 },
@@ -193,7 +193,7 @@ export default function SectoCafePedidos() {
             </a>
             <div className="leading-tight">
               <p className="text-xs tracking-[0.25em] text-neutral-500">Entregas a partir de las 19hs</p>
-              <h1 className="text-lg text-neutral-900">Mar - Dom | 19hs - 23hs</h1>
+              <h1 className="text-lg text-neutral-900"></h1>
             </div>
           </div>
           <div className="hidden sm:block text-sm text-neutral-500">SECTO CAFE — Piedras 276 · Mar a Dom 12:00 a 00:00</div>

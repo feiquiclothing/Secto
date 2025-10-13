@@ -6,7 +6,7 @@ import React, { useMemo, useReducer, useState } from "react";
  */
 
 // ===== CONFIG =====
-const PHONE_URUGUAY = "091980245"; // WhatsApp sin +598
+const PHONE_URUGUAY = "099079595"; // WhatsApp sin +598
 const MP_ENDPOINT = "https://script.google.com/macros/s/AKfycbxSsx8LL11V2S1wjytNzzNTBVwnk_9P1SE37UGynJMq4IEWXdtmEoE0bL3CukF4rHsQfg/exec";
 
 // Galeria de fotos
@@ -21,15 +21,15 @@ const MENU = [
     id: "rolls",
     name: "ROLLS 10 piezas",
     items: [
-      { id: "r01", name: "_01 - Tomate seco / Ciboulette / Phila", price: 420 },
-      { id: "r02", name: "_02 - Salmon / Phila / Mango / Quinoa frita", price: 480 },
-      { id: "r03", name: "_03 - Atun / Mango / Pepino / Sesamo / Crema palta / Cilantro", price: 480 },
-      { id: "r04", name: "_04 - Salmon / Mango / Phila / Sesamo", price: 480 },
-      { id: "r05", name: "_05 - Tomate seco / Palta / Phila / Rucula / Sesamo / Maracuya", price: 480 },
-      { id: "r06", name: "_06 - Langostino / Phila / Mango / Praline / Zest de lima", price: 560 },
-      { id: "r07", name: "_07 - Mango / Palta / Pepino / Sesamo negro / Mayo de wasabi", price: 460 },
-      { id: "r08", name: "_08 - Boniato tempura / Palta / Cebolla de verdeo / Teriyaki", price: 460 },
-      { id: "r09", name: "_09 - Hongos / Cebolla caramelizada / Rucula / Phila", price: 480 },
+      { id: "r01", name: "01 - Salmón | Palta | Queso", price: 420 },
+      { id: "r02", name: "02 - Atún | Palta | Queso", price: 440 },
+      { id: "r03", name: "03 - Atun | Mango | Pepino | Crema palta | Cilantro", price: 440 },
+      { id: "r04", name: "04 - Salmon | Mango | Ciboulette | Queso | Quinoa frita", price: 440 },
+      { id: "r05", name: "05 - Tomate seco | Palta | Rucula | Queso", price: 440 },
+      { id: "r06", name: "06 - Langostino | Mango | Queso | Praline | Sweet chilli", price: 460 },
+      { id: "r07", name: "07 - Salmon | Palta | Mayo spicy | Verdeo", price: 460 },
+      { id: "r08", name: "08 - Boniato | Palta | Ciboulette | Quinoa frita", price: 440 },
+      { id: "r09", name: "09 - Langostinos | Palta | Queso", price: 440 },
     ],
   },
   {
@@ -68,8 +68,8 @@ const MENU = [
     items: [
       { id: "b01", name: "Agua Salus sin gas", price: 120 },
       { id: "b02", name: "Agua Salus con gas", price: 120 },
-      { id: "b03", name: "Pepsi 500 cc", price: 120 },
-      { id: "b04", name: "Pepsi black 500 cc", price: 120 },
+      { id: "b03", name: "Pepsi 600 cc", price: 120 },
+      { id: "b04", name: "Pepsi black 600 cc", price: 120 },
       { id: "b05", name: "Cerveza Indica West Coast IPA", price: 250 },
     ],
   },
@@ -83,7 +83,7 @@ const ZONES = [
   { id: "otras", name: "Otras zonas coordinar", fee: 200 },
 ];
 
-const HOURS = ["19:00", "19:30", "20:00", "20:30", "21:00", "21:30", "22:00", "22:30"];
+const HOURS = ["19:30", "20:00", "20:30", "21:00", "21:30", "22:00", "22:30", "23:00"];
 
 const currency = (uy) => new Intl.NumberFormat("es-UY", { style: "currency", currency: "UYU" }).format(uy);
 
@@ -113,7 +113,7 @@ function buildWhatsAppText(order) {
   const info = [
     "Metodo: " + (method === "pickup" ? "Retiro en local" : "Delivery"),
     method === "delivery" ? "Zona: " + zona + " (" + currency(fee) + ")" : null,
-    "Horario: " + (time || "Lo antes posible"),
+    "Horario: " + (time || "Lo antes posible (A partir de las 19hs)"),
     "Nombre: " + name,
     "Tel: " + phone,
     method === "delivery" ? "Direccion: " + address : null,

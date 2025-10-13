@@ -224,19 +224,47 @@ export default function SectoCafePedidos() {
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 {cat.items.map((item) => (
-                  <article key={item.id} className="group border border-neutral-200 rounded-2xl overflow-hidden bg-white">
-                    <div className="p-4 flex items-start justify-between gap-4">
-                      <div>
-                        <h3 className="text-neutral-900 leading-tight">{item.name}</h3>
-                        <p className="text-sm text-neutral-500 mt-1">{currency(item.price)}</p>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <button onClick={() => dispatch({ type: "remove", item })} className="px-3 py-2 rounded-xl border border-neutral-200">-</button>
-                        <span className="w-6 text-center text-neutral-600">{cart[item.id]?.qty || 0}</span>
-                        <button onClick={() => dispatch({ type: "add", item })} className="px-3 py-2 rounded-xl border border-neutral-200 bg-neutral-50">+</button>
-                      </div>
-                    </div>
-                  </article>
+                  <article
+  key={item.id}
+  className="group border border-neutral-200 rounded-2xl overflow-hidden bg-white"
+>
+  {typeof item.img === "string" && item.img.trim().length > 0 ? (
+    <div className="aspect-[4/3] overflow-hidden">
+      <img
+        src={item.img}
+        alt={item.name}
+        className="w-full h-full object-cover"
+        loading="lazy"
+        decoding="async"
+      />
+    </div>
+  ) : null}
+
+  <div className="p-4 flex items-start justify-between gap-4">
+    <div>
+      <h3 className="text-neutral-900 leading-tight">{item.name}</h3>
+      <p className="text-sm text-neutral-500 mt-1">{currency(item.price)}</p>
+    </div>
+    <div className="flex items-center gap-2">
+      <button
+        onClick={() => dispatch({ type: "remove", item })}
+        className="px-3 py-2 rounded-xl border border-neutral-200"
+      >
+        -
+      </button>
+      <span className="w-6 text-center text-neutral-600">
+        {cart[item.id]?.qty || 0}
+      </span>
+      <button
+        onClick={() => dispatch({ type: "add", item })}
+        className="px-3 py-2 rounded-xl border border-neutral-200 bg-neutral-50"
+      >
+        +
+      </button>
+    </div>
+  </div>
+</article>
+
                 ))}
               </div>
             </div>

@@ -196,7 +196,7 @@ export default function SectoCafePedidos() {
               <h1 className="text-lg text-neutral-900"></h1>
             </div>
           </div>
-          <div className="hidden sm:block text-sm text-neutral-500">SECTO CAFE — Piedras 276 · Mar a Dom 12:00 a 00:00</div>
+          <div className="hidden sm:block text-sm text-neutral-500">SECTO CAFE — Piedras 276 · Mar a Dom 11:00 a 23:30</div>
         </div>
       </header>
 

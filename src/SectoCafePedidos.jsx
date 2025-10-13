@@ -296,7 +296,7 @@ export default function SectoCafePedidos() {
             <div className="mt-3">
               <label className="text-xs text-neutral-500">Horario</label>
               <select value={time} onChange={(e) => setTime(e.target.value)} className="w-full bg-white border border-neutral-200 rounded-xl p-2">
-                <option value="">Lo antes posible</option>
+                <option value="">Lo antes posible (a partir de las 19hs)</option>
                 {HOURS.map((h) => <option key={h} value={h}>{h}</option>)}
               </select>
             </div>

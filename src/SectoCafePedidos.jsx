@@ -21,7 +21,7 @@ const MENU = [
     id: "rolls",
     name: "ROLLS 10 piezas",
     items: [
-      { id: "r01", name: "01 - Salmón | Palta | Queso", price: 420 },
+      { id: "r01", name: "01 - Salmón | Palta | Queso", price: 420, img: "/photos/01.jpg" },
       { id: "r02", name: "02 - Atún | Palta | Queso", price: 440 },
       { id: "r03", name: "03 - Atun | Mango | Pepino | Crema palta | Cilantro", price: 440 },
       { id: "r04", name: "04 - Salmon | Mango | Ciboulette | Queso | Quinoa frita", price: 440 },

@@ -35,42 +35,45 @@ const MENU = [
   {
     id: "temakis",
     name: "TEMAKI 1 pieza",
-    items: [{ id: "t01", name: "Salmon / Palta / Phila", price: 240 }],
+    items: [{ id: "t01", name: "Salmon | Palta | Queso", price: 200 }],
   },
   {
     id: "sashimi",
     name: "SASHIMI",
-    items: [{ id: "s01", name: "Salmon 4 piezas", price: 390 }],
+    items: [{ id: "s01", name: "Salmon 4 piezas", price: 360 }],
+    items: [{ id: "s02", name: "Atún 4 piezas", price: 380 }],
   },
   {
     id: "nigiris",
     name: "NIGIRIS",
     items: [
-      { id: "n01", name: "Nigiri salmon 2 piezas", price: 190 },
-      { id: "n02", name: "Nigiri salmon tataki 2 piezas", price: 220 },
-      { id: "n03", name: "Nigiri atun 2 piezas", price: 220 },
-      { id: "n04", name: "Nigiri langostino 2 piezas", price: 220 },
+      { id: "n01", name: "Nigiri salmón 2 piezas", price: 180 },
+      { id: "n02", name: "Nigiri salmón tataki 2 piezas", price: 180 },
+      { id: "n03", name: "Nigiri atún 2 piezas", price: 190 },
+      { id: "n04", name: "Nigiri langostino 2 piezas", price: 190 },
     ],
   },
   {
     id: "extras",
     name: "EXTRAS",
     items: [
-      { id: "e01", name: "Palitos", price: 5 },
-      { id: "e02", name: "Jengibre extra", price: 30 },
-      { id: "e03", name: "Wasabi extra", price: 30 },
-      { id: "e04", name: "Salsa de soja extra", price: 30 },
+      { id: "e01", name: "Salsa de soja", price: 30 },
+      { id: "e02", name: "teriyaki", price: 40 },
+      { id: "e03", name: "Wasabi", price: 40 },
+      { id: "e04", name: "Gari (Jengibre)", price: 40 },
+      { id: "e05", name: "Sweet chilli", price: 60 },
     ],
   },
   {
     id: "bebidas",
     name: "BEBIDAS",
     items: [
-      { id: "b01", name: "Agua Salus sin gas", price: 120 },
-      { id: "b02", name: "Agua Salus con gas", price: 120 },
-      { id: "b03", name: "Pepsi 600 cc", price: 120 },
-      { id: "b04", name: "Pepsi black 600 cc", price: 120 },
-      { id: "b05", name: "Cerveza Indica West Coast IPA", price: 250 },
+      { id: "b01", name: "Agua Salus sin gas 600cc", price: 120 },
+      { id: "b02", name: "Agua Salus con gas 600cc", price: 120 },
+      { id: "b03", name: "Coca Cola 600cc", price: 140 },
+      { id: "b04", name: "Coca Cola black 600cc", price: 140 },
+      { id: "b05", name: "Sprite 600cc", price: 2140 },
+      { id: "b06", name: "Cerveza Indica West Coast IPA", price: 250 },
     ],
   },
 ];
@@ -367,7 +370,7 @@ export default function SectoCafePedidos() {
               </button>
 
               <p className="text-xs text-neutral-500 mt-1">
-                Pagas por transferencia, al recibir (efectivo o POS)i preferis pagar online, activamos Mercado Pago.
+                Pagas por transferencia, al recibir (efectivo|POS) o Mercado Pago.
               </p>
             </div>
           </div>

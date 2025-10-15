@@ -17,11 +17,11 @@ const GALLERY = [
 
 // ===== MENU =====
 const MENU = [
-  {
+  
     id: "rolls",
     name: "ROLLS 10 piezas",
     items: [
-      { id: "r01", name: "01 - Salmón | Palta | Queso", price: 420, img: "/Photos/01.JPG" },
+      { id: "r01", name: "(2X1) 01 - Salmón | Palta | Queso", price: 420, img: "/Photos/01.JPG" },
       { id: "r02", name: "02 - Atún | Palta | Queso", price: 440, img: "/Photos/02.JPG"},
       { id: "r03", name: "03 - Atun | Mango | Pepino | Crema palta | Cilantro", price: 440, img: "/Photos/03.JPG" },
       { id: "r04", name: "04 - Salmon | Mango | Ciboulette | Queso | Quinoa frita", price: 440, img: "/Photos/04.JPG" },
@@ -51,6 +51,15 @@ const MENU = [
       { id: "n02", name: "Nigiri salmón tataki 2 piezas", price: 180 },
       { id: "n03", name: "Nigiri atún 2 piezas", price: 190 },
       { id: "n04", name: "Nigiri langostino 2 piezas", price: 190 },
+    ],
+  },
+  {
+       id: "combos",
+    name: "COMBINADOS",
+    items: [
+      { id: "c01", name: "Combinado 14 piezas", price: 680 },
+      { id: "c02", name: "Combinado 24 piezas", price: 1100 },
+      { id: "c03", name: "Combinado 36 piezas", price: 1580 },
     ],
   },
   {

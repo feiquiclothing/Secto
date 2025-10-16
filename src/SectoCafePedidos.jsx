@@ -127,7 +127,7 @@ function buildWhatsAppText(order) {
   const info = [
     "Metodo: " + (method === "pickup" ? "Retiro en local" : "Delivery"),
     method === "delivery" ? "Zona: " + zona + " (" + currency(fee) + ")" : null,
-    "Horario: " + (time || "Lo antes posible (A partir de las 19hs)"),
+    "Horario: " + (time || "Lo antes posible (A partir de las 19hs del viernes)"),
     "Nombre: " + name,
     "Tel: " + phone,
     method === "delivery" ? "Direccion: " + address : null,
@@ -206,7 +206,7 @@ export default function SectoCafePedidos() {
               <img src="/logo-secto.png" alt="Secto Cafe" className="h-10 w-auto" />
             </a>
             <div className="leading-tight">
-              <p className="text-xs tracking-[0.25em] text-neutral-500">Entregas a partir de las 19hs</p>
+              <p className="text-xs tracking-[0.25em] text-neutral-500">Entregas a partir de las 19hs del viernes</p>
               <h1 className="text-lg text-neutral-900"></h1>
             </div>
           </div>
@@ -338,7 +338,7 @@ export default function SectoCafePedidos() {
             <div className="mt-3">
               <label className="text-xs text-neutral-500">Horario</label>
               <select value={time} onChange={(e) => setTime(e.target.value)} className="w-full bg-white border border-neutral-200 rounded-xl p-2">
-                <option value="">Lo antes posible (a partir de las 19hs)</option>
+                <option value="">Lo antes posible (a partir de las 19hs del viernes)</option>
                 {HOURS.map((h) => <option key={h} value={h}>{h}</option>)}
               </select>
             </div>

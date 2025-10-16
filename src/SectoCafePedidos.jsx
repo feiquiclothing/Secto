@@ -17,7 +17,7 @@ const GALLERY = [
 
 // ===== MENU =====
 const MENU = [
-  
+  {
     id: "rolls",
     name: "ROLLS 10 piezas",
     items: [

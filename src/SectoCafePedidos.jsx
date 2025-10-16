@@ -206,7 +206,7 @@ export default function SectoCafePedidos() {
               <img src="/logo-secto.png" alt="Secto Cafe" className="h-10 w-auto" />
             </a>
             <div className="leading-tight">
-              <p className="text-xs tracking-[0.25em] text-neutral-500">Entregas a partir de las 19hs del viernes</p>
+              <p className="text-xs tracking-[0.25em] text-neutral-500">Entregas a partir de las 19hs</p>
               <h1 className="text-lg text-neutral-900"></h1>
             </div>
           </div>

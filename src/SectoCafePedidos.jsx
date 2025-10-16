@@ -37,12 +37,15 @@ const MENU = [
     name: "TEMAKI 1 pieza",
     items: [{ id: "t01", name: "Salmon | Palta | Queso", price: 200 }],
   },
-  {
-    id: "sashimi",
-    name: "SASHIMI",
-    items: [{ id: "s01", name: "Salmon 4 piezas", price: 360 }],
-    items: [{ id: "s02", name: "Atún 4 piezas", price: 380 }],
-  },
+{
+  id: "sashimi",
+  name: "SASHIMI",
+  items: [
+    { id: "s01", name: "Salmon 4 piezas", price: 360 },
+    { id: "s02", name: "Atún 4 piezas", price: 380 },
+  ],
+},
+
   {
     id: "nigiris",
     name: "NIGIRIS",

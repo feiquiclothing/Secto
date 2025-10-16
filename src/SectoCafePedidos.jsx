@@ -93,9 +93,9 @@ const MENU = [
 // ===== ZONAS Y HORARIOS =====
 const ZONES = [
   { id: "cv", name: "Ciudad Vieja", fee: 0 },
-  { id: "centro", name: "Centro / Cordon / Aguada", fee: 90 },
-  { id: "pocitos", name: "Parque Rodo / Punta Carretas / Pocitos", fee: 140 },
-  { id: "otras", name: "Otras zonas coordinar", fee: 200 },
+  { id: "centro", name: "Centro / Cordon / Aguada", fee: 70 },
+  { id: "pocitos", name: "Parque Rodo / Punta Carretas / Pocitos", fee: 100 },
+  { id: "otras", name: "Otras zonas coordinar", fee: 170 },
 ];
 
 const HOURS = ["19:30", "20:00", "20:30", "21:00", "21:30", "22:00", "22:30", "23:00"];

@@ -85,7 +85,6 @@ const MENU = [
       { id: "b03", name: "Coca Cola 600cc", price: 140 },
       { id: "b04", name: "Coca Cola black 600cc", price: 140 },
       { id: "b05", name: "Sprite 600cc", price: 2140 },
-      { id: "b06", name: "Cerveza Indica West Coast IPA", price: 250 },
     ],
   },
 ];

@@ -21,7 +21,7 @@ const MENU = [
     id: "rolls",
     name: "ROLLS 10 piezas",
     items: [
-      { id: "r01", name: "(2X1) 01 - Salmón | Palta | Queso", price: 420, img: "/Photos/01.JPG" },
+      { id: "r01", name: "01 - Salmón | Palta | Queso", price: 420, img: "/Photos/01.JPG" },
       { id: "r02", name: "02 - Atún | Palta | Queso", price: 440, img: "/Photos/02.JPG"},
       { id: "r03", name: "03 - Atun | Mango | Pepino | Crema palta | Cilantro", price: 440, img: "/Photos/03.JPG" },
       { id: "r04", name: "04 - Salmon | Mango | Ciboulette | Queso | Quinoa frita", price: 440, img: "/Photos/04.JPG" },
@@ -84,7 +84,7 @@ const MENU = [
       { id: "b02", name: "Agua Salus con gas 600cc", price: 120 },
       { id: "b03", name: "Coca Cola 600cc", price: 140 },
       { id: "b04", name: "Coca Cola black 600cc", price: 140 },
-      { id: "b05", name: "Sprite 600cc", price: 2140 },
+      { id: "b05", name: "Sprite 600cc", price: 140 },
     ],
   },
 ];
@@ -127,7 +127,7 @@ function buildWhatsAppText(order) {
   const info = [
     "Metodo: " + (method === "pickup" ? "Retiro en local" : "Delivery"),
     method === "delivery" ? "Zona: " + zona + " (" + currency(fee) + ")" : null,
-    "Horario: " + (time || "Lo antes posible (A partir de las 19hs del viernes)"),
+    "Horario: " + (time || "Lo antes posible (A partir de las 19hs)"),
     "Nombre: " + name,
     "Tel: " + phone,
     method === "delivery" ? "Direccion: " + address : null,
@@ -338,7 +338,7 @@ export default function SectoCafePedidos() {
             <div className="mt-3">
               <label className="text-xs text-neutral-500">Horario</label>
               <select value={time} onChange={(e) => setTime(e.target.value)} className="w-full bg-white border border-neutral-200 rounded-xl p-2">
-                <option value="">Lo antes posible (a partir de las 19hs del viernes)</option>
+                <option value="">Lo antes posible (a partir de las 19hs)</option>
                 {HOURS.map((h) => <option key={h} value={h}>{h}</option>)}
               </select>
             </div>

@@ -17,7 +17,7 @@ const GALLERY = [
 // ===== APERTURA (días/horas + on/off) =====
 const TZ = "America/Montevideo";
 const OPEN_DAYS = [5, 6]; // 0=Dom, 1=Lun, ... 5=Vie, 6=Sab
-const OPEN_HOUR_START = 19; // 19:00
+const OPEN_HOUR_START = 9; // 9:00
 const OPEN_HOUR_END = 24;   // hasta 23:59 (24 exclusivo)
 
 // Cambiá estos flags para forzar ON/OFF manual (sin tocar días/horas)

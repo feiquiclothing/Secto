@@ -11,9 +11,35 @@ const MP_ENDPOINT = "https://script.google.com/macros/s/AKfycbxSsx8LL11V2S1wjytN
 
 // Galeria de fotos
 const GALLERY = [
-  
   // "/photos/secto_02.jpg",
 ];
+
+// ===== APERTURA (días/horas + on/off) =====
+const TZ = "America/Montevideo";
+const OPEN_DAYS = [5, 6]; // 0=Dom, 1=Lun, ... 5=Vie, 6=Sab
+const OPEN_HOUR_START = 19; // 19:00
+const OPEN_HOUR_END = 24;   // hasta 23:59 (24 exclusivo)
+
+// Cambiá estos flags para forzar ON/OFF manual (sin tocar días/horas)
+const FORCE_OPEN = false;
+const FORCE_CLOSED = false;
+
+function getNowInTZ() {
+  const now = new Date();
+  const weekdayStr = new Intl.DateTimeFormat("en-US", { timeZone: TZ, weekday: "short" }).format(now);
+  const dayMap = { Sun: 0, Mon: 1, Tue: 2, Wed: 3, Thu: 4, Fri: 5, Sat: 6 };
+  const day = dayMap[weekdayStr];
+  const hourStr = new Intl.DateTimeFormat("en-US", { timeZone: TZ, hour: "2-digit", hour12: false }).format(now);
+  const hour = Number(hourStr);
+  return { day, hour };
+}
+
+function isOpenBySchedule() {
+  const { day, hour } = getNowInTZ();
+  const isOpenDay = OPEN_DAYS.includes(day);
+  const isOpenHour = hour >= OPEN_HOUR_START && hour < OPEN_HOUR_END;
+  return isOpenDay && isOpenHour;
+}
 
 // ===== MENU =====
 const MENU = [
@@ -37,15 +63,14 @@ const MENU = [
     name: "TEMAKI 1 pieza",
     items: [{ id: "t01", name: "Salmon | Palta | Queso", price: 200 }],
   },
-{
-  id: "sashimi",
-  name: "SASHIMI",
-  items: [
-    { id: "s01", name: "Salmon 4 piezas", price: 360 },
-    { id: "s02", name: "Atún 4 piezas", price: 380 },
-  ],
-},
-
+  {
+    id: "sashimi",
+    name: "SASHIMI",
+    items: [
+      { id: "s01", name: "Salmon 4 piezas", price: 360 },
+      { id: "s02", name: "Atún 4 piezas", price: 380 },
+    ],
+  },
   {
     id: "nigiris",
     name: "NIGIRIS",
@@ -57,7 +82,7 @@ const MENU = [
     ],
   },
   {
-       id: "combos",
+    id: "combos",
     name: "COMBINADOS",
     items: [
       { id: "c01", name: "Combinado 14 piezas", price: 680 },
@@ -147,12 +172,21 @@ export default function SectoCafePedidos() {
   const [notes, setNotes] = useState("");
   const [time, setTime] = useState("");
 
+  // Estado calculado
   const items = useMemo(() => Object.values(cart), [cart]);
   const subtotal = useMemo(() => items.reduce((s, { item, qty }) => s + item.price * qty, 0), [items]);
   const fee = useMemo(() => (method === "delivery" ? ZONES.find((z) => z.id === zone)?.fee || 0 : 0), [method, zone]);
   const total = subtotal + fee;
   const canSend = subtotal > 0 && name && phone && (method === "pickup" || address || zone === "cv");
   const hasMP = typeof MP_ENDPOINT === "string" && MP_ENDPOINT.trim().length > 0;
+
+  // Apertura (schedule + overrides)
+  const scheduleOpen = isOpenBySchedule();
+  const isOpen =
+    (FORCE_OPEN && !FORCE_CLOSED) ||
+    (!FORCE_CLOSED && scheduleOpen);
+
+  const canSendNow = canSend && isOpen;
 
   const getOrder = (extra = {}) => ({ items, subtotal, zone, fee, total, method, name, phone, address, notes, time, ...extra });
 
@@ -206,7 +240,11 @@ export default function SectoCafePedidos() {
               <img src="/logo-secto.png" alt="Secto Cafe" className="h-10 w-auto" />
             </a>
             <div className="leading-tight">
-              <p className="text-xs tracking-[0.25em] text-neutral-500">Entregas a partir de las 19hs</p>
+              <p className="text-xs tracking-[0.25em] text-neutral-500">
+                {isOpen
+                  ? "Habilitado viernes y sábado · Entregas a partir de las 19hs"
+                  : "Cerrado — pedidos habilitados viernes y sábado de 19:00 a 23:59"}
+              </p>
               <h1 className="text-lg text-neutral-900"></h1>
             </div>
           </div>
@@ -239,46 +277,46 @@ export default function SectoCafePedidos() {
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 {cat.items.map((item) => (
                   <article
-  key={item.id}
-  className="group border border-neutral-200 rounded-2xl overflow-hidden bg-white"
->
-  {typeof item.img === "string" && item.img.trim().length > 0 ? (
-    <div className="aspect-[4/3] overflow-hidden">
-      <img
-        src={item.img}
-        alt={item.name}
-        className="w-full h-full object-cover"
-        loading="lazy"
-        decoding="async"
-      />
-    </div>
-  ) : null}
+                    key={item.id}
+                    className="group border border-neutral-200 rounded-2xl overflow-hidden bg-white"
+                  >
+                    {typeof item.img === "string" && item.img.trim().length > 0 ? (
+                      <div className="aspect-[4/3] overflow-hidden">
+                        <img
+                          src={item.img}
+                          alt={item.name}
+                          className="w-full h-full object-cover"
+                          loading="lazy"
+                          decoding="async"
+                        />
+                      </div>
+                    ) : null}
 
-  <div className="p-4 flex items-start justify-between gap-4">
-    <div>
-      <h3 className="text-neutral-900 leading-tight">{item.name}</h3>
-      <p className="text-sm text-neutral-500 mt-1">{currency(item.price)}</p>
-    </div>
-    <div className="flex items-center gap-2">
-      <button
-        onClick={() => dispatch({ type: "remove", item })}
-        className="px-3 py-2 rounded-xl border border-neutral-200"
-      >
-        -
-      </button>
-      <span className="w-6 text-center text-neutral-600">
-        {cart[item.id]?.qty || 0}
-      </span>
-      <button
-        onClick={() => dispatch({ type: "add", item })}
-        className="px-3 py-2 rounded-xl border border-neutral-200 bg-neutral-50"
-      >
-        +
-      </button>
-    </div>
-  </div>
-</article>
-
+                    <div className="p-4 flex items-start justify-between gap-4">
+                      <div>
+                        <h3 className="text-neutral-900 leading-tight">{item.name}</h3>
+                        <p className="text-sm text-neutral-500 mt-1">{currency(item.price)}</p>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <button
+                          onClick={() => dispatch({ type: "remove", item })}
+                          className="px-3 py-2 rounded-xl border border-neutral-200"
+                        >
+                          -
+                        </button>
+                        <span className="w-6 text-center text-neutral-600">
+                          {cart[item.id]?.qty || 0}
+                        </span>
+                        <button
+                          onClick={() => dispatch({ type: "add", item })}
+                          className={`px-3 py-2 rounded-xl border ${isOpen ? "border-neutral-200 bg-neutral-50" : "border-neutral-200 text-neutral-400 cursor-not-allowed"}`}
+                          disabled={!isOpen}
+                        >
+                          +
+                        </button>
+                      </div>
+                    </div>
+                  </article>
                 ))}
               </div>
             </div>
@@ -338,7 +376,7 @@ export default function SectoCafePedidos() {
             <div className="mt-3">
               <label className="text-xs text-neutral-500">Horario</label>
               <select value={time} onChange={(e) => setTime(e.target.value)} className="w-full bg-white border border-neutral-200 rounded-xl p-2">
-                <option value="">Lo antes posible (a partir de las 19hs)</option>
+                <option value="">{isOpen ? "Lo antes posible (a partir de las 19hs)" : "Pedidos habilitados vie/sáb 19:00–23:59"}</option>
                 {HOURS.map((h) => <option key={h} value={h}>{h}</option>)}
               </select>
             </div>
@@ -357,8 +395,8 @@ export default function SectoCafePedidos() {
             <div className="grid grid-cols-1 gap-2 mt-4">
               <button
                 onClick={() => sendOrder(false)}
-                disabled={canSend ? false : true}
-                className={`w-full rounded-2xl py-3 text-center ${canSend ? "bg-black text-white" : "bg-neutral-100 text-neutral-400 cursor-not-allowed"}`}
+                disabled={!canSendNow}
+                className={`w-full rounded-2xl py-3 text-center ${canSendNow ? "bg-black text-white" : "bg-neutral-100 text-neutral-400 cursor-not-allowed"}`}
               >
                 Enviar pedido por WhatsApp
               </button>
@@ -366,8 +404,8 @@ export default function SectoCafePedidos() {
               {hasMP && (
                 <button
                   onClick={payWithMP}
-                  disabled={canSend ? false : true}
-                  className={`w-full rounded-2xl py-3 text-center border ${canSend ? "border-neutral-300" : "border-neutral-200 text-neutral-400 cursor-not-allowed"}`}
+                  disabled={!canSendNow}
+                  className={`w-full rounded-2xl py-3 text-center border ${canSendNow ? "border-neutral-300" : "border-neutral-200 text-neutral-400 cursor-not-allowed"}`}
                 >
                   Pagar con Mercado Pago
                 </button>
@@ -379,6 +417,12 @@ export default function SectoCafePedidos() {
               >
                 Vaciar carrito
               </button>
+
+              {!isOpen && (
+                <p className="text-xs text-red-600 mt-1">
+                  Cerrado — pedidos habilitados viernes y sábado de {OPEN_HOUR_START}:00 a {OPEN_HOUR_END === 24 ? "23:59" : `${OPEN_HOUR_END}:00`} (hora Montevideo).
+                </p>
+              )}
 
               <p className="text-xs text-neutral-500 mt-1">
                 Pagas por transferencia, al recibir (efectivo|POS) o Mercado Pago.

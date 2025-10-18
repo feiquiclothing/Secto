@@ -248,7 +248,7 @@ export default function SectoCafePedidos() {
               <h1 className="text-lg text-neutral-900"></h1>
             </div>
           </div>
-          <div className="hidden sm:block text-sm text-neutral-500">SECTO CAFE — Piedras 276 · Mar - Dom 11:00 a 23:30</div>
+          <div className="hidden sm:block text-sm text-neutral-500">SECTO CAFE — Piedras 276</div>
         </div>
       </header>
 
@@ -435,7 +435,7 @@ export default function SectoCafePedidos() {
       {/* Footer */}
       <footer className="max-w-6xl mx-auto px-4 pb-10 text-xs text-neutral-500">
         <hr className="border-neutral-200 mb-4" />
-        © {new Date().getFullYear()} - Secto Cafe
+        © {new Date().getFullYear()} - Secto Cafe · Mar - Dom 11:00 a 23:30
       </footer>
     </div>
   );

@@ -454,10 +454,10 @@ function PokeBuilder({ onAdd, isOpen }) {
         <button
           type="button"
           onClick={handleAdd}
-          disabled={!canAdd}
+          disabled={!canAdd || !isOpen}
           className={
             "rounded-2xl px-4 py-2 text-sm " +
-            (canAdd
+            (canAdd && isOpen
               ? "bg-black text-white"
               : "bg-neutral-100 text-neutral-400 cursor-not-allowed")
           }
@@ -613,15 +613,15 @@ export default function SectoCafePedidos() {
       </header>
 
       {/* Galería */}
-      {GALLERY.length > 0 && (
+      {GALLERY?.length > 0 && (
         <section className="max-w-6xl mx-auto px-4 pt-6">
-          <div className="columns-1 sm:columns-2 lg:columns-3 gap-4">
+          <div className="columns-1 sm:columns-2 lg:columns-3 gap-4 [column-fill:_balance]">
             {GALLERY.map((src, i) => (
               <img
                 key={i}
                 src={src}
-                alt="Secto Cafe"
-                className="mb-4 w-full rounded-2xl border border-neutral-200 object-cover"
+                alt="Secto Café"
+                className="mb-4 w-full rounded-2xl border border-neutral-900 object-cover hover:opacity-90 transition"
               />
             ))}
           </div>

@@ -424,7 +424,7 @@ function PokeBuilder({ onAdd, isOpen }) {
         {/* Salsas */}
         <div className="space-y-2 sm:col-span-2">
           <p className="text-xs text-neutral-500 uppercase tracking-[0.15em]">
-            Salsas (x2 incluidas, extra {currency(POKE_EXTRA_SAUCE)})
+            Salsas (x1 incluidas, extra {currency(POKE_EXTRA_SAUCE)})
           </p>
           <div className="flex flex-wrap gap-2">
             {POKE_SAUCES.map((s) => (

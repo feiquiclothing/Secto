@@ -266,8 +266,7 @@ function PokeBuilder({ onAdd, isOpen }) {
   const [proteins, setProteins] = useState([]);
   const [toppings, setToppings] = useState([]);
   const [sauces, setSauces] = useState([]);
-  const [qty, setQty] = useState(1);
-  const [feedback, setFeedback] = useState(""); // mensaje tipo "Poke agregado"
+  const [feedback, setFeedback] = useState("");
 
   const toggleInArray = (value, setFn) => {
     setFn((prev) =>
@@ -293,8 +292,7 @@ function PokeBuilder({ onAdd, isOpen }) {
     Boolean(base) &&
     proteins.length >= 1 &&
     toppings.length >= 3 &&
-    sauces.length >= 1 &&
-    qty >= 1;
+    sauces.length >= 1;
 
   const handleAdd = () => {
     if (!canAdd) return;
@@ -315,16 +313,15 @@ function PokeBuilder({ onAdd, isOpen }) {
       price: unitPrice,
     };
 
-    onAdd(item, qty);
+    onAdd(item, 1);
 
-    // 🔁 reset total del builder
+    // Reset total
     setBase("");
     setProteins([]);
     setToppings([]);
     setSauces([]);
-    setQty(1);
 
-    // feedback visual
+    // Mensajito de feedback
     setFeedback("Poke agregado al pedido");
     setTimeout(() => setFeedback(""), 1500);
   };
@@ -371,7 +368,7 @@ function PokeBuilder({ onAdd, isOpen }) {
           </div>
         </div>
 
-        {/* Proteinas */}
+        {/* Proteínas */}
         <div className="space-y-2">
           <p className="text-xs text-neutral-500 uppercase tracking-[0.15em]">
             Proteínas (x1 incluida, extra {currency(POKE_EXTRA_PROTEIN)})
@@ -453,52 +450,24 @@ function PokeBuilder({ onAdd, isOpen }) {
         </div>
       </div>
 
-      {/* Cantidad + botón */}
-      <div className="mt-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-        <div className="flex items-center gap-3">
-          <p className="text-xs text-neutral-500">Cantidad de bowls</p>
-          <div className="flex items-center gap-2">
-            <button
-              type="button"
-              onClick={() => setQty((q) => Math.max(1, q - 1))}
-              className="px-3 py-1 border border-neutral-200 rounded-xl text-sm"
-            >
-              -
-            </button>
-            <span className="w-6 text-center text-sm text-neutral-800">
-              {qty}
-            </span>
-            <button
-              type="button"
-              onClick={() => setQty((q) => Math.min(10, q + 1))}
-              className="px-3 py-1 border border-neutral-200 rounded-xl text-sm"
-            >
-              +
-            </button>
-          </div>
-          <p className="text-[11px] text-neutral-500">
-            Total pokes: {currency(unitPrice * qty)}
-          </p>
-        </div>
-
-        <div className="flex flex-col items-end gap-1">
-          <button
-            type="button"
-            onClick={handleAdd}
-            disabled={!canAdd}
-            className={
-              "rounded-2xl px-4 py-2 text-sm " +
-              (canAdd
-                ? "bg-black text-white"
-                : "bg-neutral-100 text-neutral-400 cursor-not-allowed")
-            }
-          >
-            Agregar poke al pedido
-          </button>
-          {feedback && (
-            <p className="text-[11px] text-neutral-500">{feedback}</p>
-          )}
-        </div>
+      {/* Botón */}
+      <div className="mt-4 flex flex-col items-end gap-1">
+        <button
+          type="button"
+          onClick={handleAdd}
+          disabled={!canAdd}
+          className={
+            "rounded-2xl px-4 py-2 text-sm " +
+            (canAdd
+              ? "bg-black text-white"
+              : "bg-neutral-100 text-neutral-400 cursor-not-allowed")
+          }
+        >
+          Agregar poke al pedido
+        </button>
+        {feedback && (
+          <p className="text-[11px] text-neutral-500">{feedback}</p>
+        )}
       </div>
 
       {!isOpen && (
@@ -510,6 +479,7 @@ function PokeBuilder({ onAdd, isOpen }) {
     </section>
   );
 }
+
 
 export default function SectoCafePedidos() {
   const [cart, dispatch] = useReducer(reducer, {});

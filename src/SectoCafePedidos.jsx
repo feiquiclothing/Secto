@@ -549,18 +549,18 @@ export default function SectoCafePedidos() {
         unit_price: item.price,
         quantity: qty,
       })),
-        total: order.total,
-        name: order.name,
-        phone: order.phone,
-        method: order.method,
-        zone: order.zone,
-        address: order.address,
-        notes: order.notes,
-        time: order.time,
-        back_urls: {
-          success: window.location.origin + "?mp=success",
-          failure: window.location.origin + "?mp=failure",
-        },
+      total: order.total,
+      name: order.name,
+      phone: order.phone,
+      method: order.method,
+      zone: order.zone,
+      address: order.address,
+      notes: order.notes,
+      time: order.time,
+      back_urls: {
+        success: window.location.origin + "?mp=success",
+        failure: window.location.origin + "?mp=failure",
+      },
     };
 
     // Envio por formulario para evitar CORS

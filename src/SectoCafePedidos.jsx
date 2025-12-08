@@ -73,21 +73,10 @@ const MENU = [
     items: [{ id: "t01", name: "Salmón | Palta | Queso", price: 200 }],
   },
   {
-    id: "sashimi",
-    name: "SASHIMI",
+    id: "onigirazu",
+    name: "ONIGIRAZU",
     items: [
-      { id: "s01", name: "Salmón 4 piezas", price: 360 },
-      { id: "s02", name: "Atún 4 piezas", price: 380 },
-    ],
-  },
-  {
-    id: "nigiris",
-    name: "NIGIRIS",
-    items: [
-      { id: "n01", name: "Nigiri salmón 2 piezas", price: 180 },
-      { id: "n02", name: "Nigiri salmón tataki 2 piezas", price: 180 },
-      { id: "n03", name: "Nigiri atún 2 piezas", price: 190 },
-      { id: "n04", name: "Nigiri langostino 2 piezas", price: 190 },
+      { id: "s01", name: "Salmón 4 piezas", price: 320 },
     ],
   },
   {

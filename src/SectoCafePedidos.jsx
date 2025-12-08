@@ -303,13 +303,11 @@ function PokeBuilder({ onAdd, isOpen }) {
 
     onAdd(item, 1);
 
-    // Reset total
     setBase("");
     setProteins([]);
     setToppings([]);
     setSauces([]);
 
-    // Mensajito de feedback
     setFeedback("Poke agregado al pedido");
     setTimeout(() => setFeedback(""), 1500);
   };
@@ -331,7 +329,6 @@ function PokeBuilder({ onAdd, isOpen }) {
       </div>
 
       <div className="grid gap-4 sm:grid-cols-2">
-        {/* Base */}
         <div className="space-y-2">
           <p className="text-xs text-neutral-500 uppercase tracking-[0.15em]">
             Base (x1 incluida)
@@ -356,7 +353,6 @@ function PokeBuilder({ onAdd, isOpen }) {
           </div>
         </div>
 
-        {/* Proteínas */}
         <div className="space-y-2">
           <p className="text-xs text-neutral-500 uppercase tracking-[0.15em]">
             Proteínas (x1 incluida, extra {currency(POKE_EXTRA_PROTEIN)})
@@ -383,7 +379,6 @@ function PokeBuilder({ onAdd, isOpen }) {
           </p>
         </div>
 
-        {/* Toppings */}
         <div className="space-y-2 sm:col-span-2">
           <p className="text-xs text-neutral-500 uppercase tracking-[0.15em]">
             Toppings (x3 incluidos, extra {currency(POKE_EXTRA_TOPPING)})
@@ -410,7 +405,6 @@ function PokeBuilder({ onAdd, isOpen }) {
           </p>
         </div>
 
-        {/* Salsas */}
         <div className="space-y-2 sm:col-span-2">
           <p className="text-xs text-neutral-500 uppercase tracking-[0.15em]">
             Salsas (x1 incluida, extra {currency(POKE_EXTRA_SAUCE)})
@@ -438,7 +432,6 @@ function PokeBuilder({ onAdd, isOpen }) {
         </div>
       </div>
 
-      {/* Botón */}
       <div className="mt-4 flex flex-col items-end gap-1">
         <button
           type="button"
@@ -481,7 +474,6 @@ export default function SectoCafePedidos() {
   const cartRef = useRef(null);
   const [cartHighlight, setCartHighlight] = useState(false);
 
-  // Estado calculado
   const items = useMemo(() => Object.values(cart), [cart]);
   const subtotal = useMemo(
     () => items.reduce((s, { item, qty }) => s + item.price * qty, 0),
@@ -499,7 +491,6 @@ export default function SectoCafePedidos() {
     (method === "pickup" || address || zone === "cv");
   const hasMP = typeof MP_ENDPOINT === "string" && MP_ENDPOINT.trim().length > 0;
 
-  // Apertura (schedule + overrides)
   const scheduleOpen = isOpenBySchedule();
   const isOpen = (FORCE_OPEN && !FORCE_CLOSED) || (!FORCE_CLOSED && scheduleOpen);
 
@@ -563,7 +554,6 @@ export default function SectoCafePedidos() {
       },
     };
 
-    // Envio por formulario para evitar CORS
     const form = document.createElement("form");
     form.method = "POST";
     form.action = MP_ENDPOINT;
@@ -579,7 +569,6 @@ export default function SectoCafePedidos() {
 
   return (
     <div className="min-h-screen bg-white text-neutral-800">
-      {/* Header */}
       <header className="sticky top-0 z-40 border-b border-neutral-200 bg-white/90 backdrop-blur">
         <div className="max-w-6xl mx-auto px-4 py-3 flex items-center justify-between">
           <div className="flex items-center gap-3">
@@ -601,8 +590,8 @@ export default function SectoCafePedidos() {
         </div>
       </header>
 
-      {/* Galería */}
-      {GALLERY?.length > 0 && (
+      {/* Galería (opcional) */}
+      {GALLERY && GALLERY.length > 0 && (
         <section className="max-w-6xl mx-auto px-4 pt-6">
           <div className="columns-1 sm:columns-2 lg:columns-3 gap-4 [column-fill:_balance]">
             {GALLERY.map((src, i) => (
@@ -617,11 +606,8 @@ export default function SectoCafePedidos() {
         </section>
       )}
 
-      {/* Contenido principal */}
       <main className="max-w-6xl mx-auto px-4 py-8 grid grid-cols-1 lg:grid-cols-3 gap-8">
-        {/* Catálogo */}
         <section className="lg:col-span-2 space-y-8">
-          {/* Pokes */}
           <PokeBuilder
             isOpen={isOpen}
             onAdd={(item, qty) => {
@@ -637,7 +623,6 @@ export default function SectoCafePedidos() {
             }}
           />
 
-          {/* Sushi */}
           {MENU.map((cat) => (
             <div key={cat.id}>
               <div className="flex items-baseline justify-between mb-3">
@@ -704,7 +689,6 @@ export default function SectoCafePedidos() {
           ))}
         </section>
 
-        {/* Checkout */}
         <aside className="lg:col-span-1">
           <div
             ref={cartRef}
@@ -915,7 +899,6 @@ export default function SectoCafePedidos() {
         </aside>
       </main>
 
-      {/* Footer */}
       <footer className="max-w-6xl mx-auto px-4 pb-10 text-xs text-neutral-500">
         <hr className="border-neutral-200 mb-4" />
         © {new Date().getFullYear()} - Secto Cafe · Mar - Sab 12:00 a 23:00

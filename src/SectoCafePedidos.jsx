@@ -1,4 +1,4 @@
-import React, { useMemo, useReducer, useState } from "react";
+import React, { useMemo, useReducer, useState, useRef } from "react";
 
 /**
  * Secto Café – Página de pedidos
@@ -10,7 +10,7 @@ const PHONE_URUGUAY = "099079595"; // WhatsApp sin +598
 const MP_ENDPOINT =
   "https://script.google.com/macros/s/AKfycbxSsx8LL11V2S1wjytNzzNTBVwnk_9P1SE37UGynJMq4IEWXdtmEoE0bL3CukF4rHsQfg/exec";
 
-// Galeria de fotos (opcional)
+// Galería de fotos (opcional)
 const GALLERY = [
   // "/photos/secto_02.jpg",
 ];
@@ -131,7 +131,7 @@ const ZONES = [
   { id: "otras", name: "Otras zonas coordinar", fee: 170 },
 ];
 
-// Horarios seleccionables (simple)
+// Horarios seleccionables
 const HOURS = [
   "12:00",
   "13:00",
@@ -144,7 +144,6 @@ const HOURS = [
   "20:00",
   "21:00",
   "22:00",
-  "23:00",
 ];
 
 const currency = (uy) =>
@@ -480,7 +479,6 @@ function PokeBuilder({ onAdd, isOpen }) {
   );
 }
 
-
 export default function SectoCafePedidos() {
   const [cart, dispatch] = useReducer(reducer, {});
   const [method, setMethod] = useState("delivery");
@@ -490,6 +488,9 @@ export default function SectoCafePedidos() {
   const [address, setAddress] = useState("");
   const [notes, setNotes] = useState("");
   const [time, setTime] = useState("");
+
+  const cartRef = useRef(null);
+  const [cartHighlight, setCartHighlight] = useState(false);
 
   // Estado calculado
   const items = useMemo(() => Object.values(cart), [cart]);
@@ -514,6 +515,16 @@ export default function SectoCafePedidos() {
   const isOpen = (FORCE_OPEN && !FORCE_CLOSED) || (!FORCE_CLOSED && scheduleOpen);
 
   const canSendNow = canSend && isOpen;
+
+  const pokeCount = useMemo(
+    () =>
+      items.reduce(
+        (n, { item, qty }) =>
+          item.id && item.id.toString().startsWith("poke-") ? n + qty : n,
+        0
+      ),
+    [items]
+  );
 
   const getOrder = (extra = {}) => ({
     items,
@@ -601,7 +612,7 @@ export default function SectoCafePedidos() {
         </div>
       </header>
 
-      {/* Galeria */}
+      {/* Galería */}
       {GALLERY.length > 0 && (
         <section className="max-w-6xl mx-auto px-4 pt-6">
           <div className="columns-1 sm:columns-2 lg:columns-3 gap-4">
@@ -619,12 +630,22 @@ export default function SectoCafePedidos() {
 
       {/* Contenido principal */}
       <main className="max-w-6xl mx-auto px-4 py-8 grid grid-cols-1 lg:grid-cols-3 gap-8">
-        {/* Catalogo */}
+        {/* Catálogo */}
         <section className="lg:col-span-2 space-y-8">
           {/* Pokes */}
           <PokeBuilder
             isOpen={isOpen}
-            onAdd={(item, qty) => dispatch({ type: "add", item, qty })}
+            onAdd={(item, qty) => {
+              dispatch({ type: "add", item, qty });
+              setCartHighlight(true);
+              setTimeout(() => setCartHighlight(false), 600);
+              if (cartRef.current) {
+                cartRef.current.scrollIntoView({
+                  behavior: "smooth",
+                  block: "start",
+                });
+              }
+            }}
           />
 
           {/* Sushi */}
@@ -696,12 +717,23 @@ export default function SectoCafePedidos() {
 
         {/* Checkout */}
         <aside className="lg:col-span-1">
-          <div className="border border-neutral-200 rounded-2xl p-4 sticky top-20 bg-white">
-            <h2 className="text-sm tracking-[0.2em] text-neutral-500 mb-3">
+          <div
+            ref={cartRef}
+            className={
+              "border border-neutral-200 rounded-2xl p-4 sticky top-20 bg-white transition-shadow " +
+              (cartHighlight ? "shadow-[0_0_0_1px_rgba(0,0,0,0.6)]" : "")
+            }
+          >
+            <h2 className="text-sm tracking-[0.2em] text-neutral-500">
               TU PEDIDO
             </h2>
+            {pokeCount > 0 && (
+              <p className="text-[11px] text-neutral-500 mb-3">
+                {pokeCount} poke{pokeCount > 1 ? "s" : ""} en el carrito
+              </p>
+            )}
 
-            <div className="space-y-3 max-h-[45vh] overflow-auto pr-1">
+            <div className="space-y-3 max-h-[45vh] overflow-auto pr-1 mt-1">
               {items.length === 0 && (
                 <p className="text-sm text-neutral-500">
                   Agregá items del catálogo
@@ -897,7 +929,7 @@ export default function SectoCafePedidos() {
       {/* Footer */}
       <footer className="max-w-6xl mx-auto px-4 pb-10 text-xs text-neutral-500">
         <hr className="border-neutral-200 mb-4" />
-        © {new Date().getFullYear()} - Secto Cafe · Mar - Dom 11:00 a 23:30
+        © {new Date().getFullYear()} - Secto Cafe · Mar - Sab 12:00 a 23:00
       </footer>
     </div>
   );

@@ -267,6 +267,7 @@ function PokeBuilder({ onAdd, isOpen }) {
   const [toppings, setToppings] = useState([]);
   const [sauces, setSauces] = useState([]);
   const [qty, setQty] = useState(1);
+  const [feedback, setFeedback] = useState(""); // mensaje tipo "Poke agregado"
 
   const toggleInArray = (value, setFn) => {
     setFn((prev) =>
@@ -309,19 +310,23 @@ function PokeBuilder({ onAdd, isOpen }) {
       sauces.join(", ");
 
     const item = {
-      id: "poke-" + Date.now(), // id único por combinación
+      id: "poke-" + Date.now(),
       name: description,
       price: unitPrice,
     };
 
     onAdd(item, qty);
 
-    // reset
+    // 🔁 reset total del builder
     setBase("");
     setProteins([]);
     setToppings([]);
     setSauces([]);
     setQty(1);
+
+    // feedback visual
+    setFeedback("Poke agregado al pedido");
+    setTimeout(() => setFeedback(""), 1500);
   };
 
   return (
@@ -476,19 +481,24 @@ function PokeBuilder({ onAdd, isOpen }) {
           </p>
         </div>
 
-        <button
-          type="button"
-          onClick={handleAdd}
-          disabled={!canAdd}
-          className={
-            "rounded-2xl px-4 py-2 text-sm " +
-            (canAdd
-              ? "bg-black text-white"
-              : "bg-neutral-100 text-neutral-400 cursor-not-allowed")
-          }
-        >
-          Agregar poke al pedido
-        </button>
+        <div className="flex flex-col items-end gap-1">
+          <button
+            type="button"
+            onClick={handleAdd}
+            disabled={!canAdd}
+            className={
+              "rounded-2xl px-4 py-2 text-sm " +
+              (canAdd
+                ? "bg-black text-white"
+                : "bg-neutral-100 text-neutral-400 cursor-not-allowed")
+            }
+          >
+            Agregar poke al pedido
+          </button>
+          {feedback && (
+            <p className="text-[11px] text-neutral-500">{feedback}</p>
+          )}
+        </div>
       </div>
 
       {!isOpen && (

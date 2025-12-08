@@ -76,7 +76,7 @@ const MENU = [
     id: "onigirazu",
     name: "ONIGIRAZU",
     items: [
-      { id: "s01", name: "Salmón 4 piezas", price: 320 },
+      { id: "s01", name: "Tuna mayo | Palta | Zanahoria | Pepino", price: 320 },
     ],
   },
   {
@@ -205,7 +205,7 @@ function buildWhatsAppText(order) {
 
 // ===== POKES =====
 
-// Base del bowl (incluye 1 base, 1 proteína, 3 toppings, 2 salsas)
+// Base del bowl (incluye 1 base, 1 proteína, 3 toppings, 1 salsa)
 const POKE_BASE_PRICE = 380;
 const POKE_EXTRA_PROTEIN = 100;
 const POKE_EXTRA_TOPPING = 60;
@@ -413,7 +413,7 @@ function PokeBuilder({ onAdd, isOpen }) {
         {/* Salsas */}
         <div className="space-y-2 sm:col-span-2">
           <p className="text-xs text-neutral-500 uppercase tracking-[0.15em]">
-            Salsas (x1 incluidas, extra {currency(POKE_EXTRA_SAUCE)})
+            Salsas (x1 incluida, extra {currency(POKE_EXTRA_SAUCE)})
           </p>
           <div className="flex flex-wrap gap-2">
             {POKE_SAUCES.map((s) => (
@@ -549,18 +549,18 @@ export default function SectoCafePedidos() {
         unit_price: item.price,
         quantity: qty,
       })),
-      total: order.total,
-      name: order.name,
-      phone: order.phone,
-      method: order.method,
-      zone: order.zone,
-      address: order.address,
-      notes: order.notes,
-      time: order.time,
-      back_urls: {
-        success: window.location.origin + "?mp=success",
-        failure: window.location.origin + "?mp=failure",
-      },
+        total: order.total,
+        name: order.name,
+        phone: order.phone,
+        method: order.method,
+        zone: order.zone,
+        address: order.address,
+        notes: order.notes,
+        time: order.time,
+        back_urls: {
+          success: window.location.origin + "?mp=success",
+          failure: window.location.origin + "?mp=failure",
+        },
     };
 
     // Envio por formulario para evitar CORS
@@ -605,7 +605,6 @@ export default function SectoCafePedidos() {
       {GALLERY?.length > 0 && (
         <section className="max-w-6xl mx-auto px-4 pt-6">
           <div className="columns-1 sm:columns-2 lg:columns-3 gap-4 [column-fill:_balance]">
-
             {GALLERY.map((src, i) => (
               <img
                 key={i}

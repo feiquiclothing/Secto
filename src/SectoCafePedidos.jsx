@@ -115,24 +115,24 @@ const MENU = [
 // ===== ZONAS Y HORARIOS DELIVERY =====
 const ZONES = [
   { id: "cv", name: "Ciudad Vieja", fee: 0 },
-  { id: "centro", name: "Centro / Cordón / Aguada", fee: 70 },
-  { id: "pocitos", name: "Parque Rodó / Punta Carretas / Pocitos", fee: 100 },
-  { id: "otras", name: "Otras zonas coordinar", fee: 170 },
+  { id: "centro", name: "Centro / Cordón / Aguada", fee: 170 },
+  { id: "pocitos", name: "Parque Rodó / Punta Carretas / Pocitos", fee: 220 },
+  { id: "otras", name: "Otras zonas coordinar", fee: 270 },
 ];
 
 // Horarios seleccionables
 const HOURS = [
-  "12:00",
-  "13:00",
-  "14:00",
-  "15:00",
-  "16:00",
-  "17:00",
-  "18:00",
-  "19:00",
-  "20:00",
-  "21:00",
-  "22:00",
+  "12:00 - 24/12",
+  "13:00 - 24/12",
+  "14:00 - 24/12",
+  "15:00 - 24/12",
+  "16:00 - 24/12",
+  "17:00 - 24/12",
+  "18:00 - 24/12",
+  "19:00 - 24/12",
+  "20:00 - 24/12",
+  "21:00 - 24/12",
+  "22:00 - 24/12",
 ];
 
 const currency = (uy) =>
@@ -206,7 +206,7 @@ function buildWhatsAppText(order) {
 // ===== POKES =====
 
 // Base del bowl (incluye 1 base, 1 proteína, 3 toppings, 1 salsa)
-const POKE_BASE_PRICE = 380;
+const POKE_BASE_PRICE = 420;
 const POKE_EXTRA_PROTEIN = 100;
 const POKE_EXTRA_TOPPING = 60;
 const POKE_EXTRA_SAUCE = 40;

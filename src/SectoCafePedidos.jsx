@@ -585,7 +585,7 @@ export default function SectoCafePedidos() {
             <div className="leading-tight">
               <p className="text-xs tracking-[0.25em] text-neutral-500">
                 {isOpen
-                  ? "Abierto — martes a sábado 12:00 a 23:00"
+                  ? "Abierto — recibiendo pedidos para 24/12"
                   : "Cerrado — pedidos habilitados martes a sábado de 12:00 a 23:00"}
               </p>
               <h1 className="text-lg text-neutral-900"></h1>

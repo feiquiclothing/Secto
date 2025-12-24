@@ -206,7 +206,7 @@ function buildWhatsAppText(order) {
 // ===== POKES =====
 
 // Base del bowl (incluye 1 base, 1 proteína, 3 toppings, 1 salsa)
-const POKE_BASE_PRICE = 420;
+const POKE_BASE_PRICE = 380;
 const POKE_EXTRA_PROTEIN = 100;
 const POKE_EXTRA_TOPPING = 60;
 const POKE_EXTRA_SAUCE = 40;

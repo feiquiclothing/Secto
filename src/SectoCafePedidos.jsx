@@ -16,7 +16,7 @@ const GALLERY = [
 ];
 
 // Foto para la sección POKES (poné el archivo en /public/Photos/poke.jpg)
-const POKE_IMAGE = "/Photos/poke.jpg";
+const POKE_IMAGE = "/Photos/10.jpg";
 
 // ===== APERTURA (días/horas + on/off) =====
 // Martes (2) a sábado (6)

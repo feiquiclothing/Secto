@@ -23,7 +23,7 @@ const OPEN_HOUR_START = 12; // 12:00
 const OPEN_HOUR_END = 23; // hasta 23:00 (23 exclusivo para la lógica)
 
 // Cambiá estos flags para forzar ON/OFF manual (sin tocar días/horas)
-const FORCE_OPEN = false;
+const FORCE_OPEN = true;
 const FORCE_CLOSED = false;
 
 function getNowInTZ() {

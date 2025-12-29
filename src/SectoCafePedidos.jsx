@@ -100,7 +100,7 @@ const MENU = [
     id: "extras",
     name: "EXTRAS",
     items: [
-      { id: "e01", name: "Salsa de soja", price: 30 },
+      { id: "e01", name: "Salsa de soja", price: 10 },
       { id: "e02", name: "Teriyaki", price: 40 },
       { id: "e03", name: "Wasabi", price: 40 },
       { id: "e04", name: "Gari (Jengibre)", price: 40 },
@@ -113,9 +113,9 @@ const MENU = [
     items: [
       { id: "b01", name: "Agua Salus sin gas 600cc", price: 120 },
       { id: "b02", name: "Agua Salus con gas 600cc", price: 120 },
-      { id: "b03", name: "Coca Cola 600cc", price: 140 },
-      { id: "b04", name: "Coca Cola black 600cc", price: 140 },
-      { id: "b05", name: "Sprite 600cc", price: 140 },
+      { id: "b03", name: "Pepsi 600cc", price: 140 },
+      { id: "b04", name: "Pepsi black 600cc", price: 140 },
+      { id: "b05", name: "Paso de los Toros 600cc", price: 140 },
     ],
   },
 ];

@@ -15,6 +15,9 @@ const GALLERY = [
   // "/photos/secto_02.jpg",
 ];
 
+// Foto para la sección POKES (poné el archivo en /public/Photos/poke.jpg)
+const POKE_IMAGE = "/Photos/poke.jpg";
+
 // ===== APERTURA (días/horas + on/off) =====
 // Martes (2) a sábado (6)
 const TZ = "America/Montevideo";
@@ -23,7 +26,7 @@ const OPEN_HOUR_START = 12; // 12:00
 const OPEN_HOUR_END = 23; // hasta 23:00 (23 exclusivo para la lógica)
 
 // Cambiá estos flags para forzar ON/OFF manual (sin tocar días/horas)
-const FORCE_OPEN = true;
+const FORCE_OPEN = false;
 const FORCE_CLOSED = false;
 
 function getNowInTZ() {
@@ -34,12 +37,14 @@ function getNowInTZ() {
   }).format(now);
   const dayMap = { Sun: 0, Mon: 1, Tue: 2, Wed: 3, Thu: 4, Fri: 5, Sat: 6 };
   const day = dayMap[weekdayStr];
+
   const hourStr = new Intl.DateTimeFormat("en-US", {
     timeZone: TZ,
     hour: "2-digit",
     hour12: false,
   }).format(now);
   const hour = Number(hourStr);
+
   return { day, hour };
 }
 
@@ -70,13 +75,16 @@ const MENU = [
   {
     id: "temakis",
     name: "TEMAKI 1 pieza",
-    items: [{ id: "t01", name: "Salmón | Palta | Queso | Pepino | Sésamo", price: 220, img: "/Photos/11.JPG }],
+    items: [
+      { id: "t01", name: "Salmón | Palta | Queso | Pepino | Sésamo", price: 220, img: "/Photos/11.JPG" },
+    ],
   },
   {
     id: "onigirazu",
     name: "ONIGIRAZU",
     items: [
-      { id: "s01", name: "Tuna mayo | Palta | Zanahoria | Pepino | Repollo | Verdeo", price: 380, img: "/Photos/12.JPG },
+      // ✅ corregido: string bien cerrado
+      { id: "s01", name: "Tuna mayo | Palta | Zanahoria | Pepino | Repollo | Verdeo", price: 380, img: "/Photos/12.JPG" },
     ],
   },
   {
@@ -204,18 +212,13 @@ function buildWhatsAppText(order) {
 }
 
 // ===== POKES =====
-
 // Base del bowl (incluye 1 base, 1 proteína, 3 toppings, 1 salsa)
 const POKE_BASE_PRICE = 480;
 const POKE_EXTRA_PROTEIN = 100;
 const POKE_EXTRA_TOPPING = 60;
 const POKE_EXTRA_SAUCE = 40;
 
-const POKE_BASES = [
-  "Arroz de sushi",
-  "Arroz sin aderezar",
-  "Mix de verdes",
-];
+const POKE_BASES = ["Arroz de sushi", "Arroz sin aderezar", "Mix de verdes"];
 
 const POKE_PROTEINS = [
   "Langostinos",
@@ -321,6 +324,19 @@ function PokeBuilder({ onAdd, isOpen }) {
 
   return (
     <section className="mb-10 border border-neutral-200 rounded-2xl p-4 bg-white">
+      {/* ✅ FOTO DE POKE */}
+      {typeof POKE_IMAGE === "string" && POKE_IMAGE.trim().length > 0 && (
+        <div className="mb-4 aspect-[4/3] overflow-hidden rounded-xl border border-neutral-200">
+          <img
+            src={POKE_IMAGE}
+            alt="Poke"
+            className="w-full h-full object-cover"
+            loading="lazy"
+            decoding="async"
+          />
+        </div>
+      )}
+
       <div className="flex items-baseline justify-between mb-3">
         <h2 className="text-sm tracking-[0.2em] text-neutral-500">
           POKES — ARMA TU BOWL
@@ -453,9 +469,7 @@ function PokeBuilder({ onAdd, isOpen }) {
         >
           Agregar poke al pedido
         </button>
-        {feedback && (
-          <p className="text-[11px] text-neutral-500">{feedback}</p>
-        )}
+        {feedback && <p className="text-[11px] text-neutral-500">{feedback}</p>}
       </div>
 
       {!isOpen && (
@@ -487,7 +501,10 @@ export default function SectoCafePedidos() {
     [items]
   );
   const fee = useMemo(
-    () => (method === "delivery" ? ZONES.find((z) => z.id === zone)?.fee || 0 : 0),
+    () =>
+      method === "delivery"
+        ? ZONES.find((z) => z.id === zone)?.fee || 0
+        : 0,
     [method, zone]
   );
   const total = subtotal + fee;
@@ -500,7 +517,6 @@ export default function SectoCafePedidos() {
 
   const scheduleOpen = isOpenBySchedule();
   const isOpen = (FORCE_OPEN && !FORCE_CLOSED) || (!FORCE_CLOSED && scheduleOpen);
-
   const canSendNow = canSend && isOpen;
 
   const pokeCount = useMemo(
@@ -536,7 +552,7 @@ export default function SectoCafePedidos() {
   };
 
   const payWithMP = () => {
-    if (hasMP === false) return;
+    if (!hasMP) return;
 
     const order = getOrder();
     sessionStorage.setItem("secto_order", JSON.stringify(order));
@@ -585,7 +601,7 @@ export default function SectoCafePedidos() {
             <div className="leading-tight">
               <p className="text-xs tracking-[0.25em] text-neutral-500">
                 {isOpen
-                  ? "Abierto — recibiendo pedidos para 24/12"
+                  ? "Abierto — recibiendo pedidos"
                   : "Cerrado — pedidos habilitados martes a sábado de 12:00 a 23:00"}
               </p>
               <h1 className="text-lg text-neutral-900"></h1>

@@ -26,7 +26,7 @@ const OPEN_HOUR_START = 12; // 12:00
 const OPEN_HOUR_END = 23; // hasta 23:00 (23 exclusivo para la lógica)
 
 // Cambiá estos flags para forzar ON/OFF manual (sin tocar días/horas)
-const FORCE_OPEN = false;
+const FORCE_OPEN = true;
 const FORCE_CLOSED = false;
 
 function getNowInTZ() {
@@ -76,7 +76,7 @@ const MENU = [
     id: "temakis",
     name: "TEMAKI 1 pieza",
     items: [
-      { id: "t01", name: "Salmón | Palta | Queso | Pepino | Sésamo", price: 220, img: "/Photos/11.JPG" },
+      { id: "t01", name: "Salmón | Palta | Queso | Pepino | Sésamo", price: 220, img: "/Photos/11.jpg" },
     ],
   },
   {
@@ -84,7 +84,7 @@ const MENU = [
     name: "ONIGIRAZU",
     items: [
       // ✅ corregido: string bien cerrado
-      { id: "s01", name: "Tuna mayo | Palta | Zanahoria | Pepino | Repollo | Verdeo", price: 380, img: "/Photos/12.JPG" },
+      { id: "s01", name: "Tuna mayo | Palta | Zanahoria | Pepino | Repollo | Verdeo", price: 380, img: "/Photos/12.jpg" },
     ],
   },
   {
@@ -601,7 +601,7 @@ export default function SectoCafePedidos() {
             <div className="leading-tight">
               <p className="text-xs tracking-[0.25em] text-neutral-500">
                 {isOpen
-                  ? "Abierto — recibiendo pedidos"
+                  ? "Abierto — recibiendo pedidos para el 31/12"
                   : "Cerrado — pedidos habilitados martes a sábado de 12:00 a 23:00"}
               </p>
               <h1 className="text-lg text-neutral-900"></h1>

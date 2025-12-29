@@ -192,7 +192,7 @@ function buildWhatsAppText(order) {
     method === "delivery"
       ? "Zona: " + zona + " (" + currency(fee) + ")"
       : null,
-    "Horario: " + (time || "Lo antes posible"),
+    "Horario: " + (time || ""),
     "Nombre: " + name,
     "Tel: " + phone,
     method === "delivery" ? "Direccion: " + address : null,

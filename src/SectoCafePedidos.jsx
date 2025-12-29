@@ -100,7 +100,7 @@ const MENU = [
     id: "extras",
     name: "EXTRAS",
     items: [
-      { id: "e01", name: "Salsa de soja", price: 10 },
+      { id: "e01", name: "Salsa de soja", price: 30 },
       { id: "e02", name: "Teriyaki", price: 40 },
       { id: "e03", name: "Wasabi", price: 40 },
       { id: "e04", name: "Gari (Jengibre)", price: 40 },

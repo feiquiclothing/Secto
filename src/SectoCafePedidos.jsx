@@ -76,7 +76,7 @@ const MENU = [
     id: "onigirazu",
     name: "ONIGIRAZU",
     items: [
-      { id: "s01", name: "Tuna mayo | Palta | Zanahoria | Pepino", price: 320 },
+      { id: "s01", name: "Tuna mayo | Palta | Zanahoria | Pepino | Repollo | Verdeo", price: 380 },
     ],
   },
   {
@@ -122,17 +122,17 @@ const ZONES = [
 
 // Horarios seleccionables
 const HOURS = [
-  "12:00 - 24/12",
-  "13:00 - 24/12",
-  "14:00 - 24/12",
-  "15:00 - 24/12",
-  "16:00 - 24/12",
-  "17:00 - 24/12",
-  "18:00 - 24/12",
-  "19:00 - 24/12",
-  "20:00 - 24/12",
-  "21:00 - 24/12",
-  "22:00 - 24/12",
+  "12:00 - 31/12",
+  "13:00 - 31/12",
+  "14:00 - 31/12",
+  "15:00 - 31/12",
+  "16:00 - 31/12",
+  "17:00 - 31/12",
+  "18:00 - 31/12",
+  "19:00 - 31/12",
+  "20:00 - 31/12",
+  "21:00 - 31/12",
+  "22:00 - 31/12",
 ];
 
 const currency = (uy) =>
@@ -206,7 +206,7 @@ function buildWhatsAppText(order) {
 // ===== POKES =====
 
 // Base del bowl (incluye 1 base, 1 proteína, 3 toppings, 1 salsa)
-const POKE_BASE_PRICE = 380;
+const POKE_BASE_PRICE = 480;
 const POKE_EXTRA_PROTEIN = 100;
 const POKE_EXTRA_TOPPING = 60;
 const POKE_EXTRA_SAUCE = 40;

@@ -76,7 +76,7 @@ const MENU = [
     id: "temakis",
     name: "TEMAKI 1 pieza",
     items: [
-      { id: "t01", name: "Salmón | Palta | Queso | Pepino | Sésamo", price: 220, img: "/Photos/11.jpg" },
+      { id: "t01", name: "Salmón | Palta | Queso | Pepino | Sésamo", price: 260, img: "/Photos/11.jpg" },
     ],
   },
   {
@@ -84,7 +84,7 @@ const MENU = [
     name: "ONIGIRAZU",
     items: [
       // ✅ corregido: string bien cerrado
-      { id: "s01", name: "Tuna mayo | Palta | Zanahoria | Pepino | Repollo | Verdeo", price: 380, img: "/Photos/12.jpg" },
+      { id: "s01", name: "Tuna mayo | Palta | Zanahoria | Pepino | Repollo | Verdeo", price: 420, img: "/Photos/12.jpg" },
     ],
   },
   {

@@ -21,12 +21,12 @@ const POKE_IMAGE = "/Photos/10.jpg";
 // ===== APERTURA (días/horas + on/off) =====
 // Martes (2) a sábado (6)
 const TZ = "America/Montevideo";
-const OPEN_DAYS = [2, 3, 4, 5, 6]; // 0=Dom, 1=Lun, 2=Mar, ... 6=Sab
-const OPEN_HOUR_START = 12; // 12:00
-const OPEN_HOUR_END = 23; // hasta 23:00 (23 exclusivo para la lógica)
+const OPEN_DAYS = [1, 2, 3, 4, 5, 6]; // 0=Dom, 1=Lun, 2=Mar, ... 6=Sab
+const OPEN_HOUR_START = 11; // 12:00
+const OPEN_HOUR_END = 15; // hasta 23:00 (23 exclusivo para la lógica)
 
 // Cambiá estos flags para forzar ON/OFF manual (sin tocar días/horas)
-const FORCE_OPEN = true;
+const FORCE_OPEN = false;
 const FORCE_CLOSED = false;
 
 function getNowInTZ() {
@@ -111,11 +111,10 @@ const MENU = [
     id: "bebidas",
     name: "BEBIDAS",
     items: [
-      { id: "b01", name: "Agua Salus sin gas 600cc", price: 120 },
-      { id: "b02", name: "Agua Salus con gas 600cc", price: 120 },
-      { id: "b03", name: "Pepsi 600cc", price: 140 },
-      { id: "b04", name: "Pepsi black 600cc", price: 140 },
-      { id: "b05", name: "Paso de los Toros 600cc", price: 140 },
+      { id: "b01", name: "Agua Salus sin gas 600cc", price: 100 },
+      { id: "b02", name: "Agua Salus con gas 600cc", price: 100 },
+      { id: "b03", name: "Lata Pepsi 600cc", price: 100 },
+      { id: "b04", name: "Lata Pepsi black 600cc", price: 100 },
     ],
   },
 ];
@@ -130,17 +129,12 @@ const ZONES = [
 
 // Horarios seleccionables
 const HOURS = [
-  "12:00 - 31/12",
-  "13:00 - 31/12",
-  "14:00 - 31/12",
-  "15:00 - 31/12",
-  "16:00 - 31/12",
-  "17:00 - 31/12",
-  "18:00 - 31/12",
-  "19:00 - 31/12",
-  "20:00 - 31/12",
-  "21:00 - 31/12",
-  "22:00 - 31/12",
+  "11:00",
+  "12:00",
+  "13:00",
+  "14:00",
+  "15:00",
+
 ];
 
 const currency = (uy) =>
@@ -213,7 +207,7 @@ function buildWhatsAppText(order) {
 
 // ===== POKES =====
 // Base del bowl (incluye 1 base, 1 proteína, 3 toppings, 1 salsa)
-const POKE_BASE_PRICE = 480;
+const POKE_BASE_PRICE = 440;
 const POKE_EXTRA_PROTEIN = 100;
 const POKE_EXTRA_TOPPING = 60;
 const POKE_EXTRA_SAUCE = 40;
@@ -474,7 +468,7 @@ function PokeBuilder({ onAdd, isOpen }) {
 
       {!isOpen && (
         <p className="mt-2 text-[11px] text-red-600">
-          Cerrado — pedidos habilitados martes a sábado de {OPEN_HOUR_START}:00 a{" "}
+          Cerrado — pedidos habilitados lunes a sábado de {OPEN_HOUR_START}:00 a{" "}
           {OPEN_HOUR_END}:00 (hora Montevideo).
         </p>
       )}
@@ -606,8 +600,8 @@ export default function SectoCafePedidos() {
             <div className="leading-tight">
               <p className="text-xs tracking-[0.25em] text-neutral-500">
                 {isOpen
-                  ? "Abierto — recibiendo pedidos para el 31/12"
-                  : "Cerrado — pedidos habilitados martes a sábado de 12:00 a 23:00"}
+                  ? "Abierto — Ejecutivo de 11:00 a 15:00"
+                  : "Cerrado — pedidos habilitados lunes a sábado de 11:00 a 15:00"}
               </p>
               <h1 className="text-lg text-neutral-900"></h1>
             </div>
@@ -914,7 +908,7 @@ export default function SectoCafePedidos() {
 
               {!isOpen && (
                 <p className="text-xs text-red-600 mt-1">
-                  Cerrado — pedidos habilitados martes a sábado de{" "}
+                  Cerrado — pedidos habilitados lunes a sábado de{" "}
                   {OPEN_HOUR_START}:00 a {OPEN_HOUR_END}:00 (hora Montevideo).
                 </p>
               )}
@@ -930,7 +924,7 @@ export default function SectoCafePedidos() {
 
       <footer className="max-w-6xl mx-auto px-4 pb-10 text-xs text-neutral-500">
         <hr className="border-neutral-200 mb-4" />
-        © {new Date().getFullYear()} - Secto Cafe · Mar - Sab 12:00 a 23:00
+        © {new Date().getFullYear()} - Secto Cafe · Lun - Sab: Almuerzo 12:00 a 15:00 - Merienda 15:00 a 20:00
       </footer>
     </div>
   );

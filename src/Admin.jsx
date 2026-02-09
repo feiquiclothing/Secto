@@ -84,6 +84,23 @@ export default function Admin() {
           Ya pagó
         </label>
 
+<button
+  onClick={async () => {
+    setStatus("Pingeando…");
+    try {
+      const r = await post({ action: "next_unprinted" });
+      setStatus("PING OK: " + JSON.stringify(r));
+    } catch (e) {
+      setStatus("PING ERROR: " + (e?.message || String(e)));
+    }
+  }}
+  style={{ padding: 12, borderRadius: 8, border: "1px solid #ddd", cursor: "pointer" }}
+>
+  Ping endpoint
+</button>
+
+
+        
         <button
           onClick={submit}
           disabled={!rawText.trim()}

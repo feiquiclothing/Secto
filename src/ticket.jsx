@@ -19,7 +19,6 @@ export default function Ticket() {
     }
   }, []);
 
-  // anti double-print por id (muy útil)
   useEffect(() => {
     if (!order || !autoPrint) return;
 
@@ -28,18 +27,12 @@ export default function Ticket() {
     if (sessionStorage.getItem(key) === "1") return;
     sessionStorage.setItem(key, "1");
 
-    const t = setTimeout(() => {
-      window.print();
-      // Si querés que se cierre solo (a veces el browser lo bloquea):
-      // setTimeout(() => window.close(), 400);
-    }, 250);
-
+    const t = setTimeout(() => window.print(), 250);
     return () => clearTimeout(t);
   }, [order, autoPrint]);
 
   if (!order) return <div style={{ padding: 16, fontFamily: "monospace" }}>Sin pedido.</div>;
 
-  // Detectar WhatsApp (o "semi-raw")
   const isWhatsApp = order?.source === "whatsapp" || !!order?.rawText;
 
   const {
@@ -55,18 +48,13 @@ export default function Ticket() {
     time,
     paid,
     id,
-    // WhatsApp fields (si vienen)
     customer,
     rawText,
   } = order;
 
-  // fallback “nombre” para WhatsApp
   const displayName = name || customer || "-";
-
-  // fallback “método”
   const displayMethod =
     method === "pickup" ? "RETIRO" : method === "delivery" ? "DELIVERY" : isWhatsApp ? "WHATSAPP" : "—";
-
   const hasItems = Array.isArray(items) && items.length > 0;
 
   return (
@@ -83,11 +71,9 @@ export default function Ticket() {
       <div>Nombre: {displayName}</div>
       <div>Tel: {phone || "-"}</div>
 
-      {/* Dirección / notas */}
       {method === "delivery" ? <div>Dir: {address || "-"}</div> : null}
       {notes ? <div>Notas: {notes}</div> : null}
 
-      {/* WhatsApp raw block */}
       {isWhatsApp && rawText ? (
         <>
           <div className="hr" />
@@ -96,7 +82,6 @@ export default function Ticket() {
         </>
       ) : null}
 
-      {/* Items estructurados */}
       {hasItems ? (
         <>
           <div className="hr" />
@@ -124,7 +109,6 @@ export default function Ticket() {
           </div>
         </>
       ) : (
-        // Si no hay items, igual mostramos total si existe
         total ? (
           <>
             <div className="hr" />
@@ -156,11 +140,7 @@ export default function Ticket() {
         .row { display: flex; justify-content: space-between; gap: 8px; margin: 2px 0; }
         .l { flex: 1; word-break: break-word; }
         .r { white-space: nowrap; }
-        .raw {
-          margin-top: 6px;
-          white-space: pre-wrap;
-          word-break: break-word;
-        }
+        .raw { margin-top: 6px; white-space: pre-wrap; word-break: break-word; }
       `}</style>
     </div>
   );

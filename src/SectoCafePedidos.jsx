@@ -74,16 +74,12 @@ const MENU = [
   {
     id: "temakis",
     name: "TEMAKI 1 pieza",
-    items: [
-      { id: "t01", name: "Salmón | Palta | Queso | Pepino | Sésamo", price: 260, img: "/Photos/11.jpg" },
-    ],
+    items: [{ id: "t01", name: "Salmón | Palta | Queso | Pepino | Sésamo", price: 260, img: "/Photos/11.jpg" }],
   },
   {
     id: "onigirazu",
     name: "ONIGIRAZU",
-    items: [
-      { id: "s01", name: "Tuna mayo | Palta | Zanahoria | Pepino | Repollo | Verdeo", price: 420, img: "/Photos/12.jpg" },
-    ],
+    items: [{ id: "s01", name: "Tuna mayo | Palta | Zanahoria | Pepino | Repollo | Verdeo", price: 420, img: "/Photos/12.jpg" }],
   },
   {
     id: "combos",
@@ -153,9 +149,7 @@ function reducer(state, action) {
 function buildWhatsAppText(order) {
   const { items, subtotal, zone, fee, total, method, name, phone, address, notes, time, paid } = order;
   const header = "Pedido Secto Cafe — " + new Date().toLocaleString("es-UY");
-  const lines = items.map(
-    ({ item, qty }) => "• " + item.name + " x" + qty + " — " + currency(item.price * qty)
-  );
+  const lines = items.map(({ item, qty }) => "• " + item.name + " x" + qty + " — " + currency(item.price * qty));
   const zona = ZONES.find((z) => z.id === zone)?.name || "";
   const info = [
     "Metodo: " + (method === "pickup" ? "Retiro en local" : "Delivery"),
@@ -168,7 +162,16 @@ function buildWhatsAppText(order) {
     paid ? "Estado: Pagado (Mercado Pago)" : "Estado: A pagar al recibir",
   ].filter(Boolean);
 
-  return [header, "", "Items:", ...lines, "", "Subtotal: " + currency(subtotal), "Total: " + currency(total), ...info].join("\n");
+  return [
+    header,
+    "",
+    "Items:",
+    ...lines,
+    "",
+    "Subtotal: " + currency(subtotal),
+    "Total: " + currency(total),
+    ...info,
+  ].join("\n");
 }
 
 // ===== POKES =====
@@ -179,9 +182,33 @@ const POKE_EXTRA_SAUCE = 40;
 
 const POKE_BASES = ["Arroz de sushi", "Arroz sin aderezar", "Mix de verdes"];
 
-const POKE_PROTEINS = ["Langostinos", "Salmón", "Salmón spicy", "Tuna mayo", "Tuna mayo spicy", "Atún rojo", "Garbanzos", "Tofu"];
+const POKE_PROTEINS = [
+  "Langostinos",
+  "Salmón",
+  "Salmón spicy",
+  "Tuna mayo",
+  "Tuna mayo spicy",
+  "Atún rojo",
+  "Garbanzos",
+  "Tofu",
+];
 
-const POKE_TOPPINGS = ["Palta", "Queso crema", "Cebolla morada", "Zanahoria", "Cherrys", "Pepino", "Cebolla de verdeo", "Choclo", "Repollo", "Cilantro", "Alga nori", "Cebolla crispy", "Maíz frito", "Sésamo"];
+const POKE_TOPPINGS = [
+  "Palta",
+  "Queso crema",
+  "Cebolla morada",
+  "Zanahoria",
+  "Cherrys",
+  "Pepino",
+  "Cebolla de verdeo",
+  "Choclo",
+  "Repollo",
+  "Cilantro",
+  "Alga nori",
+  "Cebolla crispy",
+  "Maíz frito",
+  "Sésamo",
+];
 
 const POKE_SAUCES = ["Soja", "Teriyaki", "Taré", "Alioli", "Maracuyá", "Spicy mayo", "Mayo de wasabi", "Sriracha"];
 
@@ -281,14 +308,18 @@ function PokeBuilder({ onAdd, isOpen }) {
                 onClick={() => toggleInArray(p, setProteins)}
                 className={
                   "text-xs border rounded-xl px-3 py-1 " +
-                  (proteins.includes(p) ? "bg-neutral-900 text-white border-neutral-900" : "border-neutral-200 text-neutral-700")
+                  (proteins.includes(p)
+                    ? "bg-neutral-900 text-white border-neutral-900"
+                    : "border-neutral-200 text-neutral-700")
                 }
               >
                 {p}
               </button>
             ))}
           </div>
-          <p className="text-[11px] text-neutral-500">Elegidas: {proteins.length} (extras: {extraProteins})</p>
+          <p className="text-[11px] text-neutral-500">
+            Elegidas: {proteins.length} (extras: {extraProteins})
+          </p>
         </div>
 
         <div className="space-y-2 sm:col-span-2">
@@ -303,14 +334,18 @@ function PokeBuilder({ onAdd, isOpen }) {
                 onClick={() => toggleInArray(t, setToppings)}
                 className={
                   "text-xs border rounded-xl px-2 py-1 text-left " +
-                  (toppings.includes(t) ? "bg-neutral-900 text-white border-neutral-900" : "border-neutral-200 text-neutral-700")
+                  (toppings.includes(t)
+                    ? "bg-neutral-900 text-white border-neutral-900"
+                    : "border-neutral-200 text-neutral-700")
                 }
               >
                 {t}
               </button>
             ))}
           </div>
-          <p className="text-[11px] text-neutral-500">Elegidos: {toppings.length} (extras: {Math.max(0, toppings.length - 3)})</p>
+          <p className="text-[11px] text-neutral-500">
+            Elegidos: {toppings.length} (extras: {Math.max(0, toppings.length - 3)})
+          </p>
         </div>
 
         <div className="space-y-2 sm:col-span-2">
@@ -325,14 +360,18 @@ function PokeBuilder({ onAdd, isOpen }) {
                 onClick={() => toggleInArray(s, setSauces)}
                 className={
                   "text-xs border rounded-xl px-3 py-1 " +
-                  (sauces.includes(s) ? "bg-neutral-900 text-white border-neutral-900" : "border-neutral-200 text-neutral-700")
+                  (sauces.includes(s)
+                    ? "bg-neutral-900 text-white border-neutral-900"
+                    : "border-neutral-200 text-neutral-700")
                 }
               >
                 {s}
               </button>
             ))}
           </div>
-          <p className="text-[11px] text-neutral-500">Elegidas: {sauces.length} (extras: {Math.max(0, sauces.length - 1)})</p>
+          <p className="text-[11px] text-neutral-500">
+            Elegidas: {sauces.length} (extras: {Math.max(0, sauces.length - 1)})
+          </p>
         </div>
       </div>
 
@@ -387,10 +426,8 @@ export default function SectoCafePedidos() {
 
   const pokeCount = useMemo(
     () =>
-      items.reduce(
-        (n, { item, qty }) => (item.id && item.id.toString().startsWith("poke-") ? n + qty : n),
-        0
-      ),
+      items.reduce((n, { item, qty }) => (item.id && item.id.toString().startsWith("poke-") ? n + qty : n),
+        0),
     [items]
   );
 
@@ -416,7 +453,6 @@ export default function SectoCafePedidos() {
     window.open("https://wa.me/598" + phoneDigits + "?text=" + encoded, "_blank");
   };
 
-  // Cuando volvés de MP con ?mp=success, guardamos el pedido como pagado en cola + abrimos WhatsApp pagado.
   useEffect(() => {
     if (typeof window === "undefined") return;
 
@@ -436,17 +472,14 @@ export default function SectoCafePedidos() {
 
     const paidOrder = { ...order, paid: true, createdAt: Date.now() };
 
-    // 1) Guardar en cola (para imprimir)
     fetch(ORDERS_ENDPOINT, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ action: "new_order", order: paidOrder }),
     }).catch(() => {});
 
-    // 2) Abrir WhatsApp pagado
     openWhatsAppWithOrder(paidOrder);
 
-    // limpiar para que no se dispare otra vez
     sessionStorage.removeItem("secto_order");
     params.delete("mp");
     const cleanUrl = window.location.pathname + (params.toString() ? "?" + params.toString() : "");
@@ -456,7 +489,6 @@ export default function SectoCafePedidos() {
   const sendOrder = async (paid = false) => {
     const order = getOrder({ paid, createdAt: Date.now() });
 
-    // Guardar pedido en cola para impresión (PC local lo imprime)
     try {
       await fetch(ORDERS_ENDPOINT, {
         method: "POST",
@@ -465,10 +497,8 @@ export default function SectoCafePedidos() {
       });
     } catch (e) {
       console.error("No se pudo guardar el pedido:", e);
-      // igual seguimos a WhatsApp
     }
 
-    // Cliente: solo WhatsApp
     openWhatsAppWithOrder(order);
   };
 
@@ -477,7 +507,6 @@ export default function SectoCafePedidos() {
 
     const order = getOrder({ paid: false, createdAt: Date.now() });
 
-    // guardamos el pedido para recuperarlo al volver con ?mp=success
     sessionStorage.setItem("secto_order", JSON.stringify(order));
 
     const payload = {
@@ -534,8 +563,9 @@ export default function SectoCafePedidos() {
         </div>
       </header>
 
-      {GALLERY && GALLERY.length > 0 && (
+      {GALLERY?.length > 0 && (
         <section className="max-w-6xl mx-auto px-4 pt-6">
+          {/* masonry */}
           <div className="columns-1 sm:columns-2 lg:columns-3 gap-4 [column-fill:_balance]">
             {GALLERY.map((src, i) => (
               <img
@@ -575,7 +605,13 @@ export default function SectoCafePedidos() {
                   <article key={item.id} className="group border border-neutral-200 rounded-2xl overflow-hidden bg-white">
                     {typeof item.img === "string" && item.img.trim().length > 0 ? (
                       <div className="aspect-[4/3] overflow-hidden">
-                        <img src={item.img} alt={item.name} className="w-full h-full object-cover" loading="lazy" decoding="async" />
+                        <img
+                          src={item.img}
+                          alt={item.name}
+                          className="w-full h-full object-cover"
+                          loading="lazy"
+                          decoding="async"
+                        />
                       </div>
                     ) : null}
 
@@ -621,7 +657,9 @@ export default function SectoCafePedidos() {
             <h2 className="text-sm tracking-[0.2em] text-neutral-500">TU PEDIDO</h2>
 
             {pokeCount > 0 && (
-              <p className="text-[11px] text-neutral-500 mb-3">{pokeCount} poke{pokeCount > 1 ? "s" : ""} en el carrito</p>
+              <p className="text-[11px] text-neutral-500 mb-3">
+                {pokeCount} poke{pokeCount > 1 ? "s" : ""} en el carrito
+              </p>
             )}
 
             <div className="space-y-3 max-h-[45vh] overflow-auto pr-1 mt-1">
@@ -641,13 +679,17 @@ export default function SectoCafePedidos() {
 
             <div className="grid grid-cols-2 gap-2 text-sm mb-3">
               <button
-                className={`rounded-xl p-2 border ${method === "delivery" ? "bg-neutral-100 border-neutral-300" : "border-neutral-200"}`}
+                className={`rounded-xl p-2 border ${
+                  method === "delivery" ? "bg-neutral-100 border-neutral-300" : "border-neutral-200"
+                }`}
                 onClick={() => setMethod("delivery")}
               >
                 Delivery
               </button>
               <button
-                className={`rounded-xl p-2 border ${method === "pickup" ? "bg-neutral-100 border-neutral-300" : "border-neutral-200"}`}
+                className={`rounded-xl p-2 border ${
+                  method === "pickup" ? "bg-neutral-100 border-neutral-300" : "border-neutral-200"
+                }`}
                 onClick={() => setMethod("pickup")}
               >
                 Retiro
@@ -702,7 +744,11 @@ export default function SectoCafePedidos() {
 
             <div className="mt-3">
               <label className="text-xs text-neutral-500">Horario</label>
-              <select value={time} onChange={(e) => setTime(e.target.value)} className="w-full bg-white border border-neutral-200 rounded-xl p-2">
+              <select
+                value={time}
+                onChange={(e) => setTime(e.target.value)}
+                className="w-full bg-white border border-neutral-200 rounded-xl p-2"
+              >
                 <option value="">{isOpen ? "Lo antes posible" : "Pedidos habilitados mar/sáb 12:00–23:00"}</option>
                 {HOURS.map((h) => (
                   <option key={h} value={h}>
@@ -763,7 +809,10 @@ export default function SectoCafePedidos() {
                 </button>
               )}
 
-              <button onClick={() => dispatch({ type: "clear" })} className="w-full rounded-2xl py-2 text-sm border border-neutral-200">
+              <button
+                onClick={() => dispatch({ type: "clear" })}
+                className="w-full rounded-2xl py-2 text-sm border border-neutral-200"
+              >
                 Vaciar carrito
               </button>
 
@@ -773,7 +822,9 @@ export default function SectoCafePedidos() {
                 </p>
               )}
 
-              <p className="text-xs text-neutral-500 mt-1">Pagás por transferencia, al recibir (efectivo | POS) o Mercado Pago.</p>
+              <p className="text-xs text-neutral-500 mt-1">
+                Pagás por transferencia, al recibir (efectivo | POS) o Mercado Pago.
+              </p>
             </div>
           </div>
         </aside>

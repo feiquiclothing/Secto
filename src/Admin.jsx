@@ -28,13 +28,43 @@ export default function Admin() {
   const [paid, setPaid] = useState(false);
   const [status, setStatus] = useState("");
 
+  const pretty = (x) => {
+    try {
+      return JSON.stringify(x, null, 2);
+    } catch {
+      return String(x);
+    }
+  };
+
+  // ✅ PING real: solo verifica endpoint + buildId
   const ping = async () => {
     setStatus("Pingeando…");
     try {
-      const r = await post({ action: "next_unprinted" });
-      setStatus("PING OK: " + JSON.stringify(r));
+      const r = await post({ action: "ping" });
+      setStatus(
+        `PING OK\nbuildId: ${r?.buildId || "(sin buildId)"}\n\nRESP:\n${pretty(r)}`
+      );
     } catch (e) {
       setStatus("PING ERROR: " + (e?.message || String(e)));
+    }
+  };
+
+  // 👀 Ver el próximo pedido sin imprimir (esto NO es ping)
+  const peekNext = async () => {
+    setStatus("Buscando next_unprinted…");
+    try {
+      const r = await post({ action: "next_unprinted" });
+      if (r?.order?.id) {
+        setStatus(
+          `NEXT UNPRINTED OK\nid: ${r.order.id}\nbuildId: ${r?.buildId || "(sin buildId)"}\n\nORDER:\n${pretty(r.order)}`
+        );
+      } else {
+        setStatus(
+          `NEXT UNPRINTED: ninguno\nbuildId: ${r?.buildId || "(sin buildId)"}\n\nRESP:\n${pretty(r)}`
+        );
+      }
+    } catch (e) {
+      setStatus("NEXT ERROR: " + (e?.message || String(e)));
     }
   };
 
@@ -53,14 +83,13 @@ export default function Admin() {
 
       const r = await post({ action: "new_order", order });
 
-      // Mostrar la respuesta real y NO pisarla
-      setStatus("RESP: " + JSON.stringify(r));
+      // ✅ status legible + JSON completo
+      const line1 = `NEW ORDER OK`;
+      const line2 = `id: ${r?.id || r?.orderId || "(sin id)"} | wroteRow: ${
+        r?.wroteRow ?? "(sin wroteRow)"
+      } | buildId: ${r?.buildId || "(sin buildId)"}`;
 
-      // Si querés limpiar campos manualmente, usá este bloque:
-      // setCustomer("");
-      // setRawText("");
-      // setTotal("");
-      // setPaid(false);
+      setStatus(`${line1}\n${line2}\n\nRESP:\n${pretty(r)}`);
     } catch (e) {
       setStatus("ERROR: " + (e?.message || String(e)));
     }
@@ -75,19 +104,28 @@ export default function Admin() {
   };
 
   return (
-    <div style={{ padding: 16, fontFamily: "system-ui", maxWidth: 680 }}>
+    <div style={{ padding: 16, fontFamily: "system-ui", maxWidth: 720 }}>
       <h1 style={{ margin: 0 }}>SECTO — ADMIN</h1>
       <p style={{ opacity: 0.75, marginTop: 6 }}>
-        Pedidos WhatsApp (1 click). Crea una fila en <b>orders</b> con <b>printed=false</b> y Kitchen lo imprime.
+        Pedidos WhatsApp. Crea una fila en <b>orders</b> con <b>printed=false</b> y Kitchen lo imprime.
       </p>
 
       <div style={{ display: "grid", gap: 10, marginTop: 12 }}>
-        <button
-          onClick={ping}
-          style={{ padding: 12, borderRadius: 8, border: "1px solid #ddd", cursor: "pointer" }}
-        >
-          Ping endpoint
-        </button>
+        <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
+          <button
+            onClick={ping}
+            style={{ padding: 12, borderRadius: 8, border: "1px solid #ddd", cursor: "pointer" }}
+          >
+            Ping (buildId)
+          </button>
+
+          <button
+            onClick={peekNext}
+            style={{ padding: 12, borderRadius: 8, border: "1px solid #ddd", cursor: "pointer" }}
+          >
+            Ver next_unprinted
+          </button>
+        </div>
 
         <input
           placeholder="Cliente / nombre (opcional)"

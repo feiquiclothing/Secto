@@ -7,7 +7,7 @@ import React, { useMemo, useReducer, useState, useRef, useEffect } from "react";
 // ===== CONFIG =====
 const PHONE_URUGUAY = "099079595"; // WhatsApp sin +598
 
-// ✅ URL buena (web app /exec)
+// URL buena (web app /exec)
 const MP_ENDPOINT =
   "https://script.google.com/macros/s/AKfycbzpvqYP8Qee2zO4qLa5tJc8DqQiHudC_qugOlcnCW1dWaNw0yq30TSiMQ2BY-FOsAZv0g/exec";
 
@@ -179,11 +179,11 @@ const POKE_EXTRA_SAUCE = 40;
 
 const POKE_BASES = ["Arroz de sushi", "Arroz sin aderezar", "Mix de verdes"];
 
-const POKE_PROTEINS = ["Langostinos","Salmón","Salmón spicy","Tuna mayo","Tuna mayo spicy","Atún rojo","Garbanzos","Tofu"];
+const POKE_PROTEINS = ["Langostinos", "Salmón", "Salmón spicy", "Tuna mayo", "Tuna mayo spicy", "Atún rojo", "Garbanzos", "Tofu"];
 
-const POKE_TOPPINGS = ["Palta","Queso crema","Cebolla morada","Zanahoria","Cherrys","Pepino","Cebolla de verdeo","Choclo","Repollo","Cilantro","Alga nori","Cebolla crispy","Maíz frito","Sésamo"];
+const POKE_TOPPINGS = ["Palta", "Queso crema", "Cebolla morada", "Zanahoria", "Cherrys", "Pepino", "Cebolla de verdeo", "Choclo", "Repollo", "Cilantro", "Alga nori", "Cebolla crispy", "Maíz frito", "Sésamo"];
 
-const POKE_SAUCES = ["Soja","Teriyaki","Taré","Alioli","Maracuyá","Spicy mayo","Mayo de wasabi","Sriracha"];
+const POKE_SAUCES = ["Soja", "Teriyaki", "Taré", "Alioli", "Maracuyá", "Spicy mayo", "Mayo de wasabi", "Sriracha"];
 
 function PokeBuilder({ onAdd, isOpen }) {
   const [base, setBase] = useState("");
@@ -416,7 +416,7 @@ export default function SectoCafePedidos() {
     window.open("https://wa.me/598" + phoneDigits + "?text=" + encoded, "_blank");
   };
 
-  // ✅ Cuando volvés de MP con ?mp=success, guardamos el pedido como pagado en cola + abrimos WhatsApp pagado.
+  // Cuando volvés de MP con ?mp=success, guardamos el pedido como pagado en cola + abrimos WhatsApp pagado.
   useEffect(() => {
     if (typeof window === "undefined") return;
 
@@ -428,7 +428,11 @@ export default function SectoCafePedidos() {
     if (!raw) return;
 
     let order;
-    try { order = JSON.parse(raw); } catch { return; }
+    try {
+      order = JSON.parse(raw);
+    } catch {
+      return;
+    }
 
     const paidOrder = { ...order, paid: true, createdAt: Date.now() };
 
@@ -452,7 +456,7 @@ export default function SectoCafePedidos() {
   const sendOrder = async (paid = false) => {
     const order = getOrder({ paid, createdAt: Date.now() });
 
-    // ✅ Guardar pedido en cola para impresión (PC local lo imprime)
+    // Guardar pedido en cola para impresión (PC local lo imprime)
     try {
       await fetch(ORDERS_ENDPOINT, {
         method: "POST",
@@ -464,7 +468,7 @@ export default function SectoCafePedidos() {
       // igual seguimos a WhatsApp
     }
 
-    // ✅ Cliente: solo WhatsApp
+    // Cliente: solo WhatsApp
     openWhatsAppWithOrder(order);
   };
 

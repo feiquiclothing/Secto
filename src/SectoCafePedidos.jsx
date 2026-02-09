@@ -9,7 +9,7 @@ const PHONE_URUGUAY = "099079595"; // WhatsApp sin +598
 
 // URL buena (web app /exec)
 const MP_ENDPOINT =
-  "https://script.google.com/macros/s/AKfycbzpvqYP8Qee2zO4qLa5tJc8DqQiHudC_qugOlcnCW1dWaNw0yq30TSiMQ2BY-FOsAZv0g/exec";
+  "https://script.google.com/macros/s/AKfycbx3C4Wnvzguh7AVtmdtz1VH9KiAHwXBX6pGjbML-0wGvjJkaLnvBlJ7mAetvnAyTLGlSA/exec";
 
 // Usamos el mismo endpoint para cola de impresión
 const ORDERS_ENDPOINT = MP_ENDPOINT;

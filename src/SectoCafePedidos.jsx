@@ -8,7 +8,7 @@ import React, { useMemo, useReducer, useState, useRef } from "react";
 // ===== CONFIG =====
 const PHONE_URUGUAY = "099079595"; // WhatsApp sin +598
 const MP_ENDPOINT =
-  "https://script.google.com/macros/s/AKfycbxdLV_McVS0e59k4LA0Iiu9_PwGTmRelMsd5W2fB07wZOKKaCubA5Z5MCk12fH92BhwXA/exec";
+  "https://script.google.com/macros/s/AKfycbz-8mFW6t8bpACqlrq-y1kkzialtjZcOedsqdE5Nei6QF1H8wDXqf7qsrVm1FCNWPZZKg/exec";
 
 // Galería de fotos (opcional)
 const GALLERY = [

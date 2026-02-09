@@ -3,7 +3,6 @@ import React, { useEffect, useRef, useState } from "react";
 const ENDPOINT = "/api/secto";
 const POLL_MS = 2500;
 
-// recordamos IDs impresos por 10 min para evitar loops
 const STORAGE_KEY = "secto_printed_ids_v1";
 const DEDUPE_TTL_MS = 10 * 60 * 1000;
 
@@ -50,24 +49,20 @@ export default function Kitchen() {
 
   const printedRef = useRef(cleanup(loadMap()));
   const busyRef = useRef(false);
-
-  // Reutilizamos SIEMPRE la misma pestaña de ticket
   const ticketWinRef = useRef(null);
 
   useEffect(() => {
     let stop = false;
 
     const openOrReuseTicket = () => {
-      // si ya hay una ventana abierta y no está cerrada, la reutilizamos
       if (ticketWinRef.current && !ticketWinRef.current.closed) {
         ticketWinRef.current.location.href = "/ticket?autoprint=1";
         ticketWinRef.current.focus();
         return;
       }
-      // si no, abrimos una sola nueva
       ticketWinRef.current = window.open(
         "/ticket?autoprint=1",
-        "secto_ticket", // <- nombre fijo = ayuda a reutilizar
+        "secto_ticket",
         "noopener,noreferrer"
       );
     };
@@ -96,14 +91,10 @@ export default function Kitchen() {
         setStatus("Imprimiendo " + id);
 
         sessionStorage.setItem("secto_print_order", JSON.stringify(order));
-
-        // abre 1 sola pestaña (reutilizable)
         openOrReuseTicket();
 
-        // marcar impreso
         await post({ action: "mark_printed", id });
 
-        // dedupe local (anti loop)
         printedRef.current[id] = Date.now();
         saveMap(printedRef.current);
 
@@ -128,7 +119,11 @@ export default function Kitchen() {
     <div style={{ padding: 16, fontFamily: "system-ui" }}>
       <h1>SECTO — KITCHEN</h1>
       <p style={{ fontWeight: 600 }}>{status}</p>
-      {lastId && <p style={{ opacity: 0.7 }}>Último impreso: <b>{lastId}</b></p>}
+      {lastId && (
+        <p style={{ opacity: 0.7 }}>
+          Último impreso: <b>{lastId}</b>
+        </p>
+      )}
       <p style={{ opacity: 0.7 }}>
         Dejá esta pestaña abierta en la PC conectada a la impresora térmica.
       </p>

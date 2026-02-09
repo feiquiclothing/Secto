@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 
 const ENDPOINT =
-  "https://script.google.com/macros/s/AKfycbzpvqYP8Qee2zO4qLa5tJc8DqQiHudC_qugOlcnCW1dWaNw0yq30TSiMQ2BY-FOsAZv0g/exec";
+  "https://script.google.com/macros/s/AKfycbx3C4Wnvzguh7AVtmdtz1VH9KiAHwXBX6pGjbML-0wGvjJkaLnvBlJ7mAetvnAyTLGlSA/exec";
 
 export default function Kitchen() {
   const [status, setStatus] = useState("Esperando pedidos…");

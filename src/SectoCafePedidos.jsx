@@ -25,7 +25,7 @@ const TZ = "America/Montevideo";
 const OPEN_DAYS = [1, 2, 3, 4, 5, 6]; // 0=Dom, 1=Lun, ...
 const OPEN_HOUR_START = 11;
 const OPEN_HOUR_END = 15;
-const FORCE_OPEN = false;
+const FORCE_OPEN = true;
 const FORCE_CLOSED = false;
 
 function getNowInTZ() {

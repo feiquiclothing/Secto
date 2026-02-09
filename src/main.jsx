@@ -3,7 +3,7 @@ import { createRoot } from "react-dom/client";
 import SectoCafePedidos from "./SectoCafePedidos.jsx";
 import Kitchen from "./Kitchen.jsx";
 import Admin from "./Admin.jsx";
-import Ticket from "./ticket.jsx"; // si tu archivo se llama ticket.jsx, dejalo así
+import Ticket from "./ticket.jsx"; // asegurate que el archivo se llame EXACTO "ticket.jsx"
 import "./index.css";
 
 function AppRouter() {

@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 
 const ENDPOINT =
-  "https://script.google.com/macros/s/AKfycbx3C4Wnvzguh7AVtmdtz1VH9KiAHwXBX6pGjbML-0wGvjJkaLnvBlJ7mAetvnAyTLGlSA/exec";
+  "https://script.google.com/macros/s/AKfycbxrWgSPWPjDqelx1-_iaxvjDLW7ZL6W647UsZVm-ZaxREwY7E4MiQHNOvyNPXXbmHpQzA/exec";
 
 const POLL_MS = 2500;
 const TIMEOUT_MS = 12000;

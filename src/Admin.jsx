@@ -8,6 +8,7 @@ async function post(payload) {
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(payload),
   });
+
   const text = await res.text();
   let data = null;
   try { data = text ? JSON.parse(text) : null; } catch {}
@@ -31,7 +32,6 @@ export default function Admin() {
         rawText: rawText.trim(),
         total: total ? Number(total) : null,
         paid,
-        // opcional: método, dirección, etc si querés
         method: "whatsapp",
         time: "ASAP",
       };
@@ -52,7 +52,7 @@ export default function Admin() {
     <div style={{ padding: 16, fontFamily: "system-ui", maxWidth: 640 }}>
       <h1 style={{ margin: 0 }}>SECTO — ADMIN</h1>
       <p style={{ opacity: 0.75, marginTop: 6 }}>
-        Pedidos WhatsApp (1 click). Esto crea una fila en <b>orders</b> con <b>printed = false</b> y Kitchen lo imprime.
+        Pedidos WhatsApp (1 click). Crea una fila en <b>orders</b> con <b>printed = false</b> y Kitchen lo imprime.
       </p>
 
       <div style={{ display: "grid", gap: 10, marginTop: 12 }}>
@@ -103,3 +103,4 @@ export default function Admin() {
     </div>
   );
 }
+

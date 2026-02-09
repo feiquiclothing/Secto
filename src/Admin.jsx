@@ -37,6 +37,7 @@ export default function Admin() {
       };
 
       const r = await post({ action: "new_order", order });
+setStatus("RESP: " + JSON.stringify(r));
 
       setStatus(`OK — creado ${r?.id || ""}`.trim());
       setCustomer("");

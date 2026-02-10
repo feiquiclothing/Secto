@@ -94,7 +94,7 @@ const MENU = [
     id: "extras",
     name: "EXTRAS",
     items: [
-      { id: "e01", name: "Salsa de soja", price: 30 },
+      { id: "e01", name: "Salsa de soja (1 incluida)", price: 30 },
       { id: "e02", name: "Teriyaki", price: 40 },
       { id: "e03", name: "Wasabi", price: 40 },
       { id: "e04", name: "Gari (Jengibre)", price: 40 },
@@ -121,8 +121,8 @@ const ZONES = [
   { id: "otras", name: "Otras zonas coordinar", fee: 270 },
 ];
 
-// Horarios seleccionables
-const HOURS = ["11:00", "12:00", "13:00", "14:00", "15:00"];
+// Horarios seleccionables (sin 11:00)
+const HOURS = ["12:00", "13:00", "14:00", "15:00"];
 
 const currency = (uy) =>
   new Intl.NumberFormat("es-UY", { style: "currency", currency: "UYU" }).format(uy);
@@ -154,7 +154,7 @@ function buildWhatsAppText(order) {
   const info = [
     "Metodo: " + (method === "pickup" ? "Retiro en local" : "Delivery"),
     method === "delivery" ? "Zona: " + zona + " (" + currency(fee) + ")" : null,
-    "Horario: " + (time || "Lo antes posible"),
+    "Horario: " + (time || "(no especificado)"),
     "Nombre: " + name,
     "Tel: " + phone,
     method === "delivery" ? "Direccion: " + address : null,
@@ -176,8 +176,8 @@ function buildWhatsAppText(order) {
 
 // ===== POKES =====
 const POKE_BASE_PRICE = 440;
-const POKE_EXTRA_PROTEIN = 100;
-const POKE_EXTRA_TOPPING = 60;
+const POKE_EXTRA_PROTEIN = 80; // ✅
+const POKE_EXTRA_TOPPING = 40; // ✅
 const POKE_EXTRA_SAUCE = 40;
 
 const POKE_BASES = ["Arroz de sushi", "Arroz sin aderezar", "Mix de verdes"];
@@ -224,7 +224,11 @@ function PokeBuilder({ onAdd, isOpen }) {
   };
 
   const extraProteins = Math.max(0, proteins.length - 1);
-  const extraToppings = Math.max(0, toppings.length - 3);
+
+  // ✅ Sésamo gratis: no cuenta para el cálculo de extras
+  const chargeableToppingsCount = toppings.filter((t) => t !== "Sésamo").length;
+  const extraToppings = Math.max(0, chargeableToppingsCount - 3);
+
   const extraSauces = Math.max(0, sauces.length - 1);
 
   const unitPrice =
@@ -324,7 +328,7 @@ function PokeBuilder({ onAdd, isOpen }) {
 
         <div className="space-y-2 sm:col-span-2">
           <p className="text-xs text-neutral-500 uppercase tracking-[0.15em]">
-            Toppings (x3 incluidos, extra {currency(POKE_EXTRA_TOPPING)})
+            Toppings (x3 incluidos, extra {currency(POKE_EXTRA_TOPPING)}) — Sésamo gratis
           </p>
           <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
             {POKE_TOPPINGS.map((t) => (
@@ -339,12 +343,12 @@ function PokeBuilder({ onAdd, isOpen }) {
                     : "border-neutral-200 text-neutral-700")
                 }
               >
-                {t}
+                {t === "Sésamo" ? "Sésamo (gratis)" : t}
               </button>
             ))}
           </div>
           <p className="text-[11px] text-neutral-500">
-            Elegidos: {toppings.length} (extras: {Math.max(0, toppings.length - 3)})
+            Elegidos: {toppings.length} (extras: {extraToppings})
           </p>
         </div>
 
@@ -565,7 +569,6 @@ export default function SectoCafePedidos() {
 
       {GALLERY?.length > 0 && (
         <section className="max-w-6xl mx-auto px-4 pt-6">
-          {/* masonry */}
           <div className="columns-1 sm:columns-2 lg:columns-3 gap-4 [column-fill:_balance]">
             {GALLERY.map((src, i) => (
               <img
@@ -749,7 +752,7 @@ export default function SectoCafePedidos() {
                 onChange={(e) => setTime(e.target.value)}
                 className="w-full bg-white border border-neutral-200 rounded-xl p-2"
               >
-                <option value="">{isOpen ? "Lo antes posible" : "Pedidos habilitados mar/sáb 12:00–23:00"}</option>
+                <option value="">{isOpen ? "Seleccioná horario" : "Cerrado (no disponible)"}</option>
                 {HOURS.map((h) => (
                   <option key={h} value={h}>
                     {h}
@@ -832,7 +835,7 @@ export default function SectoCafePedidos() {
 
       <footer className="max-w-6xl mx-auto px-4 pb-10 text-xs text-neutral-500">
         <hr className="border-neutral-200 mb-4" />
-        © {new Date().getFullYear()} - Secto Cafe · Lun - Sab: Almuerzo 12:00 a 15:00 - Merienda 15:00 a 20:00
+        © {new Date().getFullYear()} - Secto Cafe · Lun - Sab: Almuerzo 12:00 a 15:00 - Merienda 17:00 a 20:00
       </footer>
     </div>
   );

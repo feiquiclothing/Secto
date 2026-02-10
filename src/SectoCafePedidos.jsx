@@ -25,7 +25,7 @@ const TZ = "America/Montevideo";
 const OPEN_DAYS = [1, 2, 3, 4, 5, 6]; // 0=Dom, 1=Lun, ...
 const OPEN_HOUR_START = 11;
 const OPEN_HOUR_END = 15;
-const FORCE_OPEN = true;
+const FORCE_OPEN = false;
 const FORCE_CLOSED = false;
 
 function getNowInTZ() {
@@ -343,7 +343,7 @@ function PokeBuilder({ onAdd, isOpen }) {
                     : "border-neutral-200 text-neutral-700")
                 }
               >
-                {t === "Sésamo" ? "Sésamo (gratis)" : t}
+                {t === "Sésamo" ? "Sésamo" : t}
               </button>
             ))}
           </div>
@@ -835,7 +835,7 @@ export default function SectoCafePedidos() {
 
       <footer className="max-w-6xl mx-auto px-4 pb-10 text-xs text-neutral-500">
         <hr className="border-neutral-200 mb-4" />
-        © {new Date().getFullYear()} - Secto Cafe · Lun - Sab: Almuerzo 12:00 a 15:00 - Merienda 17:00 a 20:00
+        © {new Date().getFullYear()} - Secto Cafe · Lun - Sab: Almuerzo 12:00 a 15:00 - Merienda 17:00 a 19:00
       </footer>
     </div>
   );

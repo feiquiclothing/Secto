@@ -121,8 +121,23 @@ const ZONES = [
   { id: "otras", name: "Otras zonas coordinar", fee: 270 },
 ];
 
-// Horarios seleccionables (sin 11:00)
-const HOURS = ["12:00", "13:00", "14:00", "15:00"];
+// ✅ Horarios cada 30 min (incluye 12:30, 13:30, etc.)
+function buildHours(start = "12:00", end = "15:00", stepMin = 30) {
+  const toMin = (h) => {
+    const [H, M] = h.split(":").map(Number);
+    return H * 60 + M;
+  };
+  const fromMin = (m) => {
+    const H = String(Math.floor(m / 60)).padStart(2, "0");
+    const M = String(m % 60).padStart(2, "0");
+    return `${H}:${M}`;
+  };
+
+  const out = [];
+  for (let m = toMin(start); m <= toMin(end); m += stepMin) out.push(fromMin(m));
+  return out;
+}
+const HOURS = buildHours("12:00", "15:00", 30);
 
 const currency = (uy) =>
   new Intl.NumberFormat("es-UY", { style: "currency", currency: "UYU" }).format(uy);
@@ -176,8 +191,8 @@ function buildWhatsAppText(order) {
 
 // ===== POKES =====
 const POKE_BASE_PRICE = 440;
-const POKE_EXTRA_PROTEIN = 80; // ✅
-const POKE_EXTRA_TOPPING = 40; // ✅
+const POKE_EXTRA_PROTEIN = 80;
+const POKE_EXTRA_TOPPING = 40;
 const POKE_EXTRA_SAUCE = 40;
 
 const POKE_BASES = ["Arroz de sushi", "Arroz sin aderezar", "Mix de verdes"];
@@ -237,10 +252,15 @@ function PokeBuilder({ onAdd, isOpen }) {
     extraToppings * POKE_EXTRA_TOPPING +
     extraSauces * POKE_EXTRA_SAUCE;
 
+  // ✅ exige salsa
   const canAdd = Boolean(base) && proteins.length >= 1 && toppings.length >= 3 && sauces.length >= 1;
 
   const handleAdd = () => {
-    if (!canAdd) return;
+    // ✅ feedback claro si falta algo (especialmente salsa)
+    if (!base) return setFeedback("Elegí una base");
+    if (proteins.length < 1) return setFeedback("Elegí al menos 1 proteína");
+    if (toppings.length < 3) return setFeedback("Elegí al menos 3 toppings");
+    if (sauces.length < 1) return setFeedback("Elegí al menos 1 salsa");
 
     const description =
       "Poke personalizado — Base: " +
@@ -416,6 +436,15 @@ export default function SectoCafePedidos() {
   const cartRef = useRef(null);
   const [cartHighlight, setCartHighlight] = useState(false);
 
+  // ✅ cart peek (slide-in)
+  const [cartPeek, setCartPeek] = useState(false);
+  const cartPeekT = useRef(null);
+  const showCartPeek = () => {
+    setCartPeek(true);
+    if (cartPeekT.current) clearTimeout(cartPeekT.current);
+    cartPeekT.current = setTimeout(() => setCartPeek(false), 2200);
+  };
+
   const items = useMemo(() => Object.values(cart), [cart]);
   const subtotal = useMemo(() => items.reduce((s, { item, qty }) => s + item.price * qty, 0), [items]);
   const fee = useMemo(() => (method === "delivery" ? ZONES.find((z) => z.id === zone)?.fee || 0 : 0), [method, zone]);
@@ -449,7 +478,7 @@ export default function SectoCafePedidos() {
     ...extra,
   });
 
-  // ✅ Safari-safe: usar navegación directa (no popup) y NO esperar async antes de abrir WA
+  // ✅ Safari-safe WhatsApp
   const getWhatsAppUrl = (order) => {
     const text = buildWhatsAppText(order);
     const encoded = encodeURIComponent(text);
@@ -458,9 +487,7 @@ export default function SectoCafePedidos() {
   };
 
   const openWhatsAppWithOrder = (order) => {
-    const url = getWhatsAppUrl(order);
-    // ✅ iOS Safari: más confiable que window.open
-    window.location.href = url;
+    window.location.href = getWhatsAppUrl(order);
   };
 
   useEffect(() => {
@@ -482,7 +509,6 @@ export default function SectoCafePedidos() {
 
     const paidOrder = { ...order, paid: true, createdAt: Date.now() };
 
-    // Guardar en background (keepalive ayuda en iOS cuando navega rápido)
     fetch(ORDERS_ENDPOINT, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -498,7 +524,6 @@ export default function SectoCafePedidos() {
     window.history.replaceState({}, "", cleanUrl);
   }, []);
 
-  // ✅ IMPORTANTE: no async + no await antes de abrir WA (Safari)
   const sendOrder = (paid = false) => {
     if (!canSendNow) {
       alert("Te falta completar datos (nombre, teléfono y dirección/zona) o el local está cerrado.");
@@ -510,7 +535,7 @@ export default function SectoCafePedidos() {
     // 1) abrir WA YA (gesto del usuario)
     openWhatsAppWithOrder(order);
 
-    // 2) guardar pedido en background
+    // 2) guardar en background
     fetch(ORDERS_ENDPOINT, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -607,6 +632,7 @@ export default function SectoCafePedidos() {
             isOpen={isOpen}
             onAdd={(item, qty) => {
               dispatch({ type: "add", item, qty });
+              showCartPeek(); // ✅ mostrar carrito desde derecha
               setCartHighlight(true);
               setTimeout(() => setCartHighlight(false), 600);
               if (cartRef.current) {
@@ -651,7 +677,10 @@ export default function SectoCafePedidos() {
                         </button>
                         <span className="w-6 text-center text-neutral-600">{cart[item.id]?.qty || 0}</span>
                         <button
-                          onClick={() => dispatch({ type: "add", item })}
+                          onClick={() => {
+                            dispatch({ type: "add", item });
+                            showCartPeek(); // ✅
+                          }}
                           className={`px-3 py-2 rounded-xl border ${
                             isOpen ? "border-neutral-200 bg-neutral-50" : "border-neutral-200 text-neutral-400 cursor-not-allowed"
                           }`}
@@ -809,7 +838,6 @@ export default function SectoCafePedidos() {
             </div>
 
             <div className="grid grid-cols-1 gap-2 mt-4">
-              {/* ✅ no usamos async/await; WA abre al toque en Safari */}
               <button
                 onClick={() => sendOrder(false)}
                 className={`w-full rounded-2xl py-3 text-center ${
@@ -850,6 +878,49 @@ export default function SectoCafePedidos() {
           </div>
         </aside>
       </main>
+
+      {/* ✅ CART PEEK (aparece desde derecha al agregar) */}
+      <div
+        onClick={() => {
+          setCartPeek(false);
+          if (cartRef.current) cartRef.current.scrollIntoView({ behavior: "smooth", block: "start" });
+        }}
+        className={
+          "fixed right-3 top-24 z-50 w-[320px] max-w-[88vw] rounded-2xl border border-neutral-200 bg-white shadow-lg p-4 cursor-pointer transition-transform duration-300 " +
+          (cartPeek ? "translate-x-0" : "translate-x-[120%]")
+        }
+        style={{ WebkitTapHighlightColor: "transparent" }}
+      >
+        <div className="flex items-baseline justify-between">
+          <div className="text-sm tracking-[0.2em] text-neutral-500">TU PEDIDO</div>
+          <div className="text-xs text-neutral-400">tap para ver</div>
+        </div>
+
+        <div className="mt-3 max-h-[40vh] overflow-auto pr-1">
+          {items.length === 0 ? (
+            <div className="text-sm text-neutral-500">Carrito vacío</div>
+          ) : (
+            <div className="space-y-2">
+              {items.map(({ item, qty }) => (
+                <div key={item.id} className="flex justify-between gap-3 text-sm">
+                  <div className="text-neutral-800 leading-tight">
+                    <div className="font-medium">{item.name}</div>
+                    <div className="text-neutral-500">x{qty}</div>
+                  </div>
+                  <div className="text-neutral-700 whitespace-nowrap">{currency(item.price * qty)}</div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+
+        <div className="mt-3 pt-3 border-t border-neutral-200 text-sm">
+          <div className="flex justify-between">
+            <span className="text-neutral-500">Total</span>
+            <span className="text-neutral-900 font-medium">{currency(total)}</span>
+          </div>
+        </div>
+      </div>
 
       <footer className="max-w-6xl mx-auto px-4 pb-10 text-xs text-neutral-500">
         <hr className="border-neutral-200 mb-4" />

@@ -430,8 +430,7 @@ export default function SectoCafePedidos() {
 
   const pokeCount = useMemo(
     () =>
-      items.reduce((n, { item, qty }) => (item.id && item.id.toString().startsWith("poke-") ? n + qty : n),
-        0),
+      items.reduce((n, { item, qty }) => (item.id && item.id.toString().startsWith("poke-") ? n + qty : n), 0),
     [items]
   );
 
@@ -450,11 +449,18 @@ export default function SectoCafePedidos() {
     ...extra,
   });
 
-  const openWhatsAppWithOrder = (order) => {
+  // ✅ Safari-safe: usar navegación directa (no popup) y NO esperar async antes de abrir WA
+  const getWhatsAppUrl = (order) => {
     const text = buildWhatsAppText(order);
     const encoded = encodeURIComponent(text);
     const phoneDigits = PHONE_URUGUAY.replace(/\D/g, "");
-    window.open("https://wa.me/598" + phoneDigits + "?text=" + encoded, "_blank");
+    return "https://wa.me/598" + phoneDigits + "?text=" + encoded;
+  };
+
+  const openWhatsAppWithOrder = (order) => {
+    const url = getWhatsAppUrl(order);
+    // ✅ iOS Safari: más confiable que window.open
+    window.location.href = url;
   };
 
   useEffect(() => {
@@ -476,10 +482,12 @@ export default function SectoCafePedidos() {
 
     const paidOrder = { ...order, paid: true, createdAt: Date.now() };
 
+    // Guardar en background (keepalive ayuda en iOS cuando navega rápido)
     fetch(ORDERS_ENDPOINT, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ action: "new_order", order: paidOrder }),
+      keepalive: true,
     }).catch(() => {});
 
     openWhatsAppWithOrder(paidOrder);
@@ -490,24 +498,33 @@ export default function SectoCafePedidos() {
     window.history.replaceState({}, "", cleanUrl);
   }, []);
 
-  const sendOrder = async (paid = false) => {
-    const order = getOrder({ paid, createdAt: Date.now() });
-
-    try {
-      await fetch(ORDERS_ENDPOINT, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ action: "new_order", order }),
-      });
-    } catch (e) {
-      console.error("No se pudo guardar el pedido:", e);
+  // ✅ IMPORTANTE: no async + no await antes de abrir WA (Safari)
+  const sendOrder = (paid = false) => {
+    if (!canSendNow) {
+      alert("Te falta completar datos (nombre, teléfono y dirección/zona) o el local está cerrado.");
+      return;
     }
 
+    const order = getOrder({ paid, createdAt: Date.now() });
+
+    // 1) abrir WA YA (gesto del usuario)
     openWhatsAppWithOrder(order);
+
+    // 2) guardar pedido en background
+    fetch(ORDERS_ENDPOINT, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ action: "new_order", order }),
+      keepalive: true,
+    }).catch(() => {});
   };
 
   const payWithMP = () => {
     if (!hasMP) return;
+    if (!canSendNow) {
+      alert("Te falta completar datos (nombre, teléfono y dirección/zona) o el local está cerrado.");
+      return;
+    }
 
     const order = getOrder({ paid: false, createdAt: Date.now() });
 
@@ -558,7 +575,9 @@ export default function SectoCafePedidos() {
             </a>
             <div className="leading-tight">
               <p className="text-xs tracking-[0.25em] text-neutral-500">
-                {isOpen ? "Abierto — Ejecutivo de 11:00 a 15:00" : "Cerrado — pedidos habilitados lunes a sábado de 11:00 a 15:00"}
+                {isOpen
+                  ? "Abierto — Ejecutivo de 11:00 a 15:00"
+                  : "Cerrado — pedidos habilitados lunes a sábado de 11:00 a 15:00"}
               </p>
               <h1 className="text-lg text-neutral-900"></h1>
             </div>
@@ -790,11 +809,11 @@ export default function SectoCafePedidos() {
             </div>
 
             <div className="grid grid-cols-1 gap-2 mt-4">
+              {/* ✅ no usamos async/await; WA abre al toque en Safari */}
               <button
                 onClick={() => sendOrder(false)}
-                disabled={!canSendNow}
                 className={`w-full rounded-2xl py-3 text-center ${
-                  canSendNow ? "bg-black text-white" : "bg-neutral-100 text-neutral-400 cursor-not-allowed"
+                  canSendNow ? "bg-black text-white" : "bg-neutral-100 text-neutral-600"
                 }`}
               >
                 Enviar pedido por WhatsApp
@@ -803,9 +822,8 @@ export default function SectoCafePedidos() {
               {hasMP && (
                 <button
                   onClick={payWithMP}
-                  disabled={!canSendNow}
                   className={`w-full rounded-2xl py-3 text-center border ${
-                    canSendNow ? "border-neutral-300" : "border-neutral-200 text-neutral-400 cursor-not-allowed"
+                    canSendNow ? "border-neutral-300" : "border-neutral-200 text-neutral-600"
                   }`}
                 >
                   Pagar con Mercado Pago

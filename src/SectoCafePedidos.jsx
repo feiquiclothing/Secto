@@ -238,12 +238,17 @@ function PokeBuilder({ onAdd, isOpen }) {
     setFn((prev) => (prev.includes(value) ? prev.filter((x) => x !== value) : [...prev, value]));
   };
 
+  // ✅ 1 proteína incluida. Si eligen 0 proteínas: NO se puede agregar.
   const extraProteins = Math.max(0, proteins.length - 1);
 
-  // ✅ Sésamo gratis: no cuenta para el cálculo de extras
+  // ✅ toppings: ahora son opcionales
+  // "incluidos" = 3, entonces solo cobrás extras si pasan de 3
+  // Sésamo gratis: no cuenta como extra
   const chargeableToppingsCount = toppings.filter((t) => t !== "Sésamo").length;
   const extraToppings = Math.max(0, chargeableToppingsCount - 3);
 
+  // ✅ salsas: ahora son opcionales
+  // 1 salsa incluida: solo cobrás extras si pasan de 1
   const extraSauces = Math.max(0, sauces.length - 1);
 
   const unitPrice =
@@ -252,29 +257,40 @@ function PokeBuilder({ onAdd, isOpen }) {
     extraToppings * POKE_EXTRA_TOPPING +
     extraSauces * POKE_EXTRA_SAUCE;
 
-  // ✅ exige salsa
-  const canAdd = Boolean(base) && proteins.length >= 1 && toppings.length >= 3 && sauces.length >= 1;
+  // ✅ Requisitos mínimos nuevos: base + al menos 1 proteína
+  const canAdd = Boolean(base) && proteins.length >= 1;
 
   const handleAdd = () => {
-    // ✅ feedback claro si falta algo (especialmente salsa)
-    if (!base) return setFeedback("Elegí una base");
-    if (proteins.length < 1) return setFeedback("Elegí al menos 1 proteína");
-    if (toppings.length < 3) return setFeedback("Elegí al menos 3 toppings");
-    if (sauces.length < 1) return setFeedback("Elegí al menos 1 salsa");
+    if (!isOpen) return;
+    if (!base) {
+      setFeedback("Elegí una base");
+      return;
+    }
+    if (proteins.length < 1) {
+      setFeedback("Elegí al menos 1 proteína");
+      return;
+    }
 
-    const description =
-      "Poke personalizado — Base: " +
-      base +
-      " | Proteínas: " +
-      proteins.join(", ") +
-      " | Toppings: " +
-      toppings.join(", ") +
-      " | Salsas: " +
-      sauces.join(", ");
+    // ✅ armar descripción SOLO con lo que exista
+    const parts = [
+      "Poke personalizado",
+      `Base: ${base}`,
+      `Proteínas: ${proteins.join(", ")}`,
+      toppings.length ? `Toppings: ${toppings.join(", ")}` : null,
+      sauces.length ? `Salsas: ${sauces.join(", ")}` : null,
+    ].filter(Boolean);
 
-    const item = { id: "poke-" + Date.now(), name: description, price: unitPrice };
+    const description = parts.join(" | ");
+
+    const item = {
+      id: "poke-" + Date.now(),
+      name: description,
+      price: unitPrice,
+    };
+
     onAdd(item, 1);
 
+    // reset
     setBase("");
     setProteins([]);
     setToppings([]);
@@ -302,7 +318,7 @@ function PokeBuilder({ onAdd, isOpen }) {
 
       <div className="grid gap-4 sm:grid-cols-2">
         <div className="space-y-2">
-          <p className="text-xs text-neutral-500 uppercase tracking-[0.15em]">Base (x1 incluida)</p>
+          <p className="text-xs text-neutral-500 uppercase tracking-[0.15em]">Base (obligatoria)</p>
           <div className="space-y-1">
             {POKE_BASES.map((b) => (
               <label key={b} className="flex items-center gap-2 text-sm text-neutral-800">
@@ -322,7 +338,7 @@ function PokeBuilder({ onAdd, isOpen }) {
 
         <div className="space-y-2">
           <p className="text-xs text-neutral-500 uppercase tracking-[0.15em]">
-            Proteínas (x1 incluida, extra {currency(POKE_EXTRA_PROTEIN)})
+            Proteínas (mín 1, x1 incluida, extra {currency(POKE_EXTRA_PROTEIN)})
           </p>
           <div className="flex flex-wrap gap-2">
             {POKE_PROTEINS.map((p) => (
@@ -348,7 +364,7 @@ function PokeBuilder({ onAdd, isOpen }) {
 
         <div className="space-y-2 sm:col-span-2">
           <p className="text-xs text-neutral-500 uppercase tracking-[0.15em]">
-            Toppings (x3 incluidos, extra {currency(POKE_EXTRA_TOPPING)})
+            Toppings (opcionales, x3 incluidos, extra {currency(POKE_EXTRA_TOPPING)})
           </p>
           <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
             {POKE_TOPPINGS.map((t) => (
@@ -374,7 +390,7 @@ function PokeBuilder({ onAdd, isOpen }) {
 
         <div className="space-y-2 sm:col-span-2">
           <p className="text-xs text-neutral-500 uppercase tracking-[0.15em]">
-            Salsas (x1 incluida, extra {currency(POKE_EXTRA_SAUCE)})
+            Salsas (opcionales, x1 incluida, extra {currency(POKE_EXTRA_SAUCE)})
           </p>
           <div className="flex flex-wrap gap-2">
             {POKE_SAUCES.map((s) => (
@@ -394,7 +410,7 @@ function PokeBuilder({ onAdd, isOpen }) {
             ))}
           </div>
           <p className="text-[11px] text-neutral-500">
-            Elegidas: {sauces.length} (extras: {Math.max(0, sauces.length - 1)})
+            Elegidas: {sauces.length} (extras: {extraSauces})
           </p>
         </div>
       </div>
@@ -422,6 +438,7 @@ function PokeBuilder({ onAdd, isOpen }) {
     </section>
   );
 }
+
 
 export default function SectoCafePedidos() {
   const [cart, dispatch] = useReducer(reducer, {});

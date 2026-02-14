@@ -893,7 +893,7 @@ export default function SectoCafePedidos() {
       >
         <div className="flex items-baseline justify-between">
           <div className="text-sm tracking-[0.2em] text-neutral-500">TU PEDIDO</div>
-          <div className="text-xs text-neutral-400">tap para ver</div>
+          <div className="text-xs text-neutral-400">Toca para ver</div>
         </div>
 
         <div className="mt-3 max-h-[40vh] overflow-auto pr-1">

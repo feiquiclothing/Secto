@@ -364,7 +364,7 @@ function PokeBuilder({ onAdd, isOpen }) {
 
         <div className="space-y-2 sm:col-span-2">
           <p className="text-xs text-neutral-500 uppercase tracking-[0.15em]">
-            Toppings (opcionales, x3 incluidos, extra {currency(POKE_EXTRA_TOPPING)})
+            Toppings (x3 incluidos, extra {currency(POKE_EXTRA_TOPPING)})
           </p>
           <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
             {POKE_TOPPINGS.map((t) => (
@@ -390,7 +390,7 @@ function PokeBuilder({ onAdd, isOpen }) {
 
         <div className="space-y-2 sm:col-span-2">
           <p className="text-xs text-neutral-500 uppercase tracking-[0.15em]">
-            Salsas (opcionales, x1 incluida, extra {currency(POKE_EXTRA_SAUCE)})
+            Salsas (x1 incluida, extra {currency(POKE_EXTRA_SAUCE)})
           </p>
           <div className="flex flex-wrap gap-2">
             {POKE_SAUCES.map((s) => (

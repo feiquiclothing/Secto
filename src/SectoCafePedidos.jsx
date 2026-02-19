@@ -318,7 +318,7 @@ function PokeBuilder({ onAdd, isOpen }) {
 
       <div className="grid gap-4 sm:grid-cols-2">
         <div className="space-y-2">
-          <p className="text-xs text-neutral-500 uppercase tracking-[0.15em]">Base (obligatoria)</p>
+          <p className="text-xs text-neutral-500 uppercase tracking-[0.15em]">Base</p>
           <div className="space-y-1">
             {POKE_BASES.map((b) => (
               <label key={b} className="flex items-center gap-2 text-sm text-neutral-800">
@@ -338,7 +338,7 @@ function PokeBuilder({ onAdd, isOpen }) {
 
         <div className="space-y-2">
           <p className="text-xs text-neutral-500 uppercase tracking-[0.15em]">
-            Proteínas (mín 1, x1 incluida, extra {currency(POKE_EXTRA_PROTEIN)})
+            Proteínas (x1 incluida, extra {currency(POKE_EXTRA_PROTEIN)})
           </p>
           <div className="flex flex-wrap gap-2">
             {POKE_PROTEINS.map((p) => (

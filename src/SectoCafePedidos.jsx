@@ -195,6 +195,11 @@ const POKE_EXTRA_PROTEIN = 80;
 const POKE_EXTRA_TOPPING = 40;
 const POKE_EXTRA_SAUCE = 40;
 
+// ✅ nuevos incluidos
+const POKE_INCLUDED_PROTEINS = 2; // 2 proteínas gratis
+const POKE_INCLUDED_TOPPINGS = 5; // 5 toppings gratis (sin contar Sésamo)
+const POKE_INCLUDED_SAUCES = 2; // 2 salsas gratis
+
 const POKE_BASES = ["Arroz de sushi", "Arroz sin aderezar", "Mix de verdes"];
 
 const POKE_PROTEINS = [
@@ -238,18 +243,17 @@ function PokeBuilder({ onAdd, isOpen }) {
     setFn((prev) => (prev.includes(value) ? prev.filter((x) => x !== value) : [...prev, value]));
   };
 
-  // ✅ 1 proteína incluida. Si eligen 0 proteínas: NO se puede agregar.
-  const extraProteins = Math.max(0, proteins.length - 1);
+  // ✅ 2 proteínas incluidas. Si eligen 0 proteínas: NO se puede agregar.
+  const extraProteins = Math.max(0, proteins.length - POKE_INCLUDED_PROTEINS);
 
-  // ✅ toppings: ahora son opcionales
-  // "incluidos" = 3, entonces solo cobrás extras si pasan de 3
-  // Sésamo gratis: no cuenta como extra
+  // ✅ toppings opcionales
+  // 5 incluidos; Sésamo gratis: no cuenta como extra
   const chargeableToppingsCount = toppings.filter((t) => t !== "Sésamo").length;
-  const extraToppings = Math.max(0, chargeableToppingsCount - 3);
+  const extraToppings = Math.max(0, chargeableToppingsCount - POKE_INCLUDED_TOPPINGS);
 
-  // ✅ salsas: ahora son opcionales
-  // 1 salsa incluida: solo cobrás extras si pasan de 1
-  const extraSauces = Math.max(0, sauces.length - 1);
+  // ✅ salsas opcionales
+  // 2 incluidas
+  const extraSauces = Math.max(0, sauces.length - POKE_INCLUDED_SAUCES);
 
   const unitPrice =
     POKE_BASE_PRICE +
@@ -257,7 +261,7 @@ function PokeBuilder({ onAdd, isOpen }) {
     extraToppings * POKE_EXTRA_TOPPING +
     extraSauces * POKE_EXTRA_SAUCE;
 
-  // ✅ Requisitos mínimos nuevos: base + al menos 1 proteína
+  // ✅ Requisitos mínimos: base + al menos 1 proteína
   const canAdd = Boolean(base) && proteins.length >= 1;
 
   const handleAdd = () => {
@@ -271,7 +275,7 @@ function PokeBuilder({ onAdd, isOpen }) {
       return;
     }
 
-    // ✅ armar descripción SOLO con lo que exista
+    // ✅ descripción SOLO con lo que exista
     const parts = [
       "Poke personalizado",
       `Base: ${base}`,
@@ -338,7 +342,7 @@ function PokeBuilder({ onAdd, isOpen }) {
 
         <div className="space-y-2">
           <p className="text-xs text-neutral-500 uppercase tracking-[0.15em]">
-            Proteínas (x1 incluida, extra {currency(POKE_EXTRA_PROTEIN)})
+            Proteínas (x{POKE_INCLUDED_PROTEINS} incluidas, extra {currency(POKE_EXTRA_PROTEIN)})
           </p>
           <div className="flex flex-wrap gap-2">
             {POKE_PROTEINS.map((p) => (
@@ -364,7 +368,7 @@ function PokeBuilder({ onAdd, isOpen }) {
 
         <div className="space-y-2 sm:col-span-2">
           <p className="text-xs text-neutral-500 uppercase tracking-[0.15em]">
-            Toppings (x3 incluidos, extra {currency(POKE_EXTRA_TOPPING)})
+            Toppings (x{POKE_INCLUDED_TOPPINGS} incluidos, extra {currency(POKE_EXTRA_TOPPING)})
           </p>
           <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
             {POKE_TOPPINGS.map((t) => (
@@ -390,7 +394,7 @@ function PokeBuilder({ onAdd, isOpen }) {
 
         <div className="space-y-2 sm:col-span-2">
           <p className="text-xs text-neutral-500 uppercase tracking-[0.15em]">
-            Salsas (x1 incluida, extra {currency(POKE_EXTRA_SAUCE)})
+            Salsas (x{POKE_INCLUDED_SAUCES} incluidas, extra {currency(POKE_EXTRA_SAUCE)})
           </p>
           <div className="flex flex-wrap gap-2">
             {POKE_SAUCES.map((s) => (
@@ -438,7 +442,6 @@ function PokeBuilder({ onAdd, isOpen }) {
     </section>
   );
 }
-
 
 export default function SectoCafePedidos() {
   const [cart, dispatch] = useReducer(reducer, {});
@@ -652,9 +655,7 @@ export default function SectoCafePedidos() {
               showCartPeek(); // ✅ mostrar carrito desde derecha
               setCartHighlight(true);
               setTimeout(() => setCartHighlight(false), 600);
-              if (cartRef.current) {
-                cartRef.current.scrollIntoView({ behavior: "smooth", block: "start" });
-              }
+              // ✅ punto 3: NO scrolleamos automáticamente (solo peek)
             }}
           />
 

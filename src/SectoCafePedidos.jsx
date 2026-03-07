@@ -60,8 +60,8 @@ const MENU = [
     id: "rolls",
     name: "ROLLS 10 piezas",
     items: [
-      { id: "r00", name: "2x1 KANI ROLL - Kanikama | Palta | Queso", price: 460, img: "" },
-      { id: "r00", name: "2x1 BONIATO ROLL - Boniato | Palta | Queso", price: 460, img: "" },
+      { id: "r00a", name: "2x1 KANI ROLL - Kanikama | Palta | Queso", price: 460, img: "" },
+      { id: "r00b", name: "2x1 BONIATO ROLL - Boniato | Palta | Queso", price: 460, img: "" },
       { id: "r01", name: "01 - Salmón | Palta | Queso", price: 440, img: "/Photos/01.JPG" },
       { id: "r02", name: "02 - Atún | Palta | Queso", price: 440, img: "/Photos/02.JPG" },
       { id: "r03", name: "03 - Atún | Mango | Pepino | Cilantro", price: 460, img: "/Photos/03.JPG" },
@@ -107,10 +107,10 @@ const MENU = [
     id: "bebidas",
     name: "BEBIDAS",
     items: [
-      { id: "b01", name: "Agua Salus sin gas 600cc", price: 100 },
-      { id: "b02", name: "Agua Salus con gas 600cc", price: 100 },
-      { id: "b03", name: "Lata Pepsi 600cc", price: 100 },
-      { id: "b04", name: "Lata Pepsi black 600cc", price: 100 },
+      { id: "b01", name: "Agua Salus sin gas 600cc", price: 100, img: "" },
+      { id: "b02", name: "Agua Salus con gas 600cc", price: 100, img: "" },
+      { id: "b03", name: "Lata Pepsi 600cc", price: 100, img: "" },
+      { id: "b04", name: "Lata Pepsi black 600cc", price: 100, img: "" },
     ],
   },
 ];
@@ -118,12 +118,12 @@ const MENU = [
 // ===== ZONAS =====
 const ZONES = [
   { id: "cv", name: "Ciudad Vieja", fee: 0 },
-  { id: "centro", name: "Centro / Cordón / Aguada", fee: 170 },
-  { id: "pocitos", name: "Parque Rodó / Punta Carretas / Pocitos", fee: 220 },
-  { id: "otras", name: "Otras zonas coordinar", fee: 270 },
+  { id: "centro", name: "Centro / Cordón / Aguada", fee: 70 },
+  { id: "pocitos", name: "Parque Rodó / Punta Carretas / Pocitos", fee: 120 },
+  { id: "otras", name: "Otras zonas coordinar", fee: 170 },
 ];
 
-// ✅ Horarios cada 30 min (incluye 12:30, 13:30, etc.)
+// ✅ Horarios cada 30 min
 function buildHours(start = "12:00", end = "15:00", stepMin = 30) {
   const toMin = (h) => {
     const [H, M] = h.split(":").map(Number);
@@ -197,10 +197,9 @@ const POKE_EXTRA_PROTEIN = 80;
 const POKE_EXTRA_TOPPING = 40;
 const POKE_EXTRA_SAUCE = 40;
 
-// ✅ nuevos incluidos
-const POKE_INCLUDED_PROTEINS = 2; // 2 proteínas gratis
-const POKE_INCLUDED_TOPPINGS = 5; // 5 toppings gratis (sin contar Sésamo)
-const POKE_INCLUDED_SAUCES = 2; // 2 salsas gratis
+const POKE_INCLUDED_PROTEINS = 2;
+const POKE_INCLUDED_TOPPINGS = 5;
+const POKE_INCLUDED_SAUCES = 2;
 
 const POKE_BASES = ["Arroz de sushi", "Arroz sin aderezar", "Mix de verdes"];
 
@@ -245,16 +244,9 @@ function PokeBuilder({ onAdd, isOpen }) {
     setFn((prev) => (prev.includes(value) ? prev.filter((x) => x !== value) : [...prev, value]));
   };
 
-  // ✅ 2 proteínas incluidas. Si eligen 0 proteínas: NO se puede agregar.
   const extraProteins = Math.max(0, proteins.length - POKE_INCLUDED_PROTEINS);
-
-  // ✅ toppings opcionales
-  // 5 incluidos; Sésamo gratis: no cuenta como extra
   const chargeableToppingsCount = toppings.filter((t) => t !== "Sésamo").length;
   const extraToppings = Math.max(0, chargeableToppingsCount - POKE_INCLUDED_TOPPINGS);
-
-  // ✅ salsas opcionales
-  // 2 incluidas
   const extraSauces = Math.max(0, sauces.length - POKE_INCLUDED_SAUCES);
 
   const unitPrice =
@@ -263,7 +255,6 @@ function PokeBuilder({ onAdd, isOpen }) {
     extraToppings * POKE_EXTRA_TOPPING +
     extraSauces * POKE_EXTRA_SAUCE;
 
-  // ✅ Requisitos mínimos: base + al menos 1 proteína
   const canAdd = Boolean(base) && proteins.length >= 1;
 
   const handleAdd = () => {
@@ -277,7 +268,6 @@ function PokeBuilder({ onAdd, isOpen }) {
       return;
     }
 
-    // ✅ descripción SOLO con lo que exista
     const parts = [
       "Poke personalizado",
       `Base: ${base}`,
@@ -296,7 +286,6 @@ function PokeBuilder({ onAdd, isOpen }) {
 
     onAdd(item, 1);
 
-    // reset
     setBase("");
     setProteins([]);
     setToppings([]);
@@ -458,13 +447,11 @@ export default function SectoCafePedidos() {
   const cartRef = useRef(null);
   const [cartHighlight, setCartHighlight] = useState(false);
 
-  // ✅ cart peek (slide-in)
+  // ✅ mini carrito flotante persistente
   const [cartPeek, setCartPeek] = useState(false);
-  const cartPeekT = useRef(null);
+
   const showCartPeek = () => {
     setCartPeek(true);
-    if (cartPeekT.current) clearTimeout(cartPeekT.current);
-    cartPeekT.current = setTimeout(() => setCartPeek(false), 2200);
   };
 
   const items = useMemo(() => Object.values(cart), [cart]);
@@ -500,7 +487,6 @@ export default function SectoCafePedidos() {
     ...extra,
   });
 
-  // ✅ Safari-safe WhatsApp
   const getWhatsAppUrl = (order) => {
     const text = buildWhatsAppText(order);
     const encoded = encodeURIComponent(text);
@@ -554,10 +540,8 @@ export default function SectoCafePedidos() {
 
     const order = getOrder({ paid, createdAt: Date.now() });
 
-    // 1) abrir WA YA (gesto del usuario)
     openWhatsAppWithOrder(order);
 
-    // 2) guardar en background
     fetch(ORDERS_ENDPOINT, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -624,7 +608,7 @@ export default function SectoCafePedidos() {
               <p className="text-xs tracking-[0.25em] text-neutral-500">
                 {isOpen
                   ? "Abierto — Ejecutivo de 12:00 a 15:00"
-                  : "Cerrado — pedidos habilitados lunes a sábado de 11:00 a 15:00"}
+                  : "Cerrado — pedidos habilitados lunes a sábado de 12:00 a 15:00"}
               </p>
               <h1 className="text-lg text-neutral-900"></h1>
             </div>
@@ -654,10 +638,9 @@ export default function SectoCafePedidos() {
             isOpen={isOpen}
             onAdd={(item, qty) => {
               dispatch({ type: "add", item, qty });
-              showCartPeek(); // ✅ mostrar carrito desde derecha
+              showCartPeek();
               setCartHighlight(true);
               setTimeout(() => setCartHighlight(false), 600);
-              // ✅ punto 3: NO scrolleamos automáticamente (solo peek)
             }}
           />
 
@@ -699,7 +682,7 @@ export default function SectoCafePedidos() {
                         <button
                           onClick={() => {
                             dispatch({ type: "add", item });
-                            showCartPeek(); // ✅
+                            showCartPeek();
                           }}
                           className={`px-3 py-2 rounded-xl border ${
                             isOpen ? "border-neutral-200 bg-neutral-50" : "border-neutral-200 text-neutral-400 cursor-not-allowed"
@@ -899,27 +882,33 @@ export default function SectoCafePedidos() {
         </aside>
       </main>
 
-      {/* ✅ CART PEEK (aparece desde derecha al agregar) */}
-      <div
-        onClick={() => {
-          setCartPeek(false);
-          if (cartRef.current) cartRef.current.scrollIntoView({ behavior: "smooth", block: "start" });
-        }}
-        className={
-          "fixed right-3 top-24 z-50 w-[320px] max-w-[88vw] rounded-2xl border border-neutral-200 bg-white shadow-lg p-4 cursor-pointer transition-transform duration-300 " +
-          (cartPeek ? "translate-x-0" : "translate-x-[120%]")
-        }
-        style={{ WebkitTapHighlightColor: "transparent" }}
-      >
-        <div className="flex items-baseline justify-between">
-          <div className="text-sm tracking-[0.2em] text-neutral-500">TU PEDIDO</div>
-          <div className="text-xs text-neutral-400">Toca para ver</div>
-        </div>
+      {/* ✅ MINI CARRITO FLOTANTE PERSISTENTE */}
+      {items.length > 0 && (
+        <div
+          className={
+            "fixed right-3 top-24 z-50 w-[340px] max-w-[90vw] rounded-2xl border border-neutral-200 bg-white shadow-lg p-4 transition-transform duration-300 " +
+            (cartPeek ? "translate-x-0" : "translate-x-[120%]")
+          }
+          style={{ WebkitTapHighlightColor: "transparent" }}
+        >
+          <div className="flex items-start justify-between gap-3">
+            <div>
+              <div className="text-sm tracking-[0.2em] text-neutral-500">TU PEDIDO</div>
+              <div className="text-xs text-neutral-400 mt-1">
+                Revisá tu pedido o terminá la compra
+              </div>
+            </div>
 
-        <div className="mt-3 max-h-[40vh] overflow-auto pr-1">
-          {items.length === 0 ? (
-            <div className="text-sm text-neutral-500">Carrito vacío</div>
-          ) : (
+            <button
+              type="button"
+              onClick={() => setCartPeek(false)}
+              className="text-sm border border-neutral-200 rounded-xl px-2 py-1 text-neutral-500"
+            >
+              ✕
+            </button>
+          </div>
+
+          <div className="mt-3 max-h-[34vh] overflow-auto pr-1">
             <div className="space-y-2">
               {items.map(({ item, qty }) => (
                 <div key={item.id} className="flex justify-between gap-3 text-sm">
@@ -927,20 +916,65 @@ export default function SectoCafePedidos() {
                     <div className="font-medium">{item.name}</div>
                     <div className="text-neutral-500">x{qty}</div>
                   </div>
-                  <div className="text-neutral-700 whitespace-nowrap">{currency(item.price * qty)}</div>
+                  <div className="text-neutral-700 whitespace-nowrap">
+                    {currency(item.price * qty)}
+                  </div>
                 </div>
               ))}
             </div>
-          )}
-        </div>
+          </div>
 
-        <div className="mt-3 pt-3 border-t border-neutral-200 text-sm">
-          <div className="flex justify-between">
-            <span className="text-neutral-500">Total</span>
-            <span className="text-neutral-900 font-medium">{currency(total)}</span>
+          <div className="mt-3 pt-3 border-t border-neutral-200 text-sm space-y-3">
+            <div className="flex justify-between">
+              <span className="text-neutral-500">Total</span>
+              <span className="text-neutral-900 font-medium">{currency(total)}</span>
+            </div>
+
+            <div className="grid grid-cols-1 gap-2">
+              <button
+                type="button"
+                onClick={() => {
+                  if (cartRef.current) {
+                    cartRef.current.scrollIntoView({ behavior: "smooth", block: "start" });
+                  }
+                }}
+                className="w-full rounded-2xl py-2 border border-neutral-200 text-sm"
+              >
+                Ver pedido completo
+              </button>
+
+              {hasMP && (
+                <button
+                  type="button"
+                  onClick={payWithMP}
+                  className={`w-full rounded-2xl py-3 text-center ${
+                    canSendNow ? "bg-black text-white" : "bg-neutral-100 text-neutral-600"
+                  }`}
+                >
+                  Pagar ahora
+                </button>
+              )}
+            </div>
+
+            {!canSendNow && (
+              <p className="text-[11px] text-neutral-500">
+                Completá nombre, teléfono y dirección/horario para finalizar.
+              </p>
+            )}
           </div>
         </div>
-      </div>
+      )}
+
+      {/* ✅ BOTÓN PARA REABRIR MINI CARRITO */}
+      {items.length > 0 && !cartPeek && (
+        <button
+          type="button"
+          onClick={() => setCartPeek(true)}
+          className="fixed right-3 top-24 z-40 rounded-2xl bg-black text-white px-4 py-3 shadow-lg text-sm"
+        >
+          Ver pedido · {currency(total)}
+        </button>
+      )}
 
       <footer className="max-w-6xl mx-auto px-4 pb-10 text-xs text-neutral-500">
         <hr className="border-neutral-200 mb-4" />

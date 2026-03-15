@@ -25,7 +25,7 @@ const TZ = "America/Montevideo";
 const OPEN_DAYS = [1, 2, 3, 4, 5, 6]; // 0=Dom, 1=Lun, ...
 const OPEN_HOUR_START = 12;
 const OPEN_HOUR_END = 15;
-const FORCE_OPEN = true;
+const FORCE_OPEN = false;
 const FORCE_CLOSED = false;
 
 function getNowInTZ() {
@@ -60,7 +60,7 @@ const MENU = [
     id: "rolls",
     name: "ROLLS 10 piezas",
     items: [
-      { id: "r00a", name: "2x1 KANI ROLL - Kanikama | Mango | Queso | Quinoa frita | Verdeo", price: 460, img: "" },
+      { id: "r00a", name: "2x1 KANI ROLL - Kanikama | Palta | Queso", price: 460, img: "" },
       { id: "r00b", name: "2x1 BONIATO ROLL - Boniato | Palta | Queso", price: 460, img: "" },
       { id: "r01", name: "01 - Salmón | Palta | Queso", price: 440, img: "/Photos/01.JPG" },
       { id: "r02", name: "02 - Atún | Palta | Queso", price: 440, img: "/Photos/02.JPG" },
@@ -499,6 +499,12 @@ export default function SectoCafePedidos() {
   };
 
   useEffect(() => {
+    if (items.length === 0) {
+      setCartPeek(false);
+    }
+  }, [items.length]);
+
+  useEffect(() => {
     if (typeof window === "undefined") return;
 
     const params = new URLSearchParams(window.location.search);
@@ -895,7 +901,7 @@ export default function SectoCafePedidos() {
             <div>
               <div className="text-sm tracking-[0.2em] text-neutral-500">TU PEDIDO</div>
               <div className="text-xs text-neutral-400 mt-1">
-                Revisá tu pedido o terminá la compra
+                Elegí si querés seguir agregando o completar los datos
               </div>
             </div>
 
@@ -916,9 +922,7 @@ export default function SectoCafePedidos() {
                     <div className="font-medium">{item.name}</div>
                     <div className="text-neutral-500">x{qty}</div>
                   </div>
-                  <div className="text-neutral-700 whitespace-nowrap">
-                    {currency(item.price * qty)}
-                  </div>
+                  <div className="text-neutral-700 whitespace-nowrap">{currency(item.price * qty)}</div>
                 </div>
               ))}
             </div>
@@ -934,33 +938,30 @@ export default function SectoCafePedidos() {
               <button
                 type="button"
                 onClick={() => {
+                  setCartPeek(false);
+                }}
+                className="w-full rounded-2xl py-2 border border-neutral-200 text-sm"
+              >
+                Seguir comprando
+              </button>
+
+              <button
+                type="button"
+                onClick={() => {
+                  setCartPeek(false);
                   if (cartRef.current) {
                     cartRef.current.scrollIntoView({ behavior: "smooth", block: "start" });
                   }
                 }}
-                className="w-full rounded-2xl py-2 border border-neutral-200 text-sm"
+                className="w-full rounded-2xl py-3 text-center bg-black text-white"
               >
-                Ver pedido completo
+                Enviar pedido
               </button>
-
-              {hasMP && (
-                <button
-                  type="button"
-                  onClick={payWithMP}
-                  className={`w-full rounded-2xl py-3 text-center ${
-                    canSendNow ? "bg-black text-white" : "bg-neutral-100 text-neutral-600"
-                  }`}
-                >
-                  Pagar ahora
-                </button>
-              )}
             </div>
 
-            {!canSendNow && (
-              <p className="text-[11px] text-neutral-500">
-                Completá nombre, teléfono y dirección/horario para finalizar.
-              </p>
-            )}
+            <p className="text-[11px] text-neutral-500">
+              Vas a completar nombre, teléfono, horario y dirección antes de enviarlo.
+            </p>
           </div>
         </div>
       )}
@@ -972,7 +973,7 @@ export default function SectoCafePedidos() {
           onClick={() => setCartPeek(true)}
           className="fixed right-3 top-24 z-40 rounded-2xl bg-black text-white px-4 py-3 shadow-lg text-sm"
         >
-          Ver pedido · {currency(total)}
+          Tu pedido · {currency(total)}
         </button>
       )}
 

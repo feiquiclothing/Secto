@@ -60,7 +60,7 @@ const MENU = [
     id: "rolls",
     name: "ROLLS 10 piezas",
     items: [
-      { id: "r00a", name: "2x1 KANI ROLL - Kanikama | Palta | Queso", price: 460, img: "" },
+      { id: "r00a", name: "2x1 KANI ROLL - Kanikama | Mango | Queso | Quinoa frita | Verdeo", price: 460, img: "" },
       { id: "r00b", name: "2x1 BONIATO ROLL - Boniato | Palta | Queso", price: 460, img: "" },
       { id: "r01", name: "01 - Salmón | Palta | Queso", price: 440, img: "/Photos/01.JPG" },
       { id: "r02", name: "02 - Atún | Palta | Queso", price: 440, img: "/Photos/02.JPG" },

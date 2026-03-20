@@ -69,7 +69,7 @@ const MENU = [
       { id: "r07", name: "Spicy carrot - Boniato | Palta | Queso | Spicy carrot | Verdeo", price: 390, img: "/Photos/07.JPG" },
       { id: "r08", name: "Nori furai - Boniato | Palta | Spicy carrot | Verdeo | Sésamo", price: 390, img: "/Photos/08.JPG" },
       { id: "r09", name: "Creamy Tomato - Tomate seco | Palta | Rúcula | Queso | Batayaki | Verdeo", price: 390, img: "/Photos/09.JPG" },
-      { id: "r10", name: "Teriyaki Roll - Boniato tempura | Mango | Quinoa frita | Verdeo | Teriyaki", price: 390, img: "/Photos/09.JPG" },
+      { id: "r10", name: "Teriyaki Roll - Boniato tempura | Mango | Quinoa frita | Verdeo | Teriyaki", price: 390, img: "/Photos/10.JPG" },
     ],
   },
   {

@@ -18,7 +18,7 @@ const ORDERS_ENDPOINT = MP_ENDPOINT;
 const GALLERY = [];
 
 // Foto para la sección POKES
-const POKE_IMAGE = "/Photos/10.jpg";
+const POKE_IMAGE = "/Photos/15.jpg";
 
 // ===== APERTURA =====
 const TZ = "America/Montevideo";

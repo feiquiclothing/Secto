@@ -60,36 +60,25 @@ const MENU = [
     id: "rolls",
     name: "ROLLS 10 piezas",
     items: [
-      { id: "r00a", name: "2x1 KANI ROLL - Kanikama | Mango | Queso | Quinoa frita | Verdeo", price: 460, img: "" },
-      { id: "r00b", name: "2x1 BONIATO ROLL - Boniato | Palta | Queso", price: 460, img: "" },
-      { id: "r01", name: "01 - Salmón | Palta | Queso", price: 440, img: "/Photos/01.JPG" },
-      { id: "r02", name: "02 - Atún | Palta | Queso", price: 440, img: "/Photos/02.JPG" },
-      { id: "r03", name: "03 - Atún | Mango | Pepino | Cilantro", price: 460, img: "/Photos/03.JPG" },
-      { id: "r04", name: "04 - Salmón | Mango | Ciboulette | Queso | Quinoa frita", price: 460, img: "/Photos/04.JPG" },
-      { id: "r05", name: "05 - Tomate seco | Palta | Rúcula | Queso", price: 460, img: "/Photos/05.JPG" },
-      { id: "r06", name: "06 - Langostino | Mango | Queso | Praline | Sweet chilli", price: 480, img: "/Photos/06.JPG" },
-      { id: "r07", name: "07 - Salmón | Palta | Mayo spicy | Verdeo", price: 480, img: "/Photos/07.JPG" },
-      { id: "r08", name: "08 - Boniato | Palta | Ciboulette | Quinoa frita", price: 440, img: "/Photos/08.JPG" },
-      { id: "r09", name: "09 - Langostinos | Palta | Queso", price: 440, img: "/Photos/09.JPG" },
+      { id: "r01", name: "Mango Roll - Mango | Palta | Pepino | Sésamo | Mayo wasabi", price: 360, img: "/Photos/01.JPG" },
+      { id: "r02", name: "Green Roll - Palta | Pepino | Rúcula | Queso | Sésamo", price: 360, img: "/Photos/02.JPG" },
+      { id: "r03", name: "Philadelphia Roll - Boniato | Palta | Queso | Sésamo", price: 360, img: "/Photos/03.JPG" },
+      { id: "r04", name: "Philadelphia Hot Roll - Boniato | Palta | Queso | Sésamo | Frito en panko | Taré | Verdeo", price: 390, img: "/Photos/04.JPG" },
+      { id: "r05", name: "Sweet Crunch - Boniato | Mango | Queso | Quinoa frita | Batayaki | Boniato frito", price: 420, img: "/Photos/05.JPG" },
+      { id: "r06", name: "Tempura Veggie - Zucchini tempura | Palta | Queso | Sésamo | Verdeo", price: 390, img: "/Photos/06.JPG" },
+      { id: "r07", name: "Spicy carrot - Boniato | Palta | Queso | Spicy carrot | Verdeo", price: 390, img: "/Photos/07.JPG" },
+      { id: "r08", name: "Nori furai - Boniato | Palta | Spicy carrot | Verdeo | Sésamo", price: 390, img: "/Photos/08.JPG" },
+      { id: "r09", name: "Creamy Tomato - Tomate seco | Palta | Rúcula | Queso | Batayaki | Verdeo", price: 390, img: "/Photos/09.JPG" },
+      { id: "r10", name: "Teriyaki Roll - Boniato tempura | Mango | Quinoa frita | Verdeo | Teriyaki", price: 390, img: "/Photos/09.JPG" },
     ],
   },
   {
-    id: "temakis",
-    name: "TEMAKI 1 pieza",
-    items: [{ id: "t01", name: "Salmón | Palta | Queso | Pepino | Sésamo", price: 260, img: "/Photos/11.jpg" }],
-  },
-  {
-    id: "onigirazu",
-    name: "ONIGIRAZU",
-    items: [{ id: "s01", name: "Tuna mayo | Palta | Zanahoria | Pepino | Repollo | Verdeo", price: 420, img: "/Photos/12.jpg" }],
-  },
-  {
     id: "combos",
-    name: "COMBINADOS",
+    name: "COMBOS",
     items: [
-      { id: "c01", name: "Combinado 14 piezas", price: 680 },
-      { id: "c02", name: "Combinado 24 piezas", price: 1100 },
-      { id: "c03", name: "Combinado 36 piezas", price: 1580 },
+      { id: "c01", name: "Combo 20 piezas", price: 680 },
+      { id: "c02", name: "Combo 30 piezas", price: 990 },
+      { id: "c03", name: "Combos 40 piezas", price: 1280 },
     ],
   },
   {
@@ -109,8 +98,10 @@ const MENU = [
     items: [
       { id: "b01", name: "Agua Salus sin gas 600cc", price: 100, img: "" },
       { id: "b02", name: "Agua Salus con gas 600cc", price: 100, img: "" },
-      { id: "b03", name: "Lata Pepsi 600cc", price: 100, img: "" },
-      { id: "b04", name: "Lata Pepsi black 600cc", price: 100, img: "" },
+      { id: "b03", name: "Coca Cola 600cc", price: 100, img: "" },
+      { id: "b04", name: "Schweppes 600cc", price: 100, img: "" },
+      { id: "b05", name: "Sprite 600cc", price: 100, img: "" },
+      { id: "b06", name: "Fanta 600cc", price: 100, img: "" },
     ],
   },
 ];
@@ -193,9 +184,9 @@ function buildWhatsAppText(order) {
 
 // ===== POKES =====
 const POKE_BASE_PRICE = 440;
-const POKE_EXTRA_PROTEIN = 80;
-const POKE_EXTRA_TOPPING = 40;
-const POKE_EXTRA_SAUCE = 40;
+const POKE_EXTRA_PROTEIN = 40;
+const POKE_EXTRA_TOPPING = 20;
+const POKE_EXTRA_SAUCE = 20;
 
 const POKE_INCLUDED_PROTEINS = 2;
 const POKE_INCLUDED_TOPPINGS = 5;
@@ -204,12 +195,8 @@ const POKE_INCLUDED_SAUCES = 2;
 const POKE_BASES = ["Arroz de sushi", "Arroz sin aderezar", "Mix de verdes"];
 
 const POKE_PROTEINS = [
-  "Langostinos",
-  "Salmón",
-  "Salmón spicy",
-  "Tuna mayo",
-  "Tuna mayo spicy",
-  "Atún rojo",
+  "Falafel",
+  "Boniato",
   "Garbanzos",
   "Tofu",
 ];
@@ -224,14 +211,15 @@ const POKE_TOPPINGS = [
   "Cebolla de verdeo",
   "Choclo",
   "Repollo",
-  "Cilantro",
+  "Quinoa frita",
   "Alga nori",
+  "Rúcula",
   "Cebolla crispy",
   "Maíz frito",
   "Sésamo",
 ];
 
-const POKE_SAUCES = ["Soja", "Teriyaki", "Taré", "Alioli", "Maracuyá", "Spicy mayo", "Mayo de wasabi", "Sriracha"];
+const POKE_SAUCES = ["Soja", "Teriyaki", "Taré", "Maracuyá", "Spicy mayo", "Mayo de wasabi", "Sriracha"];
 
 function PokeBuilder({ onAdd, isOpen }) {
   const [base, setBase] = useState("");

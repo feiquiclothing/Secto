@@ -79,6 +79,7 @@ const MENU = [
       { id: "c01", name: "Combo 20 piezas", price: 680 },
       { id: "c02", name: "Combo 30 piezas", price: 990 },
       { id: "c03", name: "Combos 40 piezas", price: 1280 },
+      { id: "c04", name: "Combos 50 piezas", price: 1560 },
     ],
   },
   {
@@ -89,7 +90,6 @@ const MENU = [
       { id: "e02", name: "Teriyaki", price: 40 },
       { id: "e03", name: "Wasabi", price: 40 },
       { id: "e04", name: "Gari (Jengibre)", price: 40 },
-      { id: "e05", name: "Sweet chilli", price: 60 },
     ],
   },
   {

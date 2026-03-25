@@ -1,4 +1,11 @@
 {
+  "redirects": [
+    {
+      "source": "/",
+      "destination": "https://www.pedidosya.com.uy/restaurantes/montevideo/secto-sushi-vegetal-176ace30-39a0-4762-884a-f340ec7d0c36-menu",
+      "permanent": false
+    }
+  ],
   "rewrites": [
     { "source": "/api/(.*)", "destination": "/api/$1" },
     { "source": "/(.*)", "destination": "/index.html" }

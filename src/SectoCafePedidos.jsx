@@ -24,7 +24,7 @@ const POKE_IMAGE = "/Photos/15.jpg";
 const TZ = "America/Montevideo";
 const OPEN_DAYS = [1, 2, 3, 4, 5, 6]; // 0=Dom, 1=Lun, ...
 const OPEN_HOUR_START = 12;
-const OPEN_HOUR_END = 15;
+const OPEN_HOUR_END = 23:59;
 const FORCE_OPEN = false;
 const FORCE_CLOSED = false;
 
@@ -64,7 +64,7 @@ const MENU = [
       { id: "r02", name: "Green Roll - Palta | Pepino | Rúcula | Queso | Sésamo", price: 360, img: "/Photos/02.JPG" },
       { id: "r03", name: "Philadelphia Roll - Boniato | Palta | Queso | Sésamo", price: 360, img: "/Photos/03.JPG" },
       { id: "r04", name: "Philadelphia Hot Roll - Boniato | Palta | Queso | Sésamo | Frito en panko | Taré | Verdeo", price: 390, img: "/Photos/04.JPG" },
-      { id: "r05", name: "Sweet Crunch - Boniato | Mango | Queso | Quinoa frita | Batayaki | Boniato frito", price: 420, img: "/Photos/05.JPG" },
+      { id: "r05", name: "Sweet Crunch - Boniato | Mango | Queso | Quinoa frita | Batayaki | Boniato frito", price: 390, img: "/Photos/05.JPG" },
       { id: "r06", name: "Tempura Veggie - Zucchini tempura | Palta | Queso | Sésamo | Verdeo", price: 390, img: "/Photos/06.JPG" },
       { id: "r07", name: "Spicy carrot - Boniato | Palta | Queso | Spicy carrot | Verdeo", price: 390, img: "/Photos/07.JPG" },
       { id: "r08", name: "Nori furai - Boniato | Palta | Spicy carrot | Verdeo | Sésamo", price: 390, img: "/Photos/08.JPG" },
@@ -79,7 +79,7 @@ const MENU = [
       { id: "c01", name: "Combo 20 piezas", price: 680 },
       { id: "c02", name: "Combo 30 piezas", price: 990 },
       { id: "c03", name: "Combos 40 piezas", price: 1280 },
-      { id: "c04", name: "Combos 50 piezas", price: 1560 },
+      { id: "c04", name: "Combos 50 piezas", price: 1640 },
     ],
   },
   {
@@ -115,7 +115,7 @@ const ZONES = [
 ];
 
 // ✅ Horarios cada 30 min
-function buildHours(start = "12:00", end = "15:00", stepMin = 30) {
+function buildHours(start = "12:00", end = "23:59", stepMin = 30) {
   const toMin = (h) => {
     const [H, M] = h.split(":").map(Number);
     return H * 60 + M;
@@ -130,7 +130,7 @@ function buildHours(start = "12:00", end = "15:00", stepMin = 30) {
   for (let m = toMin(start); m <= toMin(end); m += stepMin) out.push(fromMin(m));
   return out;
 }
-const HOURS = buildHours("12:00", "15:00", 30);
+const HOURS = buildHours("12:00", "23:59", 30);
 
 const currency = (uy) =>
   new Intl.NumberFormat("es-UY", { style: "currency", currency: "UYU" }).format(uy);
@@ -195,7 +195,6 @@ const POKE_INCLUDED_SAUCES = 2;
 const POKE_BASES = ["Arroz de sushi", "Arroz sin aderezar", "Mix de verdes"];
 
 const POKE_PROTEINS = [
-  "Falafel",
   "Boniato",
   "Garbanzos",
   "Tofu",
@@ -967,7 +966,7 @@ export default function SectoCafePedidos() {
 
       <footer className="max-w-6xl mx-auto px-4 pb-10 text-xs text-neutral-500">
         <hr className="border-neutral-200 mb-4" />
-        © {new Date().getFullYear()} - Secto Cafe · Lun - Sab: Almuerzo 12:00 a 15:00 - Merienda 17:00 a 19:00
+        © {new Date().getFullYear()} - Secto Cafe · Lun - Sab | 12hs - 00hs
       </footer>
     </div>
   );

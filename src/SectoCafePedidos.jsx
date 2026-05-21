@@ -60,23 +60,23 @@ const MENU = [
     id: "rolls",
     name: "ROLLS 10 piezas",
     items: [
-      { id: "r01", name: "Mango Roll - Mango | Palta | Pepino | Sésamo | Mayo wasabi", price: 360, img: "/Photos/01.JPG" },
-      { id: "r02", name: "Green Roll - Palta | Pepino | Rúcula | Queso | Sésamo", price: 360, img: "/Photos/02.JPG" },
-      { id: "r03", name: "Philadelphia Roll - Boniato | Palta | Queso | Sésamo", price: 360, img: "/Photos/03.JPG" },
-      { id: "r04", name: "Philadelphia Hot Roll - Boniato | Palta | Queso | Sésamo | Frito en panko | Taré | Verdeo", price: 390, img: "/Photos/04.JPG" },
-      { id: "r05", name: "Sweet Crunch - Boniato | Mango | Queso | Quinoa frita | Batayaki | Boniato frito", price: 390, img: "/Photos/05.JPG" },
-      { id: "r06", name: "Tempura Veggie - Zucchini tempura | Palta | Queso | Sésamo | Verdeo", price: 390, img: "/Photos/06.JPG" },
-      { id: "r07", name: "Spicy carrot - Boniato | Palta | Queso | Spicy carrot | Verdeo", price: 390, img: "/Photos/07.JPG" },
-      { id: "r08", name: "Nori furai - Boniato | Palta | Spicy carrot | Verdeo | Sésamo", price: 390, img: "/Photos/08.JPG" },
-      { id: "r09", name: "Creamy Tomato - Tomate seco | Palta | Rúcula | Queso | Batayaki | Verdeo", price: 390, img: "/Photos/09.JPG" },
-      { id: "r10", name: "Teriyaki Roll - Boniato tempura | Mango | Quinoa frita | Verdeo | Teriyaki", price: 390, img: "/Photos/10.JPG" },
+      { id: "r01", name: "Mango Roll - Mango | Palta | Pepino | Sésamo | Mayo wasabi", price: 340, img: "/Photos/01.JPG" },
+      { id: "r02", name: "Green Roll - Palta | Pepino | Rúcula | Queso | Sésamo", price: 340, img: "/Photos/02.JPG" },
+      { id: "r03", name: "Philadelphia Roll - Boniato | Palta | Queso | Sésamo", price: 340, img: "/Photos/03.JPG" },
+      { id: "r04", name: "Philadelphia Hot Roll - Boniato | Palta | Queso | Sésamo | Frito en panko | Taré | Verdeo", price: 380, img: "/Photos/04.JPG" },
+      { id: "r05", name: "Sweet Crunch - Boniato | Mango | Queso | Quinoa frita | Batayaki | Boniato frito", price: 380, img: "/Photos/05.JPG" },
+      { id: "r06", name: "Tempura Veggie - Zucchini tempura | Palta | Queso | Sésamo | Verdeo", price: 370, img: "/Photos/06.JPG" },
+      { id: "r07", name: "Spicy carrot - Boniato | Palta | Queso | Spicy carrot | Verdeo", price: 380, img: "/Photos/07.JPG" },
+      { id: "r08", name: "Nori furai - Boniato | Palta | Spicy carrot | Verdeo | Sésamo", price: 380, img: "/Photos/08.JPG" },
+      { id: "r09", name: "Creamy Tomato - Tomate seco | Palta | Rúcula | Queso | Batayaki | Verdeo", price: 380, img: "/Photos/09.JPG" },
+      { id: "r10", name: "Teriyaki Roll - Boniato tempura | Mango | Quinoa frita | Verdeo | Teriyaki", price: 380, img: "/Photos/10.JPG" },
     ],
   },
   {
     id: "combos",
-    name: "COMBOS",
+    name: "COMBOS (especificar rolls en checkout)",
     items: [
-      { id: "c01", name: "Combo 20 piezas", price: 680 },
+      { id: "c01", name: "Combo 20 piezas", price: 580 },
       { id: "c02", name: "Combo 30 piezas", price: 990 },
       { id: "c03", name: "Combos 40 piezas", price: 1280 },
       { id: "c04", name: "Combos 50 piezas", price: 1640 },
@@ -810,7 +810,7 @@ export default function SectoCafePedidos() {
               <textarea
                 value={notes}
                 onChange={(e) => setNotes(e.target.value)}
-                placeholder="Sin sésamo, timbre roto, etc."
+                placeholder="Rolls de tu combo, timbre roto, etc."
                 className="w-full bg-white border border-neutral-200 rounded-xl p-2 placeholder-neutral-400"
                 rows={2}
               />

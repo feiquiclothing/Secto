@@ -2,7 +2,7 @@ import React from "react";
 import { createRoot } from "react-dom/client";
 
 import SectoCafePedidos from "./SectoCafePedidos.jsx";
-import TumbaPizzas from "./TumbaPizzas.jsx";
+import TumbaPizzas from "./tumbapizzas.jsx";
 
 import Kitchen from "./Kitchen.jsx";
 import Admin from "./Admin.jsx";
@@ -14,13 +14,9 @@ function AppRouter() {
   const path = window.location.pathname;
 
   if (path === "/kitchen") return <Kitchen />;
-
   if (path === "/ticket") return <Ticket />;
-
   if (path === "/admin") return <Admin />;
-
-  if (path === "/TumbaPizzas")
-    return <TumbaPizzas />;
+  if (path === "/tumbapizzas") return <TumbaPizzas />;
 
   return <SectoCafePedidos />;
 }

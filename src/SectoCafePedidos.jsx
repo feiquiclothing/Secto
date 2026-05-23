@@ -95,10 +95,10 @@ const MENU = [
     items: [
       { id: "b01", name: "Agua Salus sin gas 600cc", price: 100, img: "" },
       { id: "b02", name: "Agua Salus con gas 600cc", price: 100, img: "" },
-      { id: "b03", name: "Coca Cola 600cc", price: 100, img: "" },
-      { id: "b04", name: "Schweppes 600cc", price: 100, img: "" },
-      { id: "b05", name: "Sprite 600cc", price: 100, img: "" },
-      { id: "b06", name: "Fanta 600cc", price: 100, img: "" },
+      { id: "b03", name: "Coca Cola 600cc", price: 150, img: "" },
+      { id: "b04", name: "Schweppes 600cc", price: 150, img: "" },
+      { id: "b05", name: "Sprite 600cc", price: 150, img: "" },
+      { id: "b06", name: "Fanta 600cc", price: 150, img: "" },
     ],
   },
 ];

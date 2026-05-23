@@ -1,3 +1,5 @@
+import React from "react";
+
 const MENU = [
   {
     id: "premium",
@@ -11,6 +13,7 @@ const MENU = [
       { id: "p06", name: "Prende tuba - Bondiola | Chimichanga | Nueces", price: 560 },
     ],
   },
+
   {
     id: "clasicas",
     name: "PIZZAS CLÁSICAS",
@@ -22,6 +25,7 @@ const MENU = [
       { id: "c05", name: "Fainá", price: 220 },
     ],
   },
+
   {
     id: "combos",
     name: "COMBOS",
@@ -32,6 +36,7 @@ const MENU = [
       { id: "co04", name: "Dos pizzas premium + Fainá", price: 990 },
     ],
   },
+
   {
     id: "postres",
     name: "POSTRES",
@@ -41,6 +46,7 @@ const MENU = [
       { id: "po03", name: "Chocotorta", price: 0 },
     ],
   },
+
   {
     id: "extras",
     name: "EXTRAS",
@@ -50,6 +56,7 @@ const MENU = [
       { id: "e03", name: "Dip chimichanga", price: 0 },
     ],
   },
+
   {
     id: "bebidas",
     name: "BEBIDAS",
@@ -59,3 +66,29 @@ const MENU = [
     ],
   },
 ];
+
+export default function TumbaPizzas() {
+  return (
+    <div className="min-h-screen bg-white text-black p-10">
+      <h1 className="text-5xl mb-10">TUMBA PIZZAS</h1>
+
+      {MENU.map((cat) => (
+        <div key={cat.id} className="mb-10">
+          <h2 className="text-2xl mb-4">{cat.name}</h2>
+
+          <div className="space-y-2">
+            {cat.items.map((item) => (
+              <div
+                key={item.id}
+                className="flex justify-between border-b py-2"
+              >
+                <span>{item.name}</span>
+                <span>${item.price}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+}

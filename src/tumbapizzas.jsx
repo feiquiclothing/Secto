@@ -79,9 +79,9 @@ const MENU = [
     id: "extras",
     name: "EXTRAS",
     items: [
-      { id: "e01", name: "Dip pesto", price: 0 },
-      { id: "e02", name: "Dip romesco", price: 0 },
-      { id: "e03", name: "Dip chimichanga", price: 0 },
+      { id: "e01", name: "Dip pesto", price: 60 },
+      { id: "e02", name: "Dip romesco", price: 60 },
+      { id: "e03", name: "Dip chimichurri", price: 60 },
     ],
   },
   {

@@ -47,7 +47,7 @@ const MENU = [
     id: "premium",
     name: "PIZZAS PREMIUM",
     items: [
-      { id: "p01", name: "De la planta - Bechamel de coco | Cebolla | Parmesano vegano | Tomillo", price: 480, img: "/Photos/01423.JPG" },
+      { id: "p01", name: "De la planta - Bechamel de coco | Cebolla | Parmesano vegano | Tomillo", price: 480, img: "/Photos/delaplanta.JPG" },
       { id: "p02", name: "Cabrío - Rúcula | Queso de cabra | Miel | Nueces", price: 620, img: "/Photos/cabrío.JPG" },
       { id: "p03", name: "Cuchillo de palo - Cebo figazza | Romesco | Parmesano", price: 460, img: "/Photos/cuchillo de palo.JPG" },
       { id: "p04", name: "Testigo falso - Pepperoni | Merkén", price: 580, img: "/Photos/testigo falso.JPG" },
@@ -59,11 +59,10 @@ const MENU = [
     id: "clasicas",
     name: "PIZZAS CLÁSICAS",
     items: [
-      { id: "c01", name: "Atala con alambre - Cebolla | Muzzarella | Tomillo", price: 420, img: "/Photos/01.JPG" },
+      { id: "c01", name: "Atala con alambre - Cebolla | Muzzarella | Tomillo", price: 420, img: "/Photos/atalaconalambre.png" },
       { id: "c02", name: "Margarita", price: 480, img: "/Photos/margarita.JPG" },
       { id: "c03", name: "La vieja confiable - Muzzarella", price: 420, img: "/Photos/la vieja confiable.JPG" },
       { id: "c04", name: "En mi salsa - Marinara", price: 380, img: "/Photos/en mi salsa.JPG" },
-      { id: "c05", name: "Fainá", price: 220, img: "/Photos/0123.JPG" },
     ],
   },
   {

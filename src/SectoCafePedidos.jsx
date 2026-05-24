@@ -1,16 +1,25 @@
 import React, { useMemo, useReducer, useState, useRef, useEffect } from "react";
 
-const PHONE_URUGUAY = "099079595";
+/**
+ * Secto Café – Página de pedidos
+ */
 
+// ===== CONFIG =====
+const PHONE_URUGUAY = "099079595"; // WhatsApp sin +598
+
+// URL buena (web app /exec)
 const MP_ENDPOINT =
   "https://script.google.com/macros/s/AKfycbxrWgSPWPjDqelx1-_iaxvjDLW7ZL6W647UsZVm-ZaxREwY7E4MiQHNOvyNPXXbmHpQzA/exec";
 
+// Usamos el mismo endpoint para cola de impresión
 const ORDERS_ENDPOINT = MP_ENDPOINT;
 
+// Galería de fotos (opcional)
 const GALLERY = [];
 
+// ===== APERTURA =====
 const TZ = "America/Montevideo";
-const OPEN_DAYS = [1, 2, 3, 4, 5, 6];
+const OPEN_DAYS = [1, 2, 3, 4, 5, 6]; // 0=Dom, 1=Lun, ...
 const OPEN_HOUR_START = 12;
 const OPEN_HOUR_END = 24;
 const FORCE_OPEN = false;
@@ -22,7 +31,6 @@ function getNowInTZ() {
     timeZone: TZ,
     weekday: "short",
   }).format(now);
-
   const dayMap = { Sun: 0, Mon: 1, Tue: 2, Wed: 3, Thu: 4, Fri: 5, Sat: 6 };
   const day = dayMap[weekdayStr];
 
@@ -31,7 +39,6 @@ function getNowInTZ() {
     hour: "2-digit",
     hour12: false,
   }).format(now);
-
   const hour = Number(hourStr);
 
   return { day, hour };
@@ -39,71 +46,64 @@ function getNowInTZ() {
 
 function isOpenBySchedule() {
   const { day, hour } = getNowInTZ();
-  return OPEN_DAYS.includes(day) && hour >= OPEN_HOUR_START && hour < OPEN_HOUR_END;
+  const isOpenDay = OPEN_DAYS.includes(day);
+  const isOpenHour = hour >= OPEN_HOUR_START && hour < OPEN_HOUR_END;
+  return isOpenDay && isOpenHour;
 }
 
+// ===== MENU =====
 const MENU = [
   {
-    id: "premium",
-    name: "PIZZAS PREMIUM",
+    id: "rolls",
+    name: "ROLLS 10 piezas",
     items: [
-      { id: "p01", name: "De la planta - Bechamel de coco | Cebolla | Parmesano vegano | Tomillo", price: 480 },
-      { id: "p02", name: "Cabrío - Rúcula | Queso de cabra | Miel | Nueces", price: 620 },
-      { id: "p03", name: "Cuchillo de palo - Cebo figazza | Romesco | Parmesano", price: 460 },
-      { id: "p04", name: "Testigo falso - Pepperoni | Merkén", price: 580 },
-      { id: "p05", name: "A otra rata - 3 quesos", price: 560 },
-      { id: "p06", name: "Prende tuba - Bondiola | Chimichanga | Nueces", price: 560 },
-    ],
-  },
-  {
-    id: "clasicas",
-    name: "PIZZAS CLÁSICAS",
-    items: [
-      { id: "c01", name: "Atala con alambre - Cebolla | Muzzarella | Tomillo", price: 420 },
-      { id: "c02", name: "Margarita", price: 480 },
-      { id: "c03", name: "La vieja confiable - Muzzarella", price: 420 },
-      { id: "c04", name: "En mi salsa - Marinara", price: 380 },
-      { id: "c05", name: "Fainá", price: 220 },
+      { id: "r01", name: "Mango Roll - Mango | Palta | Pepino | Sésamo | Mayo wasabi", price: 380, img: "/Photos/01.JPG" },
+      { id: "r02", name: "Green Roll - Palta | Pepino | Rúcula | Queso | Sésamo", price: 380, img: "/Photos/02.JPG" },
+      { id: "r03", name: "Philadelphia Roll - Boniato | Palta | Queso | Sésamo", price: 380, img: "/Photos/03.JPG" },
+      { id: "r04", name: "Philadelphia Hot Roll - Boniato | Palta | Queso | Sésamo | Frito en panko | Taré | Verdeo", price: 380, img: "/Photos/04.JPG" },
+      { id: "r05", name: "Sweet Crunch - Boniato | Mango | Queso | Quinoa frita | Batayaki | Boniato frito", price: 420, img: "/Photos/05.JPG" },
+      { id: "r06", name: "Tempura Veggie - Zucchini tempura | Palta | Queso | Sésamo | Verdeo", price: 380, img: "/Photos/06.JPG" },
+      { id: "r07", name: "Spicy carrot - Boniato | Palta | Queso | Spicy carrot | Verdeo", price: 420, img: "/Photos/07.JPG" },
+      { id: "r08", name: "Nori furai - Boniato | Palta | Spicy carrot | Verdeo | Sésamo", price: 420, img: "/Photos/08.JPG" },
+      { id: "r09", name: "Creamy Tomato - Tomate seco | Palta | Rúcula | Queso | Batayaki | Verdeo", price: 380, img: "/Photos/09.JPG" },
+      { id: "r10", name: "Teriyaki Roll - Boniato tempura | Mango | Quinoa frita | Verdeo | Teriyaki", price: 380, img: "/Photos/10.JPG" },
     ],
   },
   {
     id: "combos",
-    name: "COMBOS",
+    name: "COMBOS (especificar rolls en checkout)",
     items: [
-      { id: "co01", name: "Una pizza clásica + Norteña 473cc", price: 520 },
-      { id: "co02", name: "Dos pizzas clásicas + 2 Norteña 473cc", price: 1050 },
-      { id: "co03", name: "Dos pizzas premium + 2 Norteña 473cc", price: 1280 },
-      { id: "co04", name: "Dos pizzas premium + Fainá", price: 990 },
-    ],
-  },
-  {
-    id: "postres",
-    name: "POSTRES",
-    items: [
-      { id: "po01", name: "Húmeda de chocolate", price: 0 },
-      { id: "po02", name: "Budín de pan", price: 0 },
-      { id: "po03", name: "Chocotorta", price: 0 },
+      { id: "c01", name: "Combo 20 piezas", price: 580 },
+      { id: "c02", name: "Combo 30 piezas", price: 990 },
+      { id: "c03", name: "Combos 40 piezas", price: 1280 },
+      { id: "c04", name: "Combos 50 piezas", price: 1640 },
     ],
   },
   {
     id: "extras",
     name: "EXTRAS",
     items: [
-      { id: "e01", name: "Dip pesto", price: 0 },
-      { id: "e02", name: "Dip romesco", price: 0 },
-      { id: "e03", name: "Dip chimichanga", price: 0 },
+      { id: "e01", name: "Salsa de soja (1 incluida)", price: 30 },
+      { id: "e02", name: "Teriyaki", price: 40 },
+      { id: "e03", name: "Wasabi", price: 40 },
+      { id: "e04", name: "Gari (Jengibre)", price: 40 },
     ],
   },
   {
     id: "bebidas",
     name: "BEBIDAS",
     items: [
-      { id: "b01", name: "Línea Coca Cola", price: 140 },
-      { id: "b02", name: "Norteña 473cc", price: 150 },
+      { id: "b01", name: "Agua Salus sin gas 600cc", price: 100, img: "" },
+      { id: "b02", name: "Agua Salus con gas 600cc", price: 100, img: "" },
+      { id: "b03", name: "Coca Cola 600cc", price: 150, img: "" },
+      { id: "b04", name: "Schweppes 600cc", price: 150, img: "" },
+      { id: "b05", name: "Sprite 600cc", price: 150, img: "" },
+      { id: "b06", name: "Fanta 600cc", price: 150, img: "" },
     ],
   },
 ];
 
+// ===== ZONAS =====
 const ZONES = [
   { id: "cv", name: "Ciudad Vieja", fee: 0 },
   { id: "centro", name: "Centro / Cordón / Aguada", fee: 70 },
@@ -111,12 +111,12 @@ const ZONES = [
   { id: "otras", name: "Otras zonas coordinar", fee: 170 },
 ];
 
+// ✅ Horarios cada 30 min
 function buildHours(start = "12:00", end = "23:59", stepMin = 30) {
   const toMin = (h) => {
     const [H, M] = h.split(":").map(Number);
     return H * 60 + M;
   };
-
   const fromMin = (m) => {
     const H = String(Math.floor(m / 60)).padStart(2, "0");
     const M = String(m % 60).padStart(2, "0");
@@ -124,25 +124,17 @@ function buildHours(start = "12:00", end = "23:59", stepMin = 30) {
   };
 
   const out = [];
-
-  for (let m = toMin(start); m <= toMin(end); m += stepMin) {
-    out.push(fromMin(m));
-  }
-
+  for (let m = toMin(start); m <= toMin(end); m += stepMin) out.push(fromMin(m));
   return out;
 }
-
 const HOURS = buildHours("12:00", "23:59", 30);
 
 const currency = (uy) =>
-  new Intl.NumberFormat("es-UY", {
-    style: "currency",
-    currency: "UYU",
-  }).format(uy);
+  new Intl.NumberFormat("es-UY", { style: "currency", currency: "UYU" }).format(uy);
 
+// ===== CARRITO =====
 function reducer(state, action) {
   const next = { ...state };
-
   if (action.type === "add") {
     const key = action.item.id;
     const delta = typeof action.qty === "number" && action.qty > 0 ? action.qty : 1;
@@ -151,27 +143,19 @@ function reducer(state, action) {
   } else if (action.type === "remove") {
     const key = action.item.id;
     const qty = Math.max(0, (state[key]?.qty || 0) - 1);
-
     if (qty > 0) next[key] = { item: action.item, qty };
     else delete next[key];
   } else if (action.type === "clear") {
     return {};
   }
-
   return next;
 }
 
 function buildWhatsAppText(order) {
   const { items, subtotal, zone, fee, total, method, name, phone, address, notes, time, paid } = order;
-
-  const header = "Pedido Tumba Pizzas — " + new Date().toLocaleString("es-UY");
-
-  const lines = items.map(
-    ({ item, qty }) => "• " + item.name + " x" + qty + " — " + currency(item.price * qty)
-  );
-
+  const header = "Pedido Secto Cafe — " + new Date().toLocaleString("es-UY");
+  const lines = items.map(({ item, qty }) => "• " + item.name + " x" + qty + " — " + currency(item.price * qty));
   const zona = ZONES.find((z) => z.id === zone)?.name || "";
-
   const info = [
     "Metodo: " + (method === "pickup" ? "Retiro en local" : "Delivery"),
     method === "delivery" ? "Zona: " + zona + " (" + currency(fee) + ")" : null,
@@ -195,7 +179,7 @@ function buildWhatsAppText(order) {
   ].join("\n");
 }
 
-export default function TumbaPizzas() {
+export default function SectoCafePedidos() {
   const [cart, dispatch] = useReducer(reducer, {});
   const [method, setMethod] = useState("delivery");
   const [zone, setZone] = useState(ZONES[0].id);
@@ -207,6 +191,8 @@ export default function TumbaPizzas() {
 
   const cartRef = useRef(null);
   const [cartHighlight, setCartHighlight] = useState(false);
+
+  // ✅ mini carrito flotante persistente
   const [cartPeek, setCartPeek] = useState(false);
 
   const showCartPeek = () => {
@@ -214,28 +200,17 @@ export default function TumbaPizzas() {
   };
 
   const items = useMemo(() => Object.values(cart), [cart]);
-
-  const subtotal = useMemo(
-    () => items.reduce((s, { item, qty }) => s + item.price * qty, 0),
-    [items]
-  );
-
-  const fee = useMemo(
-    () => (method === "delivery" ? ZONES.find((z) => z.id === zone)?.fee || 0 : 0),
-    [method, zone]
-  );
-
+  const subtotal = useMemo(() => items.reduce((s, { item, qty }) => s + item.price * qty, 0), [items]);
+  const fee = useMemo(() => (method === "delivery" ? ZONES.find((z) => z.id === zone)?.fee || 0 : 0), [method, zone]);
   const total = subtotal + fee;
 
   const canSend = subtotal > 0 && name && phone && (method === "pickup" || address || zone === "cv");
-
   const hasMP = typeof MP_ENDPOINT === "string" && MP_ENDPOINT.trim().length > 0;
 
   const scheduleOpen = isOpenBySchedule();
-
   const isOpen = (FORCE_OPEN && !FORCE_CLOSED) || (!FORCE_CLOSED && scheduleOpen);
-
   const canSendNow = canSend && isOpen;
+
 
   const getOrder = (extra = {}) => ({
     items,
@@ -274,15 +249,12 @@ export default function TumbaPizzas() {
 
     const params = new URLSearchParams(window.location.search);
     const mp = params.get("mp");
-
     if (mp !== "success") return;
 
-    const raw = sessionStorage.getItem("tumba_order");
-
+    const raw = sessionStorage.getItem("secto_order");
     if (!raw) return;
 
     let order;
-
     try {
       order = JSON.parse(raw);
     } catch {
@@ -300,13 +272,9 @@ export default function TumbaPizzas() {
 
     openWhatsAppWithOrder(paidOrder);
 
-    sessionStorage.removeItem("tumba_order");
-
+    sessionStorage.removeItem("secto_order");
     params.delete("mp");
-
-    const cleanUrl =
-      window.location.pathname + (params.toString() ? "?" + params.toString() : "");
-
+    const cleanUrl = window.location.pathname + (params.toString() ? "?" + params.toString() : "");
     window.history.replaceState({}, "", cleanUrl);
   }, []);
 
@@ -330,7 +298,6 @@ export default function TumbaPizzas() {
 
   const payWithMP = () => {
     if (!hasMP) return;
-
     if (!canSendNow) {
       alert("Te falta completar datos (nombre, teléfono y dirección/zona) o el local está cerrado.");
       return;
@@ -338,7 +305,7 @@ export default function TumbaPizzas() {
 
     const order = getOrder({ paid: false, createdAt: Date.now() });
 
-    sessionStorage.setItem("tumba_order", JSON.stringify(order));
+    sessionStorage.setItem("secto_order", JSON.stringify(order));
 
     const payload = {
       items: order.items.map(({ item, qty }) => ({
@@ -355,8 +322,8 @@ export default function TumbaPizzas() {
       notes: order.notes,
       time: order.time,
       back_urls: {
-        success: window.location.origin + "/tumbapizzas?mp=success",
-        failure: window.location.origin + "/tumbapizzas?mp=failure",
+        success: window.location.origin + "?mp=success",
+        failure: window.location.origin + "?mp=failure",
       },
     };
 
@@ -380,23 +347,19 @@ export default function TumbaPizzas() {
       <header className="sticky top-0 z-40 border-b border-neutral-200 bg-white/90 backdrop-blur">
         <div className="max-w-6xl mx-auto px-4 py-3 flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <a href="/tumbapizzas" aria-label="Inicio Tumba Pizzas">
-              <div className="h-10 flex items-center text-lg tracking-[0.25em] text-neutral-900">
-                TUMBA
-              </div>
+            <a href="/" aria-label="Inicio Secto Cafe">
+              <img src="/logo-secto.png" alt="Secto Cafe" className="h-10 w-auto max-w-[140px] object-contain" />
             </a>
-
             <div className="leading-tight">
               <p className="text-xs tracking-[0.25em] text-neutral-500">
                 {isOpen
-                  ? "Abierto — pedidos habilitados de 12:00 a 00:00"
-                  : "Cerrado — pedidos habilitados lunes a sábado de 12:00 a 00:00"}
+                  ? "Abierto — Ejecutivo de 12:00 a 15:00"
+                  : "Cerrado — pedidos habilitados lunes a sábado de 12:00 a 15:00"}
               </p>
               <h1 className="text-lg text-neutral-900"></h1>
             </div>
           </div>
-
-          <div className="hidden sm:block text-sm text-neutral-500">TUMBA PIZZAS</div>
+          <div className="hidden sm:block text-sm text-neutral-500">SECTO CAFE — Piedras 276</div>
         </div>
       </header>
 
@@ -407,7 +370,7 @@ export default function TumbaPizzas() {
               <img
                 key={i}
                 src={src}
-                alt="Tumba Pizzas"
+                alt="Secto Café"
                 className="mb-4 w-full rounded-2xl border border-neutral-900 object-cover hover:opacity-90 transition"
               />
             ))}
@@ -426,10 +389,7 @@ export default function TumbaPizzas() {
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 {cat.items.map((item) => (
-                  <article
-                    key={item.id}
-                    className="group border border-neutral-200 rounded-2xl overflow-hidden bg-white"
-                  >
+                  <article key={item.id} className="group border border-neutral-200 rounded-2xl overflow-hidden bg-white">
                     {typeof item.img === "string" && item.img.trim().length > 0 ? (
                       <div className="aspect-[4/3] overflow-hidden">
                         <img
@@ -445,11 +405,8 @@ export default function TumbaPizzas() {
                     <div className="p-4 flex items-start justify-between gap-4">
                       <div>
                         <h3 className="text-neutral-900 leading-tight">{item.name}</h3>
-                        <p className="text-sm text-neutral-500 mt-1">
-                          {item.price > 0 ? currency(item.price) : "Consultar"}
-                        </p>
+                        <p className="text-sm text-neutral-500 mt-1">{currency(item.price)}</p>
                       </div>
-
                       <div className="flex items-center gap-2">
                         <button
                           onClick={() => dispatch({ type: "remove", item })}
@@ -457,22 +414,14 @@ export default function TumbaPizzas() {
                         >
                           -
                         </button>
-
-                        <span className="w-6 text-center text-neutral-600">
-                          {cart[item.id]?.qty || 0}
-                        </span>
-
+                        <span className="w-6 text-center text-neutral-600">{cart[item.id]?.qty || 0}</span>
                         <button
                           onClick={() => {
                             dispatch({ type: "add", item });
                             showCartPeek();
-                            setCartHighlight(true);
-                            setTimeout(() => setCartHighlight(false), 600);
                           }}
                           className={`px-3 py-2 rounded-xl border ${
-                            isOpen
-                              ? "border-neutral-200 bg-neutral-50"
-                              : "border-neutral-200 text-neutral-400 cursor-not-allowed"
+                            isOpen ? "border-neutral-200 bg-neutral-50" : "border-neutral-200 text-neutral-400 cursor-not-allowed"
                           }`}
                           disabled={!isOpen}
                         >
@@ -497,21 +446,16 @@ export default function TumbaPizzas() {
           >
             <h2 className="text-sm tracking-[0.2em] text-neutral-500">TU PEDIDO</h2>
 
-            <div className="space-y-3 max-h-[45vh] overflow-auto pr-1 mt-1">
-              {items.length === 0 && (
-                <p className="text-sm text-neutral-500">Agregá items del catálogo</p>
-              )}
 
+            <div className="space-y-3 max-h-[45vh] overflow-auto pr-1 mt-1">
+              {items.length === 0 && <p className="text-sm text-neutral-500">Agregá items del catálogo</p>}
               {items.map(({ item, qty }) => (
                 <div key={item.id} className="flex items-center justify-between text-sm">
                   <div className="pr-2">
                     <p className="text-neutral-800">{item.name}</p>
                     <p className="text-neutral-500">x{qty}</p>
                   </div>
-
-                  <div className="text-neutral-700">
-                    {item.price > 0 ? currency(item.price * qty) : "Consultar"}
-                  </div>
+                  <div className="text-neutral-700">{currency(item.price * qty)}</div>
                 </div>
               ))}
             </div>
@@ -527,7 +471,6 @@ export default function TumbaPizzas() {
               >
                 Delivery
               </button>
-
               <button
                 className={`rounded-xl p-2 border ${
                   method === "pickup" ? "bg-neutral-100 border-neutral-300" : "border-neutral-200"
@@ -541,7 +484,6 @@ export default function TumbaPizzas() {
             {method === "delivery" && (
               <div className="space-y-2">
                 <label className="text-xs text-neutral-500">Zona de entrega</label>
-
                 <select
                   value={zone}
                   onChange={(e) => setZone(e.target.value)}
@@ -555,7 +497,6 @@ export default function TumbaPizzas() {
                 </select>
 
                 <label className="text-xs text-neutral-500">Dirección</label>
-
                 <input
                   value={address}
                   onChange={(e) => setAddress(e.target.value)}
@@ -568,7 +509,6 @@ export default function TumbaPizzas() {
             <div className="grid grid-cols-2 gap-2 mt-3">
               <div>
                 <label className="text-xs text-neutral-500">Nombre</label>
-
                 <input
                   value={name}
                   onChange={(e) => setName(e.target.value)}
@@ -576,10 +516,8 @@ export default function TumbaPizzas() {
                   className="w-full bg-white border border-neutral-200 rounded-xl p-2 placeholder-neutral-400"
                 />
               </div>
-
               <div>
                 <label className="text-xs text-neutral-500">Teléfono</label>
-
                 <input
                   value={phone}
                   onChange={(e) => setPhone(e.target.value)}
@@ -591,14 +529,12 @@ export default function TumbaPizzas() {
 
             <div className="mt-3">
               <label className="text-xs text-neutral-500">Horario</label>
-
               <select
                 value={time}
                 onChange={(e) => setTime(e.target.value)}
                 className="w-full bg-white border border-neutral-200 rounded-xl p-2"
               >
                 <option value="">{isOpen ? "Seleccioná horario" : "Cerrado (no disponible)"}</option>
-
                 {HOURS.map((h) => (
                   <option key={h} value={h}>
                     {h}
@@ -609,11 +545,10 @@ export default function TumbaPizzas() {
 
             <div className="mt-3">
               <label className="text-xs text-neutral-500">Notas</label>
-
               <textarea
                 value={notes}
                 onChange={(e) => setNotes(e.target.value)}
-                placeholder="Aclaraciones del pedido, gustos del combo, timbre roto, etc."
+                placeholder="Rolls de tu combo, timbre roto, etc."
                 className="w-full bg-white border border-neutral-200 rounded-xl p-2 placeholder-neutral-400"
                 rows={2}
               />
@@ -624,14 +559,12 @@ export default function TumbaPizzas() {
                 <span className="text-neutral-500">Subtotal</span>
                 <span>{currency(subtotal)}</span>
               </div>
-
               {method === "delivery" && (
                 <div className="flex justify-between">
                   <span className="text-neutral-500">Envío</span>
                   <span>{currency(fee)}</span>
                 </div>
               )}
-
               <div className="flex justify-between text-neutral-900 font-medium">
                 <span>Total</span>
                 <span>{currency(total)}</span>
@@ -668,7 +601,7 @@ export default function TumbaPizzas() {
 
               {!isOpen && (
                 <p className="text-xs text-red-600 mt-1">
-                  Cerrado — pedidos habilitados lunes a sábado de {OPEN_HOUR_START}:00 a 00:00.
+                  Cerrado — pedidos habilitados lunes a sábado de {OPEN_HOUR_START}:00 a {OPEN_HOUR_END}:00 (hora Montevideo).
                 </p>
               )}
 
@@ -680,6 +613,7 @@ export default function TumbaPizzas() {
         </aside>
       </main>
 
+      {/* ✅ MINI CARRITO FLOTANTE PERSISTENTE */}
       {items.length > 0 && (
         <div
           className={
@@ -713,10 +647,7 @@ export default function TumbaPizzas() {
                     <div className="font-medium">{item.name}</div>
                     <div className="text-neutral-500">x{qty}</div>
                   </div>
-
-                  <div className="text-neutral-700 whitespace-nowrap">
-                    {item.price > 0 ? currency(item.price * qty) : "Consultar"}
-                  </div>
+                  <div className="text-neutral-700 whitespace-nowrap">{currency(item.price * qty)}</div>
                 </div>
               ))}
             </div>
@@ -731,7 +662,9 @@ export default function TumbaPizzas() {
             <div className="grid grid-cols-1 gap-2">
               <button
                 type="button"
-                onClick={() => setCartPeek(false)}
+                onClick={() => {
+                  setCartPeek(false);
+                }}
                 className="w-full rounded-2xl py-2 border border-neutral-200 text-sm"
               >
                 Seguir comprando
@@ -758,6 +691,7 @@ export default function TumbaPizzas() {
         </div>
       )}
 
+      {/* ✅ BOTÓN PARA REABRIR MINI CARRITO */}
       {items.length > 0 && !cartPeek && (
         <button
           type="button"
@@ -769,7 +703,8 @@ export default function TumbaPizzas() {
       )}
 
       <footer className="max-w-6xl mx-auto px-4 pb-10 text-xs text-neutral-500">
-        <hr className="border-neutral-200 mb-4" />© {new Date().getFullYear()} - Tumba Pizzas · Lun - Sab | 12hs - 00hs
+        <hr className="border-neutral-200 mb-4" />
+        © {new Date().getFullYear()} - Secto Cafe · Lun - Sab | 12hs - 00hs
       </footer>
     </div>
   );

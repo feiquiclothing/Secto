@@ -45,41 +45,40 @@ const MENU = [
     id: "premium",
     name: "PIZZAS PREMIUM",
     items: [
-      { id: "p01", name: "De la planta - Bechamel de coco | Cebolla | Parmesano vegano | Tomillo", price: 480, img: "/Photos/delaplanta.JPG" },
-      { id: "p02", name: "Cabrío - Rúcula | Queso de cabra | Miel | Nueces", price: 620, img: "/Photos/cabrío.JPG" },
-      { id: "p03", name: "Cuchillo de palo - Cebo figazza | Romesco | Parmesano", price: 460, img: "/Photos/cuchillo de palo.JPG" },
-      { id: "p04", name: "Testigo falso - Pepperoni | Merkén", price: 580, img: "/Photos/testigo falso.JPG" },
-      { id: "p05", name: "A otra rata - 3 quesos", price: 560, img: "/Photos/a otra rata3.jpg" },
-      { id: "p06", name: "Prende tuba - Bondiola | Chimichurri | Nueces", price: 560, img: "/Photos/prende tuba.JPG" },
+      { id: "p01", name: "De la planta - Bechamel de coco | Cebolla | Parmesano vegano | Tomillo", price: 450, img: "/Photos/delaplanta.JPG" },
+      { id: "p02", name: "Cabrío - Rúcula | Queso de cabra | Miel | Nueces", price: 560, img: "/Photos/cabrío.JPG" },
+      { id: "p03", name: "Cuchillo de palo - Cebo figazza | Romesco | Parmesano", price: 430, img: "/Photos/cuchillo de palo.JPG" },
+      { id: "p04", name: "Testigo falso - Pepperoni | Merkén", price: 540, img: "/Photos/testigo falso.JPG" },
+      { id: "p05", name: "A otra rata - 3 quesos", price: 520, img: "/Photos/a otra rata3.jpg" },
+      { id: "p06", name: "Prende tuba - Bondiola | Chimichurri | Nueces", price: 520, img: "/Photos/prende tuba.JPG" },
     ],
   },
   {
     id: "clasicas",
     name: "PIZZAS CLÁSICAS",
     items: [
-      { id: "c01", name: "Atala con alambre - Cebolla | Muzzarella | Tomillo", price: 420, img: "/Photos/atalaconalambre.png" },
-      { id: "c02", name: "Margarita", price: 480, img: "/Photos/margarita.JPG" },
-      { id: "c03", name: "La vieja confiable - Muzzarella", price: 420, img: "/Photos/la vieja confiable.JPG" },
-      { id: "c04", name: "En mi salsa - Marinara", price: 380, img: "/Photos/en mi salsa.JPG" },
+      { id: "c01", name: "Atala con alambre - Cebolla | Muzzarella | Tomillo", price: 360, img: "/Photos/atalaconalambre.png" },
+      { id: "c02", name: "Margarita", price: 380, img: "/Photos/margarita.JPG" },
+      { id: "c03", name: "La vieja confiable - Muzzarella", price: 360, img: "/Photos/la vieja confiable.JPG" },
+      { id: "c04", name: "En mi salsa - Marinara", price: 320, img: "/Photos/en mi salsa.JPG" },
     ],
   },
   {
     id: "combos",
     name: "COMBOS",
     items: [
-      { id: "co01", name: "Una pizza clásica + Norteña 473cc", price: 520 },
-      { id: "co02", name: "Dos pizzas clásicas + 2 Norteña 473cc", price: 1050 },
-      { id: "co03", name: "Dos pizzas premium + 2 Norteña 473cc", price: 1280 },
-      { id: "co04", name: "Dos pizzas premium + Fainá", price: 990 },
+      { id: "co01", name: "Una pizza clásica + Norteña 473cc", price: 380 },
+      { id: "co02", name: "Dos pizzas clásicas + 2 Norteña 473cc", price: 870 },
+      { id: "co03", name: "Dos pizzas premium + 2 Norteña 473cc", price: 1120 },
     ],
   },
   {
     id: "extras",
     name: "EXTRAS",
     items: [
-      { id: "e01", name: "Dip pesto", price: 60 },
-      { id: "e02", name: "Dip romesco", price: 60 },
-      { id: "e03", name: "Dip chimichurri", price: 60 },
+      { id: "e01", name: "Dip pesto", price: 40 },
+      { id: "e02", name: "Dip romesco", price: 40 },
+      { id: "e03", name: "Dip chimichurri", price: 40 },
     ],
   },
   {
@@ -92,6 +91,7 @@ const MENU = [
       { id: "b04", name: "Schweppes 600cc", price: 150, img: "" },
       { id: "b05", name: "Sprite 600cc", price: 150, img: "" },
       { id: "b06", name: "Fanta 600cc", price: 150, img: "" },
+      { id: "b07", name: "Norteña 473cc", price: 130, img: "" },
     ],
   },
 ];
@@ -99,8 +99,7 @@ const MENU = [
 const ZONES = [
   { id: "cv", name: "Ciudad Vieja", fee: 0 },
   { id: "centro", name: "Centro / Cordón / Aguada", fee: 70 },
-  { id: "pocitos", name: "Parque Rodó / Punta Carretas / Pocitos", fee: 120 },
-  { id: "otras", name: "Otras zonas coordinar", fee: 170 },
+  { id: "pocitos", name: "Parque Rodó / Punta Carretas / Pocitos", fee: 160 },
 ];
 
 function buildHours(start = "12:00", end = "23:59", stepMin = 30) {

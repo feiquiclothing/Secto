@@ -5,18 +5,15 @@ import React, { useMemo, useReducer, useState, useRef, useEffect } from "react";
  */
 
 // ===== CONFIG =====
-const PHONE_URUGUAY = "099079595"; // WhatsApp sin +598
-
-// Endpoint para guardar pedidos / cola de impresión
-const ORDERS_ENDPOINT =
-  "https://script.google.com/macros/s/AKfycbxrWgSPWPjDqelx1-_iaxvjDLW7ZL6W647UsZVm-ZaxREwY7E4MiQHNOvyNPXXbmHpQzA/exec";
+const PHONE_URUGUAY = "099079595";
+const ORDERS_ENDPOINT = "/api/secto";
 
 // Galería de fotos (opcional)
 const GALLERY = [];
 
 // ===== APERTURA =====
 const TZ = "America/Montevideo";
-const OPEN_DAYS = [1, 2, 3, 4, 5, 6]; // 0=Dom, 1=Lun, ...
+const OPEN_DAYS = [1, 2, 3, 4, 5, 6];
 const OPEN_HOUR_START = 12;
 const OPEN_HOUR_END = 24;
 const FORCE_OPEN = false;
@@ -24,6 +21,7 @@ const FORCE_CLOSED = false;
 
 function getNowInTZ() {
   const now = new Date();
+
   const weekdayStr = new Intl.DateTimeFormat("en-US", {
     timeZone: TZ,
     weekday: "short",
@@ -45,9 +43,7 @@ function getNowInTZ() {
 
 function isOpenBySchedule() {
   const { day, hour } = getNowInTZ();
-  const isOpenDay = OPEN_DAYS.includes(day);
-  const isOpenHour = hour >= OPEN_HOUR_START && hour < OPEN_HOUR_END;
-  return isOpenDay && isOpenHour;
+  return OPEN_DAYS.includes(day) && hour >= OPEN_HOUR_START && hour < OPEN_HOUR_END;
 }
 
 // ===== MENU =====
@@ -56,66 +52,16 @@ const MENU = [
     id: "rolls",
     name: "ROLLS 10 piezas",
     items: [
-      {
-        id: "r01",
-        name: "Mango Roll - Mango | Palta | Pepino | Sésamo | Mayo wasabi",
-        price: 380,
-        img: "/Photos/01.JPG",
-      },
-      {
-        id: "r02",
-        name: "Green Roll - Palta | Pepino | Rúcula | Queso | Sésamo",
-        price: 380,
-        img: "/Photos/02.JPG",
-      },
-      {
-        id: "r03",
-        name: "Philadelphia Roll - Boniato | Palta | Queso | Sésamo",
-        price: 380,
-        img: "/Photos/03.JPG",
-      },
-      {
-        id: "r04",
-        name: "Philadelphia Hot Roll - Boniato | Palta | Queso | Sésamo | Frito en panko | Taré | Verdeo",
-        price: 380,
-        img: "/Photos/04.JPG",
-      },
-      {
-        id: "r05",
-        name: "Sweet Crunch - Boniato | Mango | Queso | Quinoa frita | Batayaki | Boniato frito",
-        price: 420,
-        img: "/Photos/05.JPG",
-      },
-      {
-        id: "r06",
-        name: "Tempura Veggie - Zucchini tempura | Palta | Queso | Sésamo | Verdeo",
-        price: 380,
-        img: "/Photos/06.JPG",
-      },
-      {
-        id: "r07",
-        name: "Spicy carrot - Boniato | Palta | Queso | Spicy carrot | Verdeo",
-        price: 420,
-        img: "/Photos/07.JPG",
-      },
-      {
-        id: "r08",
-        name: "Nori furai - Boniato | Palta | Spicy carrot | Verdeo | Sésamo",
-        price: 420,
-        img: "/Photos/08.JPG",
-      },
-      {
-        id: "r09",
-        name: "Creamy Tomato - Tomate seco | Palta | Rúcula | Queso | Batayaki | Verdeo",
-        price: 380,
-        img: "/Photos/09.JPG",
-      },
-      {
-        id: "r10",
-        name: "Teriyaki Roll - Boniato tempura | Mango | Quinoa frita | Verdeo | Teriyaki",
-        price: 380,
-        img: "/Photos/10.JPG",
-      },
+      { id: "r01", name: "Mango Roll - Mango | Palta | Pepino | Sésamo | Mayo wasabi", price: 380, img: "/Photos/01.JPG" },
+      { id: "r02", name: "Green Roll - Palta | Pepino | Rúcula | Queso | Sésamo", price: 380, img: "/Photos/02.JPG" },
+      { id: "r03", name: "Philadelphia Roll - Boniato | Palta | Queso | Sésamo", price: 380, img: "/Photos/03.JPG" },
+      { id: "r04", name: "Philadelphia Hot Roll - Boniato | Palta | Queso | Sésamo | Frito en panko | Taré | Verdeo", price: 380, img: "/Photos/04.JPG" },
+      { id: "r05", name: "Sweet Crunch - Boniato | Mango | Queso | Quinoa frita | Batayaki | Boniato frito", price: 420, img: "/Photos/05.JPG" },
+      { id: "r06", name: "Tempura Veggie - Zucchini tempura | Palta | Queso | Sésamo | Verdeo", price: 380, img: "/Photos/06.JPG" },
+      { id: "r07", name: "Spicy carrot - Boniato | Palta | Queso | Spicy carrot | Verdeo", price: 420, img: "/Photos/07.JPG" },
+      { id: "r08", name: "Nori furai - Boniato | Palta | Spicy carrot | Verdeo | Sésamo", price: 420, img: "/Photos/08.JPG" },
+      { id: "r09", name: "Creamy Tomato - Tomate seco | Palta | Rúcula | Queso | Batayaki | Verdeo", price: 380, img: "/Photos/09.JPG" },
+      { id: "r10", name: "Teriyaki Roll - Boniato tempura | Mango | Quinoa frita | Verdeo | Teriyaki", price: 380, img: "/Photos/10.JPG" },
     ],
   },
   {
@@ -198,16 +144,17 @@ function reducer(state, action) {
     const delta = typeof action.qty === "number" && action.qty > 0 ? action.qty : 1;
     const qty = (state[key]?.qty || 0) + delta;
     next[key] = { item: action.item, qty };
-  } else if (action.type === "remove") {
+  }
+
+  if (action.type === "remove") {
     const key = action.item.id;
     const qty = Math.max(0, (state[key]?.qty || 0) - 1);
 
-    if (qty > 0) {
-      next[key] = { item: action.item, qty };
-    } else {
-      delete next[key];
-    }
-  } else if (action.type === "clear") {
+    if (qty > 0) next[key] = { item: action.item, qty };
+    else delete next[key];
+  }
+
+  if (action.type === "clear") {
     return {};
   }
 
@@ -274,12 +221,8 @@ export default function SectoCafePedidos() {
 
   const cartRef = useRef(null);
   const [cartHighlight, setCartHighlight] = useState(false);
-
   const [cartPeek, setCartPeek] = useState(false);
-
-  const showCartPeek = () => {
-    setCartPeek(true);
-  };
+  const [sending, setSending] = useState(false);
 
   const items = useMemo(() => Object.values(cart), [cart]);
 
@@ -289,14 +232,17 @@ export default function SectoCafePedidos() {
   );
 
   const fee = useMemo(
-    () =>
-      method === "delivery"
-        ? ZONES.find((z) => z.id === zone)?.fee || 0
-        : 0,
+    () => (method === "delivery" ? ZONES.find((z) => z.id === zone)?.fee || 0 : 0),
     [method, zone]
   );
 
   const total = subtotal + fee;
+
+  const scheduleOpen = isOpenBySchedule();
+
+  const isOpen =
+    (FORCE_OPEN && !FORCE_CLOSED) ||
+    (!FORCE_CLOSED && scheduleOpen);
 
   const canSend =
     subtotal > 0 &&
@@ -305,13 +251,11 @@ export default function SectoCafePedidos() {
     time &&
     (method === "pickup" || address || zone === "cv");
 
-  const scheduleOpen = isOpenBySchedule();
+  const canSendNow = canSend && isOpen && !sending;
 
-  const isOpen =
-    (FORCE_OPEN && !FORCE_CLOSED) ||
-    (!FORCE_CLOSED && scheduleOpen);
-
-  const canSendNow = canSend && isOpen;
+  const showCartPeek = () => {
+    setCartPeek(true);
+  };
 
   const getOrder = (extra = {}) => ({
     items,
@@ -345,7 +289,7 @@ export default function SectoCafePedidos() {
     }
   }, [items.length]);
 
-  const sendOrder = (paid = false) => {
+  const sendOrder = async (paid = false) => {
     if (!canSendNow) {
       alert("Te falta completar datos (nombre, teléfono, horario y dirección/zona) o el local está cerrado.");
       return;
@@ -357,21 +301,35 @@ export default function SectoCafePedidos() {
       source: "web",
     });
 
-    fetch(ORDERS_ENDPOINT, {
-      method: "POST",
-      headers: {
-        "Content-Type": "text/plain;charset=utf-8",
-      },
-      body: JSON.stringify({
-        action: "new_order",
-        order,
-      }),
-      keepalive: true,
-    })
-      .catch(() => {})
-      .finally(() => {
-        openWhatsAppWithOrder(order);
+    try {
+      setSending(true);
+
+      const res = await fetch(ORDERS_ENDPOINT, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          action: "new_order",
+          order,
+        }),
       });
+
+      const data = await res.json().catch(() => null);
+
+      if (!res.ok || data?.ok === false) {
+        throw new Error(data?.error || "No se pudo guardar el pedido");
+      }
+
+      openWhatsAppWithOrder({
+        ...order,
+        id: data?.id || order.id,
+      });
+    } catch (err) {
+      alert("No se pudo registrar el pedido para impresión: " + (err?.message || err));
+    } finally {
+      setSending(false);
+    }
   };
 
   return (
@@ -663,13 +621,14 @@ export default function SectoCafePedidos() {
             <div className="grid grid-cols-1 gap-2 mt-4">
               <button
                 onClick={() => sendOrder(false)}
+                disabled={!canSendNow}
                 className={`w-full rounded-2xl py-3 text-center ${
                   canSendNow
                     ? "bg-black text-white"
                     : "bg-neutral-100 text-neutral-600"
                 }`}
               >
-                Enviar pedido por WhatsApp
+                {sending ? "Registrando pedido..." : "Enviar pedido por WhatsApp"}
               </button>
 
               <button
@@ -693,7 +652,6 @@ export default function SectoCafePedidos() {
         </aside>
       </main>
 
-      {/* MINI CARRITO FLOTANTE */}
       {items.length > 0 && (
         <div
           className={
@@ -724,10 +682,7 @@ export default function SectoCafePedidos() {
           <div className="mt-3 max-h-[34vh] overflow-auto pr-1">
             <div className="space-y-2">
               {items.map(({ item, qty }) => (
-                <div
-                  key={item.id}
-                  className="flex justify-between gap-3 text-sm"
-                >
+                <div key={item.id} className="flex justify-between gap-3 text-sm">
                   <div className="text-neutral-800 leading-tight">
                     <div className="font-medium">{item.name}</div>
                     <div className="text-neutral-500">x{qty}</div>
@@ -782,7 +737,6 @@ export default function SectoCafePedidos() {
         </div>
       )}
 
-      {/* BOTÓN PARA REABRIR MINI CARRITO */}
       {items.length > 0 && !cartPeek && (
         <button
           type="button"

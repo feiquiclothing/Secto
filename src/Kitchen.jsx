@@ -4,7 +4,6 @@ const ENDPOINT = "/api/secto";
 const POLL_MS = 2500;
 
 const STORAGE_KEY = "secto_printed_ids_v1";
-const PRINT_ORDER_KEY = "secto_print_order";
 const DEDUPE_TTL_MS = 10 * 60 * 1000;
 
 function loadMap() {
@@ -64,20 +63,12 @@ export default function Kitchen() {
   const busyRef = useRef(false);
   const ticketWinRef = useRef(null);
 
-  const saveOrderForTicket = (order) => {
-    const raw = JSON.stringify(order);
+  const openOrReuseTicket = (order) => {
+    const id = order?.id;
 
-    try {
-      localStorage.setItem(PRINT_ORDER_KEY, raw);
-    } catch {}
+    if (!id) return false;
 
-    try {
-      sessionStorage.setItem(PRINT_ORDER_KEY, raw);
-    } catch {}
-  };
-
-  const openOrReuseTicket = () => {
-    const url = "/ticket?autoprint=1";
+    const url = `/ticket?id=${encodeURIComponent(id)}&autoprint=1`;
 
     if (ticketWinRef.current && !ticketWinRef.current.closed) {
       ticketWinRef.current.location.href = url;
@@ -101,9 +92,7 @@ export default function Kitchen() {
       return;
     }
 
-    saveOrderForTicket(lastOrder);
-
-    const opened = openOrReuseTicket();
+    const opened = openOrReuseTicket(lastOrder);
 
     if (!opened) {
       setStatus("No se pudo abrir la pestaña de ticket. Revisá bloqueo de popups.");
@@ -142,9 +131,7 @@ export default function Kitchen() {
         setLastOrder(order);
         setStatus("Preparando ticket " + id);
 
-        saveOrderForTicket(order);
-
-        const opened = openOrReuseTicket();
+        const opened = openOrReuseTicket(order);
 
         if (!opened) {
           setStatus("No se pudo abrir /ticket. Revisá bloqueo de popups.");

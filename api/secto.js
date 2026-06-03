@@ -1,5 +1,5 @@
 const GAS =
-  "https://script.google.com/macros/s/AKfycbxrWgSPWPjDqelx1-_iaxvjDLW7ZL6W647UsZVm-ZaxREwY7E4MiQHNOvyNPXXbmHpQzA/exec";
+  "https://script.google.com/macros/s/AKfycbyWg8W1hRgCZvm9weQ4vgLG_isPbXDeFnsMAE_rSaPVU0_NYILQJJY2v2o8npFUNMwpug/exec";
 
 export default async function handler(req, res) {
   if (req.method !== "POST") {

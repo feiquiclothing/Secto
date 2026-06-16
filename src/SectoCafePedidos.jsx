@@ -72,15 +72,17 @@ const MENU = [
       { id: "c02", name: "Combo pareja", price: 880, img: "/Photos/combo pareja.jpeg"  },
       { id: "c03", name: "Combo doble", price: 650, img: "/Photos/combo doble.jpeg"  },
       { id: "c04", name: "Combo triple", price: 930, img: "/Photos/combo triple.jpg"  },
+      { id: "c05", name: "3x2 Phila hot roll", price: 760, img: "/Photos/3x2.jpg"  },
+      
     ],
   },
   {
     id: "extras",
     name: "EXTRAS",
     items: [
-      { id: "e01", name: "Salsa de soja (1 incluida)", price: 35 },
-      { id: "e03", name: "Wasabi", price: 35 },
-      { id: "e04", name: "Gari (Jengibre)", price: 35 },
+      { id: "e01", name: "Salsa de soja (1 incluida)", price: 35, img: "/Photos/soja.jpeg },
+      { id: "e03", name: "Wasabi", price: 35, img: "/Photos/wasabi.jpeg },
+      { id: "e04", name: "Gari (Jengibre)", price: 35, img: "/Photos/gari.jpeg },
     ],
   },
   {

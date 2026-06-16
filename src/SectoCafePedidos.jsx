@@ -347,8 +347,8 @@ export default function SectoCafePedidos() {
             <div className="leading-tight">
               <p className="text-xs tracking-[0.25em] text-neutral-500">
                 {isOpen
-                  ? "Abierto — pedidos de 12:00 a 00:00"
-                  : "Cerrado — pedidos habilitados lunes a sábado de 12:00 a 00:00"}
+                  ? "Sushi vegetal — pedidos de 12:00 a 00:00"
+                  : "Sushi vegetal — pedidos abiertos lunes a sábado de 12:00 a 00:00"}
               </p>
               <h1 className="text-lg text-neutral-900"></h1>
             </div>

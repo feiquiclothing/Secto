@@ -87,12 +87,12 @@ const MENU = [
     id: "bebidas",
     name: "BEBIDAS",
     items: [
-      { id: "b03", name: "Coca Cola 600cc", price: 150, img: "coca.png" },
-      { id: "b02", name: "Coca Cola Zero 600cc", price: 150, img: "coca zero.png" },
-      { id: "b04", name: "Schweppes 600cc", price: 150, img: "shwewtnjg.png" },
-      { id: "b05", name: "Sprite 600cc", price: 150, img: "sprite.png" },
-       { id: "b05", name: "Sprite Zero 600cc", price: 150, img: "sprite zero.png" },
-      { id: "b06", name: "Fanta 600cc", price: 150, img: "fanta.png" },
+      { id: "b03", name: "Coca Cola 600cc", price: 150, img: "/Photos/coca.png" },
+      { id: "b02", name: "Coca Cola Zero 600cc", price: 150, img: "/Photos/coca zero.png" },
+      { id: "b04", name: "Schweppes 600cc", price: 150, img: "/Photos/shwewtnjg.png" },
+      { id: "b05", name: "Sprite 600cc", price: 150, img: "/Photos/sprite.png" },
+       { id: "b05", name: "Sprite Zero 600cc", price: 150, img: "/Photos/sprite zero.png" },
+      { id: "b06", name: "Fanta 600cc", price: 150, img: "/Photos/fanta.png" },
     ],
   },
 ];

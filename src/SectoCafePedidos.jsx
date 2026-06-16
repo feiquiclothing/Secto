@@ -106,7 +106,7 @@ const ZONES = [
 ];
 
 // ===== HORARIOS =====
-function buildHours(start = "12:00", end = "23:59", stepMin = 30) {
+function buildHours(start = "12:00", end = "23:59", stepMin = 60) {
   const toMin = (h) => {
     const [H, M] = h.split(":").map(Number);
     return H * 60 + M;

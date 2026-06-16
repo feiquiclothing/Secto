@@ -71,7 +71,7 @@ const MENU = [
       { id: "c01", name: "Combo individual", price: 670, img: "/Photos/combo ind.jpeg"  },
       { id: "c02", name: "Combo pareja", price: 880, img: "/Photos/combo pareja.jpeg"  },
       { id: "c03", name: "Combo doble", price: 650, img: "/Photos/combo doble.jpeg"  },
-      { id: "c04", name: "Combo triple", price: 950, img: "/Photos/combo triple.jpg"  },
+      { id: "c04", name: "Combo triple", price: 930, img: "/Photos/combo triple.jpg"  },
     ],
   },
   {

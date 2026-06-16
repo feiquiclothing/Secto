@@ -126,7 +126,7 @@ function buildHours(start = "12:00", end = "23:59", stepMin = 60) {
   return out;
 }
 
-const HOURS = buildHours("12:00", "23:59", 30);
+const HOURS = buildHours("12:00", "23:59", 60);
 
 const currency = (uy) =>
   new Intl.NumberFormat("es-UY", {

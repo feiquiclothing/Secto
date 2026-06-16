@@ -54,7 +54,7 @@ const MENU = [
     items: [
       { id: "r01", name: "Mango Roll - Mango | Palta | Pepino | Sésamo | Mayo wasabi", price: 380, img: "/Photos/01.JPG" },
       { id: "r02", name: "Green Roll - Palta | Pepino | Rúcula | Queso | Sésamo", price: 380, img: "/Photos/02.JPG" },
-      { id: "r03", name: "Philadelphia Roll - Boniato | Palta | Queso | Sésamo", price: 380, img: "/Photos/03.JPG" },
+      { id: "r03", name: "Philadelphia Roll - Boniato | Palta | Queso | Sésamo", price: 380, img: "/Photos/phila.jpg" },
       { id: "r04", name: "Philadelphia Hot Roll - Boniato | Palta | Queso | Sésamo | Frito en panko | Taré | Verdeo", price: 380, img: "/Photos/04.JPG" },
       { id: "r05", name: "Sweet Crunch - Boniato | Mango | Queso | Quinoa frita | Batayaki | Boniato frito", price: 420, img: "/Photos/05.JPG" },
       { id: "r06", name: "Tempura Veggie - Zucchini tempura | Palta | Queso | Sésamo | Verdeo", price: 380, img: "/Photos/06.JPG" },

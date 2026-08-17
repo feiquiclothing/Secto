@@ -48,27 +48,11 @@ function isOpenBySchedule() {
 
 // ===== MENU =====
 const MENU = [
-  {
-    id: "rolls",
-    name: "ROLLS 10 piezas",
-    items: [
-      { id: "r01", name: "Mango Roll - Mango | Palta | Pepino | Sésamo | Mayo wasabi", price: 350, img: "/Photos/mango.jpg" },
-      { id: "r02", name: "Green Roll - Palta | Pepino | Rúcula | Queso | Sésamo", price: 350, img: "/Photos/green.jpg" },
-      { id: "r03", name: "Philadelphia Roll - Boniato | Palta | Queso | Sésamo", price: 350, img: "/Photos/phila.jpg" },
-      { id: "r04", name: "Philadelphia Hot Roll - Boniato | Palta | Queso | Sésamo | Frito en panko | Taré | Verdeo", price: 380, img: "/Photos/hotroll.jpg" },
-      { id: "r05", name: "Sweet Crunch - Boniato | Mango | Queso | Quinoa frita | Batayaki | Boniato frito", price: 380, img: "/Photos/sweet.jpg" },
-      { id: "r06", name: "Tempura Veggie - Zucchini tempura | Palta | Queso | Sésamo | Verdeo", price: 380, img: "/Photos/tempura.jpg" },
-      { id: "r07", name: "Spicy carrot - Boniato | Palta | Queso | Spicy carrot | Verdeo", price: 380, img: "/Photos/spicy.jpg" },
-      { id: "r08", name: "Nori furai - Boniato | Palta | Spicy carrot | Verdeo | Sésamo", price: 420, img: "/Photos/nori.jpg" },
-      { id: "r09", name: "Creamy Tomato - Tomate seco | Palta | Rúcula | Queso | Batayaki | Verdeo", price: 380, img: "/Photos/creamy.jpg" },
-      { id: "r10", name: "Teriyaki Roll - Boniato tempura | Mango | Quinoa frita | Verdeo | Teriyaki", price: 420, img: "/Photos/teri.jpg" },
-    ],
-  },
-  {
+   {
     id: "combos",
-    name: "COMBOS (especificar rolls en checkout)",
+    name: "COMBOS (especificar rolls y bebidas en checkout)",
     items: [
-      { id: "c01", name: "Combo individual", price: 670, img: "/Photos/combo ind.jpeg"  },
+      { id: "c01", name: "Combo individual", price: 440, img: "/Photos/combo ind.jpeg"  },
       { id: "c02", name: "Combo pareja", price: 880, img: "/Photos/combo pareja.jpeg"  },
       { id: "c03", name: "Combo doble", price: 650, img: "/Photos/combo doble.jpeg"  },
       { id: "c04", name: "Combo triple", price: 930, img: "/Photos/combo triple.jpg"  },
@@ -77,12 +61,29 @@ const MENU = [
     ],
   },
   {
+    id: "rolls",
+    name: "ROLLS 10 piezas",
+    items: [
+      { id: "r01", name: "Mango Roll - Mango | Palta | Pepino | Sésamo | Mayo wasabi", price: 350, img: "/Photos/mango.jpg" },
+      { id: "r02", name: "Green Roll - Palta | Pepino | Rúcula | Philadelphia vegano | Sésamo", price: 350, img: "/Photos/green.jpg" },
+      { id: "r03", name: "Philadelphia Roll - Boniato | Palta | Philadelphia vegano | Sésamo", price: 350, img: "/Photos/phila.jpg" },
+      { id: "r04", name: "Philadelphia Hot Roll - Boniato | Palta | Philadelphia vegano | Sésamo | Frito en panko | Taré | Verdeo", price: 380, img: "/Photos/hotroll.jpg" },
+      { id: "r05", name: "Sweet Crunch - Boniato | Mango | Philadelphia vegano | Quinoa frita | Batayaki | Boniato frito", price: 380, img: "/Photos/sweet.jpg" },
+      { id: "r06", name: "Tempura Veggie - Zucchini tempura | Palta | Philadelphia vegano | Sésamo | Verdeo", price: 380, img: "/Photos/tempura.jpg" },
+      { id: "r07", name: "Spicy carrot - Boniato | Palta | Philadelphia vegano | Spicy carrot | Verdeo", price: 380, img: "/Photos/spicy.jpg" },
+      { id: "r08", name: "Nori furai - Boniato | Palta | Spicy carrot | Verdeo | Sésamo", price: 420, img: "/Photos/nori.jpg" },
+      { id: "r09", name: "Creamy Tomato - Tomate seco | Palta | Rúcula | Philadelphia vegano | Batayaki | Verdeo", price: 380, img: "/Photos/creamy.jpg" },
+      { id: "r10", name: "Teriyaki Roll - Boniato tempura | Mango | Quinoa frita | Verdeo | Teriyaki", price: 420, img: "/Photos/teri.jpg" },
+    ],
+  },
+ 
+  {
     id: "extras",
     name: "EXTRAS",
     items: [
-      { id: "e01", name: "Salsa de soja (1 incluida)", price: 35, img: "/Photos/soja.jpeg" },
-      { id: "e03", name: "Wasabi", price: 35, img: "/Photos/wasabi.jpeg" },
-      { id: "e04", name: "Gari (Jengibre)", price: 35, img: "/Photos/gari.jpeg" },
+      { id: "e01", name: "Salsa de soja (1 incluida)", price: 60, img: "/Photos/soja.jpeg" },
+      { id: "e03", name: "Wasabi", price: 60, img: "/Photos/wasabi.jpeg" },
+      { id: "e04", name: "Gari (Jengibre)", price: 60, img: "/Photos/gari.jpeg" },
     ],
   },
   {
@@ -349,8 +350,8 @@ export default function SectoCafePedidos() {
             <div className="leading-tight">
               <p className="text-xs tracking-[0.25em] text-neutral-500">
                 {isOpen
-                  ? "Sushi vegetal — pedidos de 12:00 a 00:00"
-                  : "Sushi vegetal — pedidos abiertos lunes a sábado de 12:00 a 00:00"}
+                  ? "Sushi vegano — pedidos de 12:00 a 00:00"
+                  : "Sushi vegano — pedidos abiertos lunes a sábado de 12:00 a 00:00"}
               </p>
               <h1 className="text-lg text-neutral-900"></h1>
             </div>

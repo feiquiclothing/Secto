@@ -92,10 +92,8 @@ const MENU = [
     items: [
       { id: "b03", name: "Coca Cola 600cc", price: 135, img: "/Photos/coca.png" },
       { id: "b02", name: "Coca Cola Zero 600cc", price: 135, img: "/Photos/coca zero.png" },
-      { id: "b04", name: "Schweppes 600cc", price: 135, img: "/Photos/shwewtnjg.png" },
       { id: "b05", name: "Sprite 600cc", price: 135, img: "/Photos/sprite.png" },
        { id: "b05", name: "Sprite Zero 600cc", price: 135, img: "/Photos/sprite zero.png" },
-      { id: "b06", name: "Fanta 600cc", price: 135, img: "/Photos/fanta.png" },
     ],
   },
 ];

@@ -81,7 +81,7 @@ const MENU = [
     id: "extras",
     name: "EXTRAS",
     items: [
-      { id: "e01", name: "Salsa de soja (1 incluida)", price: 60, img: "/Photos/soja.jpeg" },
+      { id: "e01", name: "Salsa de soja", price: 60, img: "/Photos/soja.jpeg" },
       { id: "e03", name: "Wasabi", price: 60, img: "/Photos/wasabi.jpeg" },
       { id: "e04", name: "Gari (Jengibre)", price: 60, img: "/Photos/gari.jpeg" },
     ],

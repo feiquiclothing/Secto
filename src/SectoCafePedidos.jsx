@@ -53,7 +53,7 @@ const MENU = [
     name: "COMBOS (especificar rolls y bebidas en checkout)",
     items: [
       { id: "c01", name: "Combo individual", price: 440, img: "/Photos/combo ind.jpeg"  },
-      { id: "c02", name: "Combo pareja", price: 880, img: "/Photos/combo pareja.jpeg"  },
+      { id: "c02", name: "Combo pareja", price: 860, img: "/Photos/combo pareja.jpeg"  },
       { id: "c03", name: "Combo doble", price: 650, img: "/Photos/combo doble.jpeg"  },
       { id: "c04", name: "Combo triple", price: 930, img: "/Photos/combo triple.jpg"  },
       { id: "c05", name: "3x2 Phila hot roll", price: 760, img: "/Photos/3x2.jpg"  },

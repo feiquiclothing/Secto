@@ -82,8 +82,6 @@ const MENU = [
     name: "ACOMPAÑAMIENTOS",
     items: [
       { id: "a01", name: "Gyozas fritas (veganas)", price: 215, img: "/Photos/gyoza.JPG" },
-      { id: "e03", name: "Wasabi", price: 60, img: "/Photos/wasabi.jpeg" },
-      { id: "e04", name: "Gari (Jengibre)", price: 60, img: "/Photos/gari.jpeg" },
     ],
   },
   

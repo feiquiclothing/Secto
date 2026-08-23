@@ -16,7 +16,7 @@ const TZ = "America/Montevideo";
 const OPEN_DAYS = [1, 2, 3, 4, 5, 6];
 const OPEN_HOUR_START = 12;
 const OPEN_HOUR_END = 24;
-const FORCE_OPEN = true;
+const FORCE_OPEN = false;
 const FORCE_CLOSED = false;
 
 function getNowInTZ() {
@@ -200,6 +200,10 @@ function reducer(state, action) {
 
     if (qty > 0) next[key] = { item: action.item, qty };
     else delete next[key];
+  }
+
+  if (action.type === "removeAll") {
+    delete next[action.item.id];
   }
 
   if (action.type === "clear") {
@@ -591,8 +595,27 @@ export default function SectoCafePedidos() {
                     <p className="text-neutral-500">x{qty}</p>
                   </div>
 
-                  <div className="text-neutral-700">
-                    {currency(item.price * qty)}
+                  <div className="flex items-center gap-2">
+                    <div className="text-neutral-700">
+                      {currency(item.price * qty)}
+                    </div>
+                    <button
+                      type="button"
+                      aria-label={`Quitar ${item.name} del carrito`}
+                      onClick={() => {
+                        dispatch({ type: "removeAll", item });
+                        setComboSelections((prev) => {
+                          const next = { ...prev };
+                          Object.keys(next)
+                            .filter((key) => key.startsWith(`${item.id}-`))
+                            .forEach((key) => delete next[key]);
+                          return next;
+                        });
+                      }}
+                      className="w-7 h-7 rounded-full border border-neutral-200 text-neutral-400 hover:text-neutral-900 hover:border-neutral-400 flex items-center justify-center"
+                    >
+                      ×
+                    </button>
                   </div>
                 </div>
               ))}
@@ -864,8 +887,27 @@ export default function SectoCafePedidos() {
                     <div className="text-neutral-500">x{qty}</div>
                   </div>
 
-                  <div className="text-neutral-700 whitespace-nowrap">
-                    {currency(item.price * qty)}
+                  <div className="flex items-center gap-2 whitespace-nowrap">
+                    <div className="text-neutral-700">
+                      {currency(item.price * qty)}
+                    </div>
+                    <button
+                      type="button"
+                      aria-label={`Quitar ${item.name} del carrito`}
+                      onClick={() => {
+                        dispatch({ type: "removeAll", item });
+                        setComboSelections((prev) => {
+                          const next = { ...prev };
+                          Object.keys(next)
+                            .filter((key) => key.startsWith(`${item.id}-`))
+                            .forEach((key) => delete next[key]);
+                          return next;
+                        });
+                      }}
+                      className="w-7 h-7 rounded-full border border-neutral-200 text-neutral-400 hover:text-neutral-900 hover:border-neutral-400 flex items-center justify-center"
+                    >
+                      ×
+                    </button>
                   </div>
                 </div>
               ))}

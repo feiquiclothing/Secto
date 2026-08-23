@@ -16,7 +16,7 @@ const TZ = "America/Montevideo";
 const OPEN_DAYS = [1, 2, 3, 4, 5, 6];
 const OPEN_HOUR_START = 12;
 const OPEN_HOUR_END = 24;
-const FORCE_OPEN = true;
+const FORCE_OPEN = false;
 const FORCE_CLOSED = false;
 
 function getNowInTZ() {
@@ -831,7 +831,7 @@ export default function SectoCafePedidos() {
       {items.length > 0 && (
         <div
           className={
-            "fixed right-3 top-24 z-50 w-[340px] max-w-[90vw] rounded-2xl border border-neutral-200 bg-white shadow-lg p-4 transition-transform duration-300 " +
+            "lg:hidden fixed right-3 top-24 z-50 w-[340px] max-w-[90vw] max-h-[78vh] overflow-y-auto rounded-2xl border border-neutral-200 bg-white shadow-lg p-4 transition-transform duration-300 " +
             (cartPeek ? "translate-x-0" : "translate-x-[120%]")
           }
           style={{ WebkitTapHighlightColor: "transparent" }}
@@ -872,6 +872,68 @@ export default function SectoCafePedidos() {
             </div>
           </div>
 
+
+          {comboInstances.length > 0 && (
+            <div className="mt-3 pt-3 border-t border-neutral-200 space-y-3">
+              <div>
+                <div className="text-xs tracking-[0.16em] text-neutral-500">
+                  ELEGÍ TU COMBO
+                </div>
+                <div className="text-[11px] text-neutral-400 mt-1">
+                  Completá las opciones antes de enviar.
+                </div>
+              </div>
+
+              {comboInstances.map(({ item, index, key, config }) => {
+                const selection = comboSelections[key] || { rolls: [], drinks: [] };
+
+                return (
+                  <div key={key} className="rounded-xl border border-neutral-200 p-3 space-y-2">
+                    <div className="text-sm font-medium text-neutral-800">
+                      {item.name}{cart[item.id]?.qty > 1 ? ` #${index + 1}` : ""}
+                    </div>
+
+                    {Array.from({ length: config.rolls }).map((_, rollIndex) => (
+                      <select
+                        key={`mobile-roll-${rollIndex}`}
+                        value={selection.rolls?.[rollIndex] || ""}
+                        onChange={(e) =>
+                          setComboChoice(key, "rolls", rollIndex, e.target.value)
+                        }
+                        className="w-full bg-white border border-neutral-200 rounded-xl p-2 text-sm"
+                      >
+                        <option value="">Elegí roll {rollIndex + 1}</option>
+                        {ROLL_OPTIONS.map((roll) => (
+                          <option key={roll.id} value={roll.id}>
+                            {roll.name}
+                          </option>
+                        ))}
+                      </select>
+                    ))}
+
+                    {Array.from({ length: config.drinks }).map((_, drinkIndex) => (
+                      <select
+                        key={`mobile-drink-${drinkIndex}`}
+                        value={selection.drinks?.[drinkIndex] || ""}
+                        onChange={(e) =>
+                          setComboChoice(key, "drinks", drinkIndex, e.target.value)
+                        }
+                        className="w-full bg-white border border-neutral-200 rounded-xl p-2 text-sm"
+                      >
+                        <option value="">Elegí bebida {drinkIndex + 1}</option>
+                        {DRINK_OPTIONS.map((drink) => (
+                          <option key={drink.id} value={drink.id}>
+                            {drink.name}
+                          </option>
+                        ))}
+                      </select>
+                    ))}
+                  </div>
+                );
+              })}
+            </div>
+          )}
+
           <div className="mt-3 pt-3 border-t border-neutral-200 text-sm space-y-3">
             <div className="flex justify-between">
               <span className="text-neutral-500">Total</span>
@@ -892,6 +954,7 @@ export default function SectoCafePedidos() {
               <button
                 type="button"
                 onClick={() => {
+                  if (!combosComplete) return;
                   setCartPeek(false);
                   if (cartRef.current) {
                     cartRef.current.scrollIntoView({
@@ -900,9 +963,14 @@ export default function SectoCafePedidos() {
                     });
                   }
                 }}
-                className="w-full rounded-2xl py-3 text-center bg-black text-white"
+                disabled={!combosComplete}
+                className={`w-full rounded-2xl py-3 text-center ${
+                  combosComplete
+                    ? "bg-black text-white"
+                    : "bg-neutral-100 text-neutral-400 cursor-not-allowed"
+                }`}
               >
-                Enviar pedido
+                {combosComplete ? "Continuar pedido" : "Completá tu combo"}
               </button>
             </div>
 
@@ -917,7 +985,7 @@ export default function SectoCafePedidos() {
         <button
           type="button"
           onClick={() => setCartPeek(true)}
-          className="fixed right-3 top-24 z-40 rounded-2xl bg-black text-white px-4 py-3 shadow-lg text-sm"
+          className="lg:hidden fixed right-3 top-24 z-40 rounded-2xl bg-black text-white px-4 py-3 shadow-lg text-sm"
         >
           Tu pedido · {currency(total)}
         </button>

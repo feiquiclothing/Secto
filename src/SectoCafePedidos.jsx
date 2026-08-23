@@ -50,7 +50,7 @@ function isOpenBySchedule() {
 const MENU = [
    {
     id: "combos",
-    name: "COMBOS (especificar rolls y bebidas en checkout)",
+    name: "COMBOS",
     items: [
       { id: "c01", name: "Combo individual", price: 440, img: "/Photos/combo ind.jpeg"  },
       { id: "c02", name: "Combo pareja", price: 860, img: "/Photos/combo pareja.jpeg"  },
@@ -101,7 +101,7 @@ const MENU = [
       { id: "b03", name: "Coca Cola 600cc", price: 135, img: "/Photos/coca.png" },
       { id: "b02", name: "Coca Cola Zero 600cc", price: 135, img: "/Photos/coca zero.png" },
       { id: "b05", name: "Sprite 600cc", price: 135, img: "/Photos/sprite.png" },
-       { id: "b05", name: "Sprite Zero 600cc", price: 135, img: "/Photos/sprite zero.png" },
+       { id: "b06", name: "Sprite Zero 600cc", price: 135, img: "/Photos/sprite zero.png" },
     ],
   },
 ];
@@ -136,6 +136,46 @@ function buildHours(start = "12:00", end = "23:59", stepMin = 60) {
 }
 
 const HOURS = buildHours("12:00", "23:59", 60);
+
+const COMBO_CONFIG = {
+  c01: { rolls: 1, drinks: 1 },
+  c02: { rolls: 2, drinks: 2 },
+  c03: { rolls: 2, drinks: 0 },
+  c04: { rolls: 3, drinks: 0 },
+};
+
+const ROLL_OPTIONS =
+  MENU.find((cat) => cat.id === "rolls")?.items.map((item) => ({
+    id: item.id,
+    name: item.name.split(" - ")[0],
+  })) || [];
+
+const DRINK_OPTIONS =
+  MENU.find((cat) => cat.id === "bebidas")?.items.map((item) => ({
+    id: item.id,
+    name: item.name,
+  })) || [];
+
+function getCurrentMinutesInTZ() {
+  const parts = new Intl.DateTimeFormat("en-US", {
+    timeZone: TZ,
+    hour: "2-digit",
+    minute: "2-digit",
+    hour12: false,
+  }).formatToParts(new Date());
+
+  const hour = Number(parts.find((p) => p.type === "hour")?.value || 0);
+  const minute = Number(parts.find((p) => p.type === "minute")?.value || 0);
+  return hour * 60 + minute;
+}
+
+function futureHours() {
+  const nowMin = getCurrentMinutesInTZ();
+  return HOURS.filter((h) => {
+    const [H, M] = h.split(":").map(Number);
+    return H * 60 + M > nowMin;
+  });
+}
 
 const currency = (uy) =>
   new Intl.NumberFormat("es-UY", {
@@ -182,6 +222,7 @@ function buildWhatsAppText(order) {
     address,
     notes,
     time,
+    comboSelections = [],
     paid,
   } = order;
 
@@ -192,12 +233,19 @@ function buildWhatsAppText(order) {
       "• " + item.name + " x" + qty + " — " + currency(item.price * qty)
   );
 
+  const comboLines = comboSelections.flatMap((combo) => {
+    const details = [];
+    if (combo.rolls?.length) details.push("Rolls: " + combo.rolls.join(" / "));
+    if (combo.drinks?.length) details.push("Bebidas: " + combo.drinks.join(" / "));
+    return details.length ? ["  ↳ " + combo.comboName + " — " + details.join(" · ")] : [];
+  });
+
   const zona = ZONES.find((z) => z.id === zone)?.name || "";
 
   const info = [
     "Metodo: " + (method === "pickup" ? "Retiro en local" : "Delivery"),
     method === "delivery" ? "Zona: " + zona + " (" + currency(fee) + ")" : null,
-    "Horario: " + (time || "(no especificado)"),
+    "Horario: " + (time === "asap" ? "Lo antes posible" : time),
     "Nombre: " + name,
     "Tel: " + phone,
     method === "delivery" ? "Direccion: " + address : null,
@@ -210,6 +258,7 @@ function buildWhatsAppText(order) {
     "",
     "Items:",
     ...lines,
+    ...comboLines,
     "",
     "Subtotal: " + currency(subtotal),
     "Total: " + currency(total),
@@ -225,7 +274,8 @@ export default function SectoCafePedidos() {
   const [phone, setPhone] = useState("");
   const [address, setAddress] = useState("");
   const [notes, setNotes] = useState("");
-  const [time, setTime] = useState("");
+  const [time, setTime] = useState("asap");
+  const [comboSelections, setComboSelections] = useState({});
 
   const cartRef = useRef(null);
   const [cartHighlight, setCartHighlight] = useState(false);
@@ -233,6 +283,44 @@ export default function SectoCafePedidos() {
   const [sending, setSending] = useState(false);
 
   const items = useMemo(() => Object.values(cart), [cart]);
+
+
+  const comboInstances = useMemo(() => {
+    const result = [];
+    items.forEach(({ item, qty }) => {
+      const config = COMBO_CONFIG[item.id];
+      if (!config) return;
+      for (let i = 0; i < qty; i += 1) {
+        result.push({ item, index: i, key: `${item.id}-${i}`, config });
+      }
+    });
+    return result;
+  }, [items]);
+
+  const setComboChoice = (key, type, index, value) => {
+    setComboSelections((prev) => {
+      const current = prev[key] || { rolls: [], drinks: [] };
+      const nextValues = [...(current[type] || [])];
+      nextValues[index] = value;
+      return {
+        ...prev,
+        [key]: {
+          ...current,
+          [type]: nextValues,
+        },
+      };
+    });
+  };
+
+  const combosComplete = comboInstances.every(({ key, config }) => {
+    const selection = comboSelections[key] || {};
+    const rolls = selection.rolls || [];
+    const drinks = selection.drinks || [];
+    return (
+      rolls.slice(0, config.rolls).filter(Boolean).length === config.rolls &&
+      drinks.slice(0, config.drinks).filter(Boolean).length === config.drinks
+    );
+  });
 
   const subtotal = useMemo(
     () => items.reduce((s, { item, qty }) => s + item.price * qty, 0),
@@ -257,6 +345,7 @@ export default function SectoCafePedidos() {
     name &&
     phone &&
     time &&
+    combosComplete &&
     (method === "pickup" || address || zone === "cv");
 
   const canSendNow = canSend && isOpen && !sending;
@@ -277,6 +366,19 @@ export default function SectoCafePedidos() {
     address,
     notes,
     time,
+    comboSelections: comboInstances.map(({ item, key }) => {
+      const selection = comboSelections[key] || {};
+      return {
+        comboId: item.id,
+        comboName: item.name,
+        rolls: (selection.rolls || []).map(
+          (id) => ROLL_OPTIONS.find((r) => r.id === id)?.name || id
+        ),
+        drinks: (selection.drinks || []).map(
+          (id) => DRINK_OPTIONS.find((d) => d.id === id)?.name || id
+        ),
+      };
+    }),
     ...extra,
   });
 
@@ -299,7 +401,7 @@ export default function SectoCafePedidos() {
 
   const sendOrder = async (paid = false) => {
     if (!canSendNow) {
-      alert("Te falta completar datos (nombre, teléfono, horario y dirección/zona) o el local está cerrado.");
+      alert("Revisá los datos del pedido. Completá nombre, teléfono, dirección/zona y todas las opciones de los combos.");
       return;
     }
 
@@ -496,6 +598,68 @@ export default function SectoCafePedidos() {
               ))}
             </div>
 
+
+            {comboInstances.length > 0 && (
+              <div className="mt-4 space-y-4">
+                <div>
+                  <h3 className="text-xs tracking-[0.16em] text-neutral-500">
+                    ELEGÍ TU COMBO
+                  </h3>
+                  <p className="text-xs text-neutral-400 mt-1">
+                    Completá las opciones de cada combo antes de enviar.
+                  </p>
+                </div>
+
+                {comboInstances.map(({ item, index, key, config }) => {
+                  const selection = comboSelections[key] || { rolls: [], drinks: [] };
+
+                  return (
+                    <div key={key} className="rounded-xl border border-neutral-200 p-3 space-y-2">
+                      <div className="text-sm font-medium text-neutral-800">
+                        {item.name}{cart[item.id]?.qty > 1 ? ` #${index + 1}` : ""}
+                      </div>
+
+                      {Array.from({ length: config.rolls }).map((_, rollIndex) => (
+                        <select
+                          key={`roll-${rollIndex}`}
+                          value={selection.rolls?.[rollIndex] || ""}
+                          onChange={(e) =>
+                            setComboChoice(key, "rolls", rollIndex, e.target.value)
+                          }
+                          className="w-full bg-white border border-neutral-200 rounded-xl p-2 text-sm"
+                        >
+                          <option value="">Elegí roll {rollIndex + 1}</option>
+                          {ROLL_OPTIONS.map((roll) => (
+                            <option key={roll.id} value={roll.id}>
+                              {roll.name}
+                            </option>
+                          ))}
+                        </select>
+                      ))}
+
+                      {Array.from({ length: config.drinks }).map((_, drinkIndex) => (
+                        <select
+                          key={`drink-${drinkIndex}`}
+                          value={selection.drinks?.[drinkIndex] || ""}
+                          onChange={(e) =>
+                            setComboChoice(key, "drinks", drinkIndex, e.target.value)
+                          }
+                          className="w-full bg-white border border-neutral-200 rounded-xl p-2 text-sm"
+                        >
+                          <option value="">Elegí bebida {drinkIndex + 1}</option>
+                          {DRINK_OPTIONS.map((drink) => (
+                            <option key={drink.id} value={drink.id}>
+                              {drink.name}
+                            </option>
+                          ))}
+                        </select>
+                      ))}
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+
             <hr className="my-4 border-neutral-200" />
 
             <div className="grid grid-cols-2 gap-2 text-sm mb-3">
@@ -576,22 +740,26 @@ export default function SectoCafePedidos() {
             </div>
 
             <div className="mt-3">
-              <label className="text-xs text-neutral-500">Horario</label>
+              <label className="text-xs text-neutral-500">¿Cuándo lo querés?</label>
 
               <select
                 value={time}
                 onChange={(e) => setTime(e.target.value)}
-                className="w-full bg-white border border-neutral-200 rounded-xl p-2"
+                disabled={!isOpen}
+                className="w-full bg-white border border-neutral-200 rounded-xl p-2 disabled:bg-neutral-100 disabled:text-neutral-500"
               >
-                <option value="">
-                  {isOpen ? "Seleccioná horario" : "Cerrado (no disponible)"}
-                </option>
-
-                {HOURS.map((h) => (
-                  <option key={h} value={h}>
-                    {h}
-                  </option>
-                ))}
+                {isOpen ? (
+                  <>
+                    <option value="asap">Lo antes posible</option>
+                    {futureHours().map((h) => (
+                      <option key={h} value={h}>
+                        {h}
+                      </option>
+                    ))}
+                  </>
+                ) : (
+                  <option value="">Pedidos cerrados</option>
+                )}
               </select>
             </div>
 
@@ -601,7 +769,7 @@ export default function SectoCafePedidos() {
               <textarea
                 value={notes}
                 onChange={(e) => setNotes(e.target.value)}
-                placeholder="Rolls de tu combo, timbre roto, etc."
+                placeholder="Timbre roto, indicaciones de entrega, etc."
                 className="w-full bg-white border border-neutral-200 rounded-xl p-2 placeholder-neutral-400"
                 rows={2}
               />
@@ -640,7 +808,7 @@ export default function SectoCafePedidos() {
               </button>
 
               <button
-                onClick={() => dispatch({ type: "clear" })}
+                onClick={() => { dispatch({ type: "clear" }); setComboSelections({}); }}
                 className="w-full rounded-2xl py-2 text-sm border border-neutral-200"
               >
                 Vaciar carrito
@@ -739,7 +907,7 @@ export default function SectoCafePedidos() {
             </div>
 
             <p className="text-[11px] text-neutral-500">
-              Vas a completar nombre, teléfono, horario y dirección antes de enviarlo.
+              Vas a completar nombre, teléfono y dirección antes de enviarlo.
             </p>
           </div>
         </div>

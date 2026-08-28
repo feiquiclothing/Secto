@@ -64,7 +64,7 @@ const MENU = [
     id: "rolls",
     name: "ROLLS 10 piezas",
     items: [
-      { id: "r01", name: "Mango Roll - Mango | Palta | Pepino | Sésamo | Mayo wasabi", price: 350, img: "/Photos/mango.jpg" },
+      { id: "r01", name: "Mango Roll - Mango | Palta | Pepino | Sésamo | Salsa Mango", price: 350, img: "/Photos/mango.jpg" },
       { id: "r02", name: "Green Roll - Palta | Pepino | Rúcula | Philadelphia vegano | Sésamo", price: 350, img: "/Photos/green.jpg" },
       { id: "r03", name: "Philadelphia Roll - Boniato | Palta | Philadelphia vegano | Sésamo", price: 350, img: "/Photos/phila.jpg" },
       { id: "r04", name: "Philadelphia Hot Roll - Boniato | Palta | Philadelphia vegano | Sésamo | Frito en panko | Taré | Verdeo", price: 380, img: "/Photos/hotroll.jpg" },

@@ -56,7 +56,7 @@ const MENU = [
       { id: "c02", name: "Combo pareja", price: 860, img: "/Photos/combo pareja.jpeg"  },
       { id: "c03", name: "Combo doble", price: 650, img: "/Photos/combo doble.jpeg"  },
       { id: "c04", name: "Combo triple", price: 930, img: "/Photos/combo triple.jpg"  },
-      { id: "c05", name: "3x2 Phila hot roll", price: 760, img: "/Photos/3x2.jpg"  },
+      { id: "c05", name: "3x2 Phila hot roll", price: 760, img: "/Photos/3x2.jpeg"  },
       
     ],
   },
@@ -279,8 +279,8 @@ const FIXED_POKES = [
     name: "Seitan tonkatsu",
     description:
       "Arroz de sushi, milanesa panko, palta, zanahoria, repollo, Philadelphia vegano, pepino, mayo spicy, verdeo, sésamo.",
-    price: 720,
-    img: "",
+    price: 580,
+    img: "/Photos/tonkatsu.jpeg",
     tags: ["Vegano", "Picante"],
   },
   {
@@ -288,13 +288,13 @@ const FIXED_POKES = [
     name: "Crispy protein",
     description:
       "Arroz de sushi, tofu, cebolla crispy, quinoa frita, edamame, Philadelphia vegano, palta, zanahoria, repollo, teriyaki, verdeo, sésamo.",
-    price: 720,
-    img: "",
+    price: 550,
+    img: "/Photos/crispy.jpeg",
     tags: ["Sin gluten", "Vegano"],
   },
 ];
 
-const POKE_BASE_PRICE = 690;
+const POKE_BASE_PRICE = 530;
 const POKE_EXTRA_TOPPING = 60;
 const POKE_EXTRA_SAUCE = 40;
 

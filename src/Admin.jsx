@@ -14,6 +14,71 @@ const METHOD_OPTIONS = [
   { id: "delivery", label: "Delivery" },
 ];
 
+const CATALOG = [
+  {
+    id: "combos",
+    name: "COMBOS",
+    items: [
+      { id: "c01", name: "Combo individual", price: 440 },
+      { id: "c02", name: "Combo pareja", price: 860 },
+      { id: "c03", name: "Combo doble", price: 650 },
+      { id: "c04", name: "Combo triple", price: 930 },
+      { id: "c05", name: "3x2 Phila hot roll", price: 760 },
+    ],
+  },
+  {
+    id: "pokes",
+    name: "POKES",
+    items: [
+      { id: "poke-seitan-tonkatsu", name: "Seitan tonkatsu", price: 720 },
+      { id: "poke-crispy-protein", name: "Crispy protein", price: 720 },
+      { id: "poke-custom", name: "Armá tu poke", price: 690 },
+    ],
+  },
+  {
+    id: "rolls",
+    name: "ROLLS 10 piezas",
+    items: [
+      { id: "r01", name: "Mango Roll", price: 350 },
+      { id: "r02", name: "Green Roll", price: 350 },
+      { id: "r03", name: "Philadelphia Roll", price: 350 },
+      { id: "r04", name: "Philadelphia Hot Roll", price: 380 },
+      { id: "r05", name: "Sweet Crunch", price: 380 },
+      { id: "r06", name: "Tempura Veggie", price: 380 },
+      { id: "r07", name: "Spicy carrot", price: 380 },
+      { id: "r08", name: "Nori furai", price: 420 },
+      { id: "r09", name: "Creamy Tomato", price: 380 },
+      { id: "r10", name: "Teriyaki Roll", price: 420 },
+    ],
+  },
+  {
+    id: "acompañamientos",
+    name: "ACOMPAÑAMIENTOS",
+    items: [
+      { id: "a01", name: "Gyozas fritas (veganas)", price: 215 },
+    ],
+  },
+  {
+    id: "extras",
+    name: "EXTRAS",
+    items: [
+      { id: "e01", name: "Salsa de soja", price: 60 },
+      { id: "e03", name: "Wasabi", price: 60 },
+      { id: "e04", name: "Gari (Jengibre)", price: 60 },
+    ],
+  },
+  {
+    id: "bebidas",
+    name: "BEBIDAS",
+    items: [
+      { id: "b03", name: "Coca Cola 600cc", price: 135 },
+      { id: "b02", name: "Coca Cola Zero 600cc", price: 135 },
+      { id: "b05", name: "Sprite 600cc", price: 135 },
+      { id: "b06", name: "Sprite Zero 600cc", price: 135 },
+    ],
+  },
+];
+
 const STORAGE_KEY = "secto_admin_recent_orders";
 
 async function post(payload) {
@@ -36,8 +101,7 @@ async function post(payload) {
 
   if (!res.ok) {
     throw new Error(
-      data?.error ||
-        `HTTP ${res.status}: ${text.slice(0, 200)}`
+      data?.error || `HTTP ${res.status}: ${text.slice(0, 200)}`
     );
   }
 
@@ -50,7 +114,6 @@ async function post(payload) {
 
 function formatMoney(value) {
   const n = Number(value);
-
   if (!Number.isFinite(n)) return "-";
 
   return new Intl.NumberFormat("es-UY", {
@@ -64,7 +127,6 @@ function formatDate(value) {
   if (!value) return "-";
 
   const d = new Date(value);
-
   if (Number.isNaN(d.getTime())) return String(value);
 
   return d.toLocaleString("es-UY", {
@@ -122,14 +184,7 @@ function OrderSummary({ order }) {
           <div style={{ fontWeight: 800 }}>
             {order.customer || order.name || "Sin nombre"}
           </div>
-
-          <div
-            style={{
-              fontSize: 12,
-              opacity: 0.65,
-              marginTop: 2,
-            }}
-          >
+          <div style={{ fontSize: 12, opacity: 0.65, marginTop: 2 }}>
             {source} · {method}
           </div>
         </div>
@@ -138,14 +193,7 @@ function OrderSummary({ order }) {
           <div style={{ fontWeight: 800 }}>
             {order.total != null ? formatMoney(order.total) : "-"}
           </div>
-
-          <div
-            style={{
-              fontSize: 12,
-              opacity: 0.65,
-              marginTop: 2,
-            }}
-          >
+          <div style={{ fontSize: 12, opacity: 0.65, marginTop: 2 }}>
             {order.paid ? "PAGADO" : "A PAGAR"}
           </div>
         </div>
@@ -177,9 +225,7 @@ function OrderSummary({ order }) {
       >
         {order.id && <span>ID: {order.id}</span>}
         {order.time && <span>Hora: {order.time}</span>}
-        {order.createdAt && (
-          <span>Creado: {formatDate(order.createdAt)}</span>
-        )}
+        {order.createdAt && <span>Creado: {formatDate(order.createdAt)}</span>}
       </div>
     </div>
   );
@@ -189,10 +235,16 @@ export default function Admin() {
   const [source, setSource] = useState("whatsapp");
   const [method, setMethod] = useState("pickup");
   const [customer, setCustomer] = useState("");
-  const [rawText, setRawText] = useState("");
-  const [total, setTotal] = useState("");
+  const [notes, setNotes] = useState("");
   const [paid, setPaid] = useState(false);
   const [time, setTime] = useState("ASAP");
+
+  const [categoryId, setCategoryId] = useState(CATALOG[0].id);
+  const [selectedItemId, setSelectedItemId] = useState(CATALOG[0].items[0].id);
+  const [orderItems, setOrderItems] = useState([]);
+
+  const [manualName, setManualName] = useState("");
+  const [manualPrice, setManualPrice] = useState("");
 
   const [status, setStatus] = useState("");
   const [statusType, setStatusType] = useState("");
@@ -200,27 +252,48 @@ export default function Admin() {
   const [checking, setChecking] = useState(false);
 
   const [nextOrder, setNextOrder] = useState(null);
-  const [recentOrders, setRecentOrders] = useState(() =>
-    safeLoadRecentOrders()
-  );
+  const [recentOrders, setRecentOrders] = useState(() => safeLoadRecentOrders());
 
   const sourceLabel = useMemo(
-    () =>
-      SOURCE_OPTIONS.find((x) => x.id === source)?.label ||
-      source,
+    () => SOURCE_OPTIONS.find((x) => x.id === source)?.label || source,
     [source]
   );
 
-  const totalNumber = total.trim() === "" ? null : Number(total);
+  const selectedCategory = useMemo(
+    () => CATALOG.find((cat) => cat.id === categoryId) || CATALOG[0],
+    [categoryId]
+  );
 
-  const totalIsValid =
-    total.trim() === "" ||
-    (Number.isFinite(totalNumber) && totalNumber >= 0);
+  const selectedCatalogItem = useMemo(
+    () =>
+      selectedCategory.items.find((item) => item.id === selectedItemId) ||
+      selectedCategory.items[0],
+    [selectedCategory, selectedItemId]
+  );
 
-  const canSubmit =
-    rawText.trim().length > 0 &&
-    totalIsValid &&
-    !sending;
+  const total = useMemo(
+    () =>
+      orderItems.reduce(
+        (sum, row) => sum + Number(row.price || 0) * Number(row.qty || 0),
+        0
+      ),
+    [orderItems]
+  );
+
+  const rawText = useMemo(() => {
+    const lines = orderItems.map(
+      (row) =>
+        `• ${row.name} x${row.qty} — ${formatMoney(row.price * row.qty)}`
+    );
+
+    if (notes.trim()) {
+      lines.push("", `Notas: ${notes.trim()}`);
+    }
+
+    return lines.join("\n");
+  }, [orderItems, notes]);
+
+  const canSubmit = orderItems.length > 0 && !sending;
 
   useEffect(() => {
     if (typeof window === "undefined") return;
@@ -231,21 +304,66 @@ export default function Admin() {
         JSON.stringify(recentOrders.slice(0, 20))
       );
     } catch {
-      // El historial local es auxiliar. Si falla, no interrumpe el Admin.
+      // Historial auxiliar: si falla, no bloquea el Admin.
     }
   }, [recentOrders]);
-
-  const pretty = (x) => {
-    try {
-      return JSON.stringify(x, null, 2);
-    } catch {
-      return String(x);
-    }
-  };
 
   const setMessage = (message, type = "") => {
     setStatus(message);
     setStatusType(type);
+  };
+
+  const addItem = (item) => {
+    if (!item) return;
+
+    setOrderItems((prev) => {
+      const found = prev.find((row) => row.id === item.id);
+
+      if (found) {
+        return prev.map((row) =>
+          row.id === item.id
+            ? { ...row, qty: row.qty + 1 }
+            : row
+        );
+      }
+
+      return [...prev, { ...item, qty: 1 }];
+    });
+  };
+
+  const changeQty = (id, delta) => {
+    setOrderItems((prev) =>
+      prev
+        .map((row) =>
+          row.id === id
+            ? { ...row, qty: Math.max(0, row.qty + delta) }
+            : row
+        )
+        .filter((row) => row.qty > 0)
+    );
+  };
+
+  const removeItem = (id) => {
+    setOrderItems((prev) => prev.filter((row) => row.id !== id));
+  };
+
+  const addManualItem = () => {
+    const price = Number(manualPrice);
+
+    if (!manualName.trim() || !Number.isFinite(price) || price < 0) {
+      setMessage("Completá nombre y precio válido del ítem manual.", "error");
+      return;
+    }
+
+    addItem({
+      id: `manual-${Date.now()}`,
+      name: manualName.trim(),
+      price,
+    });
+
+    setManualName("");
+    setManualPrice("");
+    setMessage("");
   };
 
   const ping = async () => {
@@ -254,18 +372,12 @@ export default function Admin() {
 
     try {
       const r = await post({ action: "ping" });
-
       setMessage(
-        `PING OK\nbuildId: ${
-          r?.buildId || "(sin buildId)"
-        }\n\nRESP:\n${pretty(r)}`,
+        `PING OK\nbuildId: ${r?.buildId || "(sin buildId)"}`,
         "success"
       );
     } catch (e) {
-      setMessage(
-        "PING ERROR: " + (e?.message || String(e)),
-        "error"
-      );
+      setMessage("PING ERROR: " + (e?.message || String(e)), "error");
     } finally {
       setChecking(false);
     }
@@ -280,18 +392,14 @@ export default function Admin() {
 
       if (r?.order?.id) {
         setNextOrder(r.order);
-
         setMessage(
-          `NEXT UNPRINTED OK\nid: ${
-            r.order.id
-          }\nbuildId: ${
+          `NEXT UNPRINTED OK\nid: ${r.order.id}\nbuildId: ${
             r?.buildId || "(sin buildId)"
           }`,
           "success"
         );
       } else {
         setNextOrder(null);
-
         setMessage(
           `No hay pedidos pendientes de impresión.\nbuildId: ${
             r?.buildId || "(sin buildId)"
@@ -301,11 +409,7 @@ export default function Admin() {
       }
     } catch (e) {
       setNextOrder(null);
-
-      setMessage(
-        "NEXT ERROR: " + (e?.message || String(e)),
-        "error"
-      );
+      setMessage("NEXT ERROR: " + (e?.message || String(e)), "error");
     } finally {
       setChecking(false);
     }
@@ -322,13 +426,23 @@ export default function Admin() {
     const order = {
       source,
       customer: customer.trim() || sourceLabel,
-      rawText: rawText.trim(),
-      total: totalNumber,
+      rawText,
+      total,
       paid,
       method,
       time: time.trim() || "ASAP",
       createdAt,
       manual: true,
+
+      // Datos extra útiles para el Admin / futuras mejoras.
+      // El backend actual puede ignorarlos sin afectar rawText/total.
+      items: orderItems.map((row) => ({
+        id: row.id,
+        name: row.name,
+        price: row.price,
+        qty: row.qty,
+      })),
+      notes: notes.trim(),
     };
 
     try {
@@ -350,31 +464,23 @@ export default function Admin() {
         buildId: r?.buildId,
       };
 
-      setRecentOrders((prev) =>
-        [savedOrder, ...prev].slice(0, 20)
-      );
+      setRecentOrders((prev) => [savedOrder, ...prev].slice(0, 20));
 
       setMessage(
-        `PEDIDO CREADO\nid: ${id} | wroteRow: ${
+        `PEDIDO CREADO\nid: ${id} | total: ${formatMoney(total)} | wroteRow: ${
           r?.wroteRow ?? "(sin wroteRow)"
-        } | buildId: ${
-          r?.buildId || "(sin buildId)"
-        }`,
+        } | buildId: ${r?.buildId || "(sin buildId)"}`,
         "success"
       );
 
-      // Limpia el contenido del pedido pero conserva origen/método
-      // para cargar varios pedidos seguidos más rápido.
+      // Conservamos origen y entrega para cargar pedidos seguidos.
       setCustomer("");
-      setRawText("");
-      setTotal("");
+      setNotes("");
       setPaid(false);
       setTime("ASAP");
+      setOrderItems([]);
     } catch (e) {
-      setMessage(
-        "ERROR: " + (e?.message || String(e)),
-        "error"
-      );
+      setMessage("ERROR: " + (e?.message || String(e)), "error");
     } finally {
       setSending(false);
     }
@@ -382,10 +488,10 @@ export default function Admin() {
 
   const clearForm = () => {
     setCustomer("");
-    setRawText("");
-    setTotal("");
+    setNotes("");
     setPaid(false);
     setTime("ASAP");
+    setOrderItems([]);
     setMessage("");
   };
 
@@ -403,9 +509,7 @@ export default function Admin() {
     const text = [
       order.customer ? `Cliente: ${order.customer}` : null,
       order.rawText || null,
-      order.total != null
-        ? `Total: ${formatMoney(order.total)}`
-        : null,
+      order.total != null ? `Total: ${formatMoney(order.total)}` : null,
       order.paid ? "Pagado" : "A pagar",
     ]
       .filter(Boolean)
@@ -415,10 +519,7 @@ export default function Admin() {
       await navigator.clipboard.writeText(text);
       setMessage("Pedido copiado al portapapeles.", "success");
     } catch {
-      setMessage(
-        "No se pudo copiar automáticamente.",
-        "error"
-      );
+      setMessage("No se pudo copiar automáticamente.", "error");
     }
   };
 
@@ -446,46 +547,24 @@ export default function Admin() {
       style={{
         padding: 16,
         fontFamily: "system-ui, sans-serif",
-        maxWidth: 860,
+        maxWidth: 900,
         margin: "0 auto",
         color: "#1a1a1a",
       }}
     >
-      <header
-        style={{
-          display: "flex",
-          justifyContent: "space-between",
-          alignItems: "flex-start",
-          gap: 16,
-          flexWrap: "wrap",
-        }}
-      >
-        <div>
-          <h1 style={{ margin: 0 }}>
-            SECTO — ADMIN
-          </h1>
+      <header>
+        <h1 style={{ margin: 0 }}>SECTO — ADMIN</h1>
 
-          <p
-            style={{
-              opacity: 0.65,
-              margin: "6px 0 0",
-              maxWidth: 620,
-            }}
-          >
-            Carga manual de pedidos y control de la cola de impresión.
-            Los pedidos web siguen entrando automáticamente.
-          </p>
-        </div>
-
-        <div
+        <p
           style={{
-            fontSize: 12,
-            opacity: 0.55,
-            paddingTop: 5,
+            opacity: 0.65,
+            margin: "6px 0 0",
+            maxWidth: 650,
           }}
         >
-          endpoint: {ENDPOINT}
-        </div>
+          Carga manual de pedidos. Elegí los productos y el total se calcula solo.
+          Los pedidos web siguen entrando automáticamente.
+        </p>
       </header>
 
       <main
@@ -502,74 +581,30 @@ export default function Admin() {
             padding: 16,
           }}
         >
-          <div
-            style={{
-              display: "flex",
-              justifyContent: "space-between",
-              gap: 12,
-              alignItems: "center",
-              marginBottom: 14,
-            }}
-          >
-            <div>
-              <h2
-                style={{
-                  fontSize: 16,
-                  margin: 0,
-                }}
-              >
-                NUEVO PEDIDO
-              </h2>
+          <h2 style={{ fontSize: 16, margin: "0 0 14px" }}>
+            NUEVO PEDIDO
+          </h2>
 
-              <p
-                style={{
-                  margin: "4px 0 0",
-                  fontSize: 12,
-                  opacity: 0.6,
-                }}
-              >
-                Para WhatsApp, teléfono, mostrador u otro ingreso manual.
-              </p>
-            </div>
-          </div>
-
-          <div
-            style={{
-              display: "grid",
-              gap: 12,
-            }}
-          >
+          <div style={{ display: "grid", gap: 14 }}>
             <div
               style={{
                 display: "grid",
-                gridTemplateColumns:
-                  "repeat(auto-fit, minmax(180px, 1fr))",
+                gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))",
                 gap: 10,
               }}
             >
               <label>
-                <div
-                  style={{
-                    fontSize: 12,
-                    opacity: 0.65,
-                    marginBottom: 5,
-                  }}
-                >
+                <div style={{ fontSize: 12, opacity: 0.65, marginBottom: 5 }}>
                   Origen
                 </div>
 
                 <select
                   value={source}
-                  onChange={(e) =>
-                    setSource(e.target.value)
-                  }
+                  onChange={(e) => setSource(e.target.value)}
                   style={fieldStyle}
                 >
                   {SOURCE_OPTIONS.map((option) => (
-                    <option
-                      key={option.id}
-                      value={option.id}
-                    >
+                    <option key={option.id} value={option.id}>
                       {option.label}
                     </option>
                   ))}
@@ -577,28 +612,17 @@ export default function Admin() {
               </label>
 
               <label>
-                <div
-                  style={{
-                    fontSize: 12,
-                    opacity: 0.65,
-                    marginBottom: 5,
-                  }}
-                >
+                <div style={{ fontSize: 12, opacity: 0.65, marginBottom: 5 }}>
                   Entrega
                 </div>
 
                 <select
                   value={method}
-                  onChange={(e) =>
-                    setMethod(e.target.value)
-                  }
+                  onChange={(e) => setMethod(e.target.value)}
                   style={fieldStyle}
                 >
                   {METHOD_OPTIONS.map((option) => (
-                    <option
-                      key={option.id}
-                      value={option.id}
-                    >
+                    <option key={option.id} value={option.id}>
                       {option.label}
                     </option>
                   ))}
@@ -606,21 +630,13 @@ export default function Admin() {
               </label>
 
               <label>
-                <div
-                  style={{
-                    fontSize: 12,
-                    opacity: 0.65,
-                    marginBottom: 5,
-                  }}
-                >
+                <div style={{ fontSize: 12, opacity: 0.65, marginBottom: 5 }}>
                   Horario
                 </div>
 
                 <input
                   value={time}
-                  onChange={(e) =>
-                    setTime(e.target.value)
-                  }
+                  onChange={(e) => setTime(e.target.value)}
                   placeholder="ASAP / 20:00"
                   style={fieldStyle}
                 />
@@ -630,27 +646,260 @@ export default function Admin() {
             <input
               placeholder="Cliente / nombre (opcional)"
               value={customer}
-              onChange={(e) =>
-                setCustomer(e.target.value)
-              }
+              onChange={(e) => setCustomer(e.target.value)}
               style={fieldStyle}
             />
 
+            <div
+              style={{
+                border: "1px solid #e5e5e5",
+                borderRadius: 12,
+                padding: 12,
+                display: "grid",
+                gap: 10,
+                background: "#fafafa",
+              }}
+            >
+              <div>
+                <div style={{ fontWeight: 800, fontSize: 14 }}>
+                  AGREGAR PRODUCTO
+                </div>
+                <div style={{ fontSize: 12, opacity: 0.55, marginTop: 3 }}>
+                  Precio cargado automáticamente.
+                </div>
+              </div>
+
+              <div
+                style={{
+                  display: "grid",
+                  gridTemplateColumns: "minmax(150px, .8fr) minmax(220px, 1.4fr) auto",
+                  gap: 8,
+                  alignItems: "end",
+                }}
+              >
+                <label>
+                  <div style={{ fontSize: 12, opacity: 0.65, marginBottom: 5 }}>
+                    Categoría
+                  </div>
+
+                  <select
+                    value={categoryId}
+                    onChange={(e) => {
+                      const nextCategory =
+                        CATALOG.find((cat) => cat.id === e.target.value) ||
+                        CATALOG[0];
+
+                      setCategoryId(nextCategory.id);
+                      setSelectedItemId(nextCategory.items[0].id);
+                    }}
+                    style={fieldStyle}
+                  >
+                    {CATALOG.map((cat) => (
+                      <option key={cat.id} value={cat.id}>
+                        {cat.name}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+
+                <label>
+                  <div style={{ fontSize: 12, opacity: 0.65, marginBottom: 5 }}>
+                    Producto
+                  </div>
+
+                  <select
+                    value={selectedItemId}
+                    onChange={(e) => setSelectedItemId(e.target.value)}
+                    style={fieldStyle}
+                  >
+                    {selectedCategory.items.map((item) => (
+                      <option key={item.id} value={item.id}>
+                        {item.name} — {formatMoney(item.price)}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+
+                <button
+                  type="button"
+                  onClick={() => addItem(selectedCatalogItem)}
+                  style={{
+                    ...buttonStyle,
+                    background: "#111",
+                    color: "#fff",
+                    fontWeight: 800,
+                    whiteSpace: "nowrap",
+                  }}
+                >
+                  + Agregar
+                </button>
+              </div>
+
+              <details>
+                <summary
+                  style={{
+                    cursor: "pointer",
+                    fontSize: 12,
+                    opacity: 0.7,
+                  }}
+                >
+                  Agregar ítem manual
+                </summary>
+
+                <div
+                  style={{
+                    display: "grid",
+                    gridTemplateColumns: "1fr 140px auto",
+                    gap: 8,
+                    marginTop: 10,
+                  }}
+                >
+                  <input
+                    value={manualName}
+                    onChange={(e) => setManualName(e.target.value)}
+                    placeholder="Nombre del ítem"
+                    style={fieldStyle}
+                  />
+
+                  <input
+                    value={manualPrice}
+                    onChange={(e) => setManualPrice(e.target.value)}
+                    placeholder="Precio"
+                    inputMode="decimal"
+                    style={fieldStyle}
+                  />
+
+                  <button
+                    type="button"
+                    onClick={addManualItem}
+                    style={buttonStyle}
+                  >
+                    Agregar
+                  </button>
+                </div>
+              </details>
+            </div>
+
+            <div>
+              <div
+                style={{
+                  display: "flex",
+                  justifyContent: "space-between",
+                  alignItems: "center",
+                  gap: 10,
+                  marginBottom: 8,
+                }}
+              >
+                <div style={{ fontWeight: 800, fontSize: 14 }}>
+                  PEDIDO
+                </div>
+
+                <div style={{ fontWeight: 900, fontSize: 18 }}>
+                  {formatMoney(total)}
+                </div>
+              </div>
+
+              {orderItems.length === 0 ? (
+                <div
+                  style={{
+                    border: "1px dashed #ddd",
+                    borderRadius: 12,
+                    padding: 18,
+                    textAlign: "center",
+                    fontSize: 13,
+                    opacity: 0.55,
+                  }}
+                >
+                  Todavía no agregaste productos.
+                </div>
+              ) : (
+                <div style={{ display: "grid", gap: 8 }}>
+                  {orderItems.map((row) => (
+                    <div
+                      key={row.id}
+                      style={{
+                        border: "1px solid #e5e5e5",
+                        borderRadius: 10,
+                        padding: 10,
+                        display: "flex",
+                        justifyContent: "space-between",
+                        gap: 12,
+                        alignItems: "center",
+                      }}
+                    >
+                      <div style={{ minWidth: 0 }}>
+                        <div style={{ fontWeight: 700 }}>
+                          {row.name}
+                        </div>
+                        <div style={{ fontSize: 12, opacity: 0.6, marginTop: 2 }}>
+                          {formatMoney(row.price)} c/u ·{" "}
+                          {formatMoney(row.price * row.qty)}
+                        </div>
+                      </div>
+
+                      <div
+                        style={{
+                          display: "flex",
+                          gap: 6,
+                          alignItems: "center",
+                          flexShrink: 0,
+                        }}
+                      >
+                        <button
+                          type="button"
+                          onClick={() => changeQty(row.id, -1)}
+                          style={{
+                            ...buttonStyle,
+                            padding: "6px 10px",
+                          }}
+                        >
+                          −
+                        </button>
+
+                        <strong
+                          style={{
+                            minWidth: 24,
+                            textAlign: "center",
+                          }}
+                        >
+                          {row.qty}
+                        </strong>
+
+                        <button
+                          type="button"
+                          onClick={() => changeQty(row.id, 1)}
+                          style={{
+                            ...buttonStyle,
+                            padding: "6px 10px",
+                          }}
+                        >
+                          +
+                        </button>
+
+                        <button
+                          type="button"
+                          aria-label={`Quitar ${row.name}`}
+                          onClick={() => removeItem(row.id)}
+                          style={{
+                            ...buttonStyle,
+                            padding: "6px 10px",
+                            color: "#777",
+                          }}
+                        >
+                          ×
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+
             <textarea
-              placeholder={
-                source === "whatsapp"
-                  ? "Pegá el mensaje de WhatsApp acá"
-                  : source === "phone"
-                  ? "Escribí el pedido tomado por teléfono"
-                  : source === "local"
-                  ? "Escribí el pedido de mostrador"
-                  : "Detalle del pedido"
-              }
-              value={rawText}
-              onChange={(e) =>
-                setRawText(e.target.value)
-              }
-              rows={8}
+              placeholder="Notas del pedido, variantes, dirección, elección de rolls del combo, etc."
+              value={notes}
+              onChange={(e) => setNotes(e.target.value)}
+              rows={4}
               style={{
                 ...fieldStyle,
                 resize: "vertical",
@@ -658,63 +907,21 @@ export default function Admin() {
               }}
             />
 
-            <div
+            <label
               style={{
-                display: "grid",
-                gridTemplateColumns:
-                  "minmax(160px, 1fr) auto",
-                gap: 12,
+                display: "flex",
+                gap: 8,
                 alignItems: "center",
+                fontSize: 14,
               }}
             >
-              <div>
-                <input
-                  placeholder="Total (opcional)"
-                  value={total}
-                  onChange={(e) =>
-                    setTotal(e.target.value)
-                  }
-                  inputMode="decimal"
-                  style={{
-                    ...fieldStyle,
-                    borderColor: totalIsValid
-                      ? "#ddd"
-                      : "#c62828",
-                  }}
-                />
-
-                {!totalIsValid && (
-                  <div
-                    style={{
-                      color: "#c62828",
-                      fontSize: 12,
-                      marginTop: 4,
-                    }}
-                  >
-                    Ingresá un total válido.
-                  </div>
-                )}
-              </div>
-
-              <label
-                style={{
-                  display: "flex",
-                  gap: 8,
-                  alignItems: "center",
-                  whiteSpace: "nowrap",
-                  fontSize: 14,
-                }}
-              >
-                <input
-                  type="checkbox"
-                  checked={paid}
-                  onChange={(e) =>
-                    setPaid(e.target.checked)
-                  }
-                />
-                Ya pagó
-              </label>
-            </div>
+              <input
+                type="checkbox"
+                checked={paid}
+                onChange={(e) => setPaid(e.target.checked)}
+              />
+              Ya pagó
+            </label>
 
             <div
               style={{
@@ -730,31 +937,20 @@ export default function Admin() {
                   ...buttonStyle,
                   flex: "1 1 260px",
                   fontWeight: 800,
-                  background: canSubmit
-                    ? "#111"
-                    : "#f1f1f1",
-                  color: canSubmit
-                    ? "#fff"
-                    : "#888",
-                  cursor: canSubmit
-                    ? "pointer"
-                    : "not-allowed",
+                  background: canSubmit ? "#111" : "#f1f1f1",
+                  color: canSubmit ? "#fff" : "#888",
+                  cursor: canSubmit ? "pointer" : "not-allowed",
                 }}
               >
                 {sending
                   ? "Creando pedido…"
-                  : `Crear pedido · ${sourceLabel}`}
+                  : `Crear pedido · ${formatMoney(total)}`}
               </button>
 
               <button
                 onClick={clearForm}
                 disabled={sending}
-                style={{
-                  ...buttonStyle,
-                  cursor: sending
-                    ? "not-allowed"
-                    : "pointer",
-                }}
+                style={buttonStyle}
               >
                 Limpiar
               </button>
@@ -797,19 +993,12 @@ export default function Admin() {
                 marginBottom: 8,
               }}
             >
-              <h2
-                style={{
-                  fontSize: 14,
-                  margin: 0,
-                }}
-              >
+              <h2 style={{ fontSize: 14, margin: 0 }}>
                 PRÓXIMO SIN IMPRIMIR
               </h2>
 
               <button
-                onClick={() =>
-                  copyOrder(nextOrder)
-                }
+                onClick={() => copyOrder(nextOrder)}
                 style={{
                   ...buttonStyle,
                   padding: "7px 10px",
@@ -835,22 +1024,11 @@ export default function Admin() {
             }}
           >
             <div>
-              <h2
-                style={{
-                  fontSize: 14,
-                  margin: 0,
-                }}
-              >
+              <h2 style={{ fontSize: 14, margin: 0 }}>
                 CREADOS DESDE ADMIN
               </h2>
 
-              <div
-                style={{
-                  fontSize: 12,
-                  opacity: 0.55,
-                  marginTop: 3,
-                }}
-              >
+              <div style={{ fontSize: 12, opacity: 0.55, marginTop: 3 }}>
                 Últimos {recentOrders.length} guardados en este navegador.
               </div>
             </div>
@@ -883,12 +1061,7 @@ export default function Admin() {
               Todavía no creaste pedidos desde este Admin.
             </div>
           ) : (
-            <div
-              style={{
-                display: "grid",
-                gap: 10,
-              }}
-            >
+            <div style={{ display: "grid", gap: 10 }}>
               {recentOrders.map((order, index) => (
                 <div
                   key={`${order.id || "local"}-${order.createdAt || index}`}
@@ -903,9 +1076,7 @@ export default function Admin() {
                     }}
                   >
                     <button
-                      onClick={() =>
-                        copyOrder(order)
-                      }
+                      onClick={() => copyOrder(order)}
                       style={{
                         ...buttonStyle,
                         padding: "6px 9px",
@@ -945,13 +1116,7 @@ export default function Admin() {
               marginTop: 12,
             }}
           >
-            <p
-              style={{
-                margin: 0,
-                fontSize: 12,
-                opacity: 0.6,
-              }}
-            >
+            <p style={{ margin: 0, fontSize: 12, opacity: 0.6 }}>
               Herramientas técnicas. No son necesarias para cargar un pedido normal.
             </p>
 
@@ -965,12 +1130,7 @@ export default function Admin() {
               <button
                 onClick={ping}
                 disabled={checking}
-                style={{
-                  ...buttonStyle,
-                  cursor: checking
-                    ? "not-allowed"
-                    : "pointer",
-                }}
+                style={buttonStyle}
               >
                 Ping / buildId
               </button>
@@ -978,12 +1138,7 @@ export default function Admin() {
               <button
                 onClick={peekNext}
                 disabled={checking}
-                style={{
-                  ...buttonStyle,
-                  cursor: checking
-                    ? "not-allowed"
-                    : "pointer",
-                }}
+                style={buttonStyle}
               >
                 Ver próximo sin imprimir
               </button>

@@ -273,7 +273,6 @@ function buildWhatsAppText(order) {
 
 // ===== POKES =====
 
-// Pokes fijos
 const FIXED_POKES = [
   {
     id: "poke-seitan-tonkatsu",
@@ -295,10 +294,9 @@ const FIXED_POKES = [
   },
 ];
 
-// Armá tu poke
 const POKE_BASE_PRICE = 690;
-const POKE_EXTRA_SAUCE = 40;
 const POKE_EXTRA_TOPPING = 60;
+const POKE_EXTRA_SAUCE = 40;
 
 const POKE_BASES = [
   "Arroz sushi",
@@ -341,14 +339,9 @@ const POKE_SAUCES = [
 
 function PokeBuilder({ onAdd, isOpen }) {
   const [base, setBase] = useState("");
-  const [protein, setProtein] = useState("");
+  const [proteins, setProteins] = useState([]);
   const [toppings, setToppings] = useState([]);
   const [sauces, setSauces] = useState([]);
-
-  const [extraProteins, setExtraProteins] = useState([]);
-  const [extraSauces, setExtraSauces] = useState([]);
-  const [extraToppings, setExtraToppings] = useState([]);
-
   const [feedback, setFeedback] = useState("");
 
   const toggleInArray = (value, setFn) => {
@@ -359,125 +352,104 @@ function PokeBuilder({ onAdd, isOpen }) {
     );
   };
 
-  const toggleLimited = (value, current, setFn, limit) => {
-    if (current.includes(value)) {
-      setFn(current.filter((x) => x !== value));
-      return;
-    }
-
-    if (current.length < limit) {
-      setFn([...current, value]);
-    }
-  };
-
-  const extraProteinTotal = extraProteins.reduce((sum, name) => {
+  // La primera proteína está incluida.
+  // A partir de la segunda se suma el valor específico de esa proteína.
+  const extraProteinTotal = proteins.slice(1).reduce((sum, name) => {
     const found = POKE_PROTEINS.find((p) => p.name === name);
     return sum + (found?.extraPrice || 0);
   }, 0);
 
-  const extraSauceTotal =
-    extraSauces.length * POKE_EXTRA_SAUCE;
+  // Sésamo no suma como topping extra.
+  const chargeableToppings = toppings.filter((t) => t !== "Sésamo");
+  const extraToppingCount = Math.max(0, chargeableToppings.length - 5);
+  const extraToppingTotal = extraToppingCount * POKE_EXTRA_TOPPING;
 
-  const extraToppingTotal = extraToppings.reduce(
-    (sum, topping) =>
-      sum + (topping === "Sésamo" ? 0 : POKE_EXTRA_TOPPING),
-    0
-  );
+  // Las primeras 2 salsas están incluidas.
+  const extraSauceCount = Math.max(0, sauces.length - 2);
+  const extraSauceTotal = extraSauceCount * POKE_EXTRA_SAUCE;
 
   const unitPrice =
     POKE_BASE_PRICE +
     extraProteinTotal +
-    extraSauceTotal +
-    extraToppingTotal;
+    extraToppingTotal +
+    extraSauceTotal;
 
   const canAdd =
     Boolean(base) &&
-    Boolean(protein) &&
+    proteins.length >= 1 &&
     toppings.length >= 1 &&
     sauces.length >= 1;
 
   const handleAdd = () => {
     if (!canAdd || !isOpen) return;
 
-    const parts = [
-      "Armá tu poke",
-      "Base: " + base,
-      "Proteína: " + protein,
-      "Toppings: " + toppings.join(", "),
-      "Salsas: " + sauces.join(", "),
-    ];
-
-    if (extraProteins.length > 0) {
-      parts.push(
-        "Extra proteína: " + extraProteins.join(", ")
-      );
-    }
-
-    if (extraSauces.length > 0) {
-      parts.push(
-        "Salsa extra: " + extraSauces.join(", ")
-      );
-    }
-
-    if (extraToppings.length > 0) {
-      parts.push(
-        "Topping extra: " + extraToppings.join(", ")
-      );
-    }
+    const description =
+      "Armá tu poke — Base: " +
+      base +
+      " | Proteína" +
+      (proteins.length > 1 ? "s" : "") +
+      ": " +
+      proteins.join(", ") +
+      " | Toppings: " +
+      toppings.join(", ") +
+      " | Salsas: " +
+      sauces.join(", ");
 
     const item = {
       id: "poke-custom-" + Date.now(),
-      name: parts.join(" | "),
+      name: description,
       price: unitPrice,
     };
 
     onAdd(item, 1);
 
     setBase("");
-    setProtein("");
+    setProteins([]);
     setToppings([]);
     setSauces([]);
-    setExtraProteins([]);
-    setExtraSauces([]);
-    setExtraToppings([]);
 
     setFeedback("Poke agregado al pedido");
     setTimeout(() => setFeedback(""), 1500);
   };
 
   return (
-    <section className="border border-neutral-200 rounded-2xl p-4 bg-white">
-      <div className="flex items-baseline justify-between gap-4 mb-4">
+    <details className="border border-neutral-200 rounded-2xl bg-white overflow-hidden">
+      <summary className="cursor-pointer list-none p-4 flex items-center justify-between gap-4">
         <div>
-          <h2 className="text-sm tracking-[0.2em] text-neutral-500">
-            ARMÁ TU POKE
-          </h2>
-          <p className="text-xs text-neutral-400 mt-1">
-            1 base · 1 proteína · hasta 5 toppings · hasta 2 salsas
+          <h3 className="text-neutral-900 leading-tight">
+            Armá tu poke
+          </h3>
+          <p className="text-xs text-neutral-500 mt-1">
+            1 proteína · 5 toppings · 2 salsas incluidas
           </p>
         </div>
 
         <div className="text-right shrink-0">
-          <p className="text-xs text-neutral-500">
+          <p className="text-sm text-neutral-900">
             Desde {currency(POKE_BASE_PRICE)}
           </p>
           <p className="text-[11px] text-neutral-400">
-            Actual {currency(unitPrice)}
+            Tocá para armar
           </p>
         </div>
-      </div>
+      </summary>
 
-      <div className="space-y-6">
+      <div className="border-t border-neutral-200 p-4 space-y-6">
         <div>
           <p className="text-xs text-neutral-500 uppercase tracking-[0.15em] mb-2">
             Base · elegí 1
           </p>
 
-          <div className="space-y-2">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
             {POKE_BASES.map((option) => (
               <label
                 key={option}
-                className="flex items-center justify-between gap-3 border-b border-neutral-100 pb-2 text-sm text-neutral-800"
+                className={
+                  "flex items-center justify-between rounded-xl border px-3 py-2 text-sm cursor-pointer " +
+                  (base === option
+                    ? "border-neutral-900 bg-neutral-900 text-white"
+                    : "border-neutral-200 text-neutral-700")
+                }
               >
                 <span>{option}</span>
                 <input
@@ -493,140 +465,29 @@ function PokeBuilder({ onAdd, isOpen }) {
         </div>
 
         <div>
-          <p className="text-xs text-neutral-500 uppercase tracking-[0.15em] mb-2">
-            Proteína · 1 incluida
-          </p>
-
-          <div className="space-y-2">
-            {POKE_PROTEINS.map((option) => (
-              <label
-                key={option.name}
-                className="flex items-center justify-between gap-3 border-b border-neutral-100 pb-2 text-sm text-neutral-800"
-              >
-                <span>{option.name}</span>
-                <input
-                  type="radio"
-                  name="poke-protein"
-                  checked={protein === option.name}
-                  onChange={() => setProtein(option.name)}
-                  className="accent-black"
-                />
-              </label>
-            ))}
-          </div>
-        </div>
-
-        <div>
           <div className="flex items-baseline justify-between gap-3 mb-2">
             <p className="text-xs text-neutral-500 uppercase tracking-[0.15em]">
-              Toppings · hasta 5 incluidos
+              Proteína · 1 incluida
             </p>
             <span className="text-[11px] text-neutral-400">
-              {toppings.length}/5
+              {proteins.length > 1
+                ? `${proteins.length - 1} extra`
+                : "sin extras"}
             </span>
           </div>
-
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-            {POKE_TOPPINGS.map((option) => {
-              const selected = toppings.includes(option);
-              const disabled =
-                !selected && toppings.length >= 5;
-
-              return (
-                <button
-                  key={option}
-                  type="button"
-                  disabled={disabled}
-                  onClick={() =>
-                    toggleLimited(
-                      option,
-                      toppings,
-                      setToppings,
-                      5
-                    )
-                  }
-                  className={
-                    "flex items-center justify-between text-xs border rounded-xl px-3 py-2 text-left " +
-                    (selected
-                      ? "bg-neutral-900 text-white border-neutral-900"
-                      : disabled
-                      ? "border-neutral-100 text-neutral-300 cursor-not-allowed"
-                      : "border-neutral-200 text-neutral-700")
-                  }
-                >
-                  <span>{option}</span>
-                  <span>{selected ? "✓" : "+"}</span>
-                </button>
-              );
-            })}
-          </div>
-        </div>
-
-        <div>
-          <div className="flex items-baseline justify-between gap-3 mb-2">
-            <p className="text-xs text-neutral-500 uppercase tracking-[0.15em]">
-              Salsas · hasta 2 incluidas
-            </p>
-            <span className="text-[11px] text-neutral-400">
-              {sauces.length}/2
-            </span>
-          </div>
-
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-            {POKE_SAUCES.map((option) => {
-              const selected = sauces.includes(option);
-              const disabled =
-                !selected && sauces.length >= 2;
-
-              return (
-                <button
-                  key={option}
-                  type="button"
-                  disabled={disabled}
-                  onClick={() =>
-                    toggleLimited(
-                      option,
-                      sauces,
-                      setSauces,
-                      2
-                    )
-                  }
-                  className={
-                    "flex items-center justify-between text-xs border rounded-xl px-3 py-2 text-left " +
-                    (selected
-                      ? "bg-neutral-900 text-white border-neutral-900"
-                      : disabled
-                      ? "border-neutral-100 text-neutral-300 cursor-not-allowed"
-                      : "border-neutral-200 text-neutral-700")
-                  }
-                >
-                  <span>{option}</span>
-                  <span>{selected ? "✓" : "+"}</span>
-                </button>
-              );
-            })}
-          </div>
-        </div>
-
-        <div>
-          <p className="text-xs text-neutral-500 uppercase tracking-[0.15em] mb-2">
-            Extra proteína
-          </p>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
             {POKE_PROTEINS.map((option) => {
-              const selected =
-                extraProteins.includes(option.name);
+              const selected = proteins.includes(option.name);
+              const index = proteins.indexOf(option.name);
+              const isExtra = selected && index > 0;
 
               return (
                 <button
-                  key={"extra-protein-" + option.name}
+                  key={option.name}
                   type="button"
                   onClick={() =>
-                    toggleInArray(
-                      option.name,
-                      setExtraProteins
-                    )
+                    toggleInArray(option.name, setProteins)
                   }
                   className={
                     "flex items-center justify-between text-xs border rounded-xl px-3 py-2 text-left " +
@@ -637,8 +498,7 @@ function PokeBuilder({ onAdd, isOpen }) {
                 >
                   <span>{option.name}</span>
                   <span>
-                    + {currency(option.extraPrice)}
-                    {selected ? " ✓" : ""}
+                    {isExtra ? `+ ${currency(option.extraPrice)}` : selected ? "✓" : "+"}
                   </span>
                 </button>
               );
@@ -647,64 +507,82 @@ function PokeBuilder({ onAdd, isOpen }) {
         </div>
 
         <div>
-          <p className="text-xs text-neutral-500 uppercase tracking-[0.15em] mb-2">
-            Salsa extra
-          </p>
-
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-            {POKE_SAUCES.map((option) => {
-              const selected =
-                extraSauces.includes(option);
-
-              return (
-                <button
-                  key={"extra-sauce-" + option}
-                  type="button"
-                  onClick={() =>
-                    toggleInArray(
-                      option,
-                      setExtraSauces
-                    )
-                  }
-                  className={
-                    "flex items-center justify-between text-xs border rounded-xl px-3 py-2 text-left " +
-                    (selected
-                      ? "bg-neutral-900 text-white border-neutral-900"
-                      : "border-neutral-200 text-neutral-700")
-                  }
-                >
-                  <span>{option}</span>
-                  <span>
-                    + {currency(POKE_EXTRA_SAUCE)}
-                    {selected ? " ✓" : ""}
-                  </span>
-                </button>
-              );
-            })}
+          <div className="flex items-baseline justify-between gap-3 mb-2">
+            <p className="text-xs text-neutral-500 uppercase tracking-[0.15em]">
+              Toppings · 5 incluidos
+            </p>
+            <span className="text-[11px] text-neutral-400">
+              {chargeableToppings.length}/5
+              {extraToppingCount > 0
+                ? ` · ${extraToppingCount} extra`
+                : ""}
+            </span>
           </div>
-        </div>
-
-        <div>
-          <p className="text-xs text-neutral-500 uppercase tracking-[0.15em] mb-2">
-            Topping extra
-          </p>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
             {POKE_TOPPINGS.map((option) => {
-              const selected =
-                extraToppings.includes(option);
-
-              const isFree = option === "Sésamo";
+              const selected = toppings.includes(option);
+              const chargeableIndex =
+                option === "Sésamo"
+                  ? -1
+                  : chargeableToppings.indexOf(option);
+              const isExtra =
+                selected &&
+                option !== "Sésamo" &&
+                chargeableIndex >= 5;
 
               return (
                 <button
-                  key={"extra-topping-" + option}
+                  key={option}
                   type="button"
                   onClick={() =>
-                    toggleInArray(
-                      option,
-                      setExtraToppings
-                    )
+                    toggleInArray(option, setToppings)
+                  }
+                  className={
+                    "flex items-center justify-between text-xs border rounded-xl px-3 py-2 text-left " +
+                    (selected
+                      ? "bg-neutral-900 text-white border-neutral-900"
+                      : "border-neutral-200 text-neutral-700")
+                  }
+                >
+                  <span>
+                    {option}
+                    {option === "Sésamo" ? " · gratis" : ""}
+                  </span>
+                  <span>
+                    {isExtra ? `+ ${currency(POKE_EXTRA_TOPPING)}` : selected ? "✓" : "+"}
+                  </span>
+                </button>
+              );
+            })}
+          </div>
+        </div>
+
+        <div>
+          <div className="flex items-baseline justify-between gap-3 mb-2">
+            <p className="text-xs text-neutral-500 uppercase tracking-[0.15em]">
+              Salsas · 2 incluidas
+            </p>
+            <span className="text-[11px] text-neutral-400">
+              {sauces.length}/2
+              {extraSauceCount > 0
+                ? ` · ${extraSauceCount} extra`
+                : ""}
+            </span>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+            {POKE_SAUCES.map((option) => {
+              const selected = sauces.includes(option);
+              const index = sauces.indexOf(option);
+              const isExtra = selected && index >= 2;
+
+              return (
+                <button
+                  key={option}
+                  type="button"
+                  onClick={() =>
+                    toggleInArray(option, setSauces)
                   }
                   className={
                     "flex items-center justify-between text-xs border rounded-xl px-3 py-2 text-left " +
@@ -715,55 +593,155 @@ function PokeBuilder({ onAdd, isOpen }) {
                 >
                   <span>{option}</span>
                   <span>
-                    {isFree
-                      ? "Gratis"
-                      : "+ " + currency(POKE_EXTRA_TOPPING)}
-                    {selected ? " ✓" : ""}
+                    {isExtra ? `+ ${currency(POKE_EXTRA_SAUCE)}` : selected ? "✓" : "+"}
                   </span>
                 </button>
               );
             })}
           </div>
         </div>
-      </div>
 
-      <div className="mt-5">
-        <div className="flex items-center justify-between mb-3">
-          <span className="text-sm text-neutral-500">
-            Total poke
-          </span>
-          <span className="text-lg text-neutral-900 font-medium">
-            {currency(unitPrice)}
-          </span>
+        <div className="pt-2 border-t border-neutral-200">
+          <div className="flex items-center justify-between mb-3">
+            <span className="text-sm text-neutral-500">
+              Total poke
+            </span>
+            <span className="text-lg font-medium text-neutral-900">
+              {currency(unitPrice)}
+            </span>
+          </div>
+
+          <button
+            type="button"
+            onClick={handleAdd}
+            disabled={!canAdd || !isOpen}
+            className={
+              "w-full rounded-2xl py-3 text-sm " +
+              (canAdd && isOpen
+                ? "bg-black text-white"
+                : "bg-neutral-100 text-neutral-400 cursor-not-allowed")
+            }
+          >
+            Agregar poke al pedido
+          </button>
+
+          {!canAdd && (
+            <p className="text-[11px] text-neutral-400 mt-2">
+              Elegí base, al menos 1 proteína, 1 topping y 1 salsa.
+            </p>
+          )}
+
+          {feedback && (
+            <p className="text-[11px] text-neutral-500 mt-2">
+              {feedback}
+            </p>
+          )}
         </div>
-
-        <button
-          type="button"
-          onClick={handleAdd}
-          disabled={!canAdd || !isOpen}
-          className={
-            "w-full rounded-2xl py-3 text-sm " +
-            (canAdd && isOpen
-              ? "bg-black text-white"
-              : "bg-neutral-100 text-neutral-400 cursor-not-allowed")
-          }
-        >
-          Agregar poke al pedido
-        </button>
-
-        {!canAdd && (
-          <p className="text-[11px] text-neutral-400 mt-2">
-            Elegí base, proteína, al menos 1 topping y al menos 1 salsa.
-          </p>
-        )}
-
-        {feedback && (
-          <p className="text-[11px] text-neutral-500 mt-2">
-            {feedback}
-          </p>
-        )}
       </div>
-    </section>
+    </details>
+  );
+}
+
+function PokesSection({ cart, dispatch, isOpen, showCartPeek, setCartHighlight }) {
+  return (
+    <div>
+      <div className="flex items-baseline justify-between mb-3">
+        <h2 className="text-sm tracking-[0.2em] text-neutral-500">
+          POKES
+        </h2>
+        <span className="h-[1px] flex-1 ml-4 bg-neutral-200"></span>
+      </div>
+
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        {FIXED_POKES.map((item) => (
+          <article
+            key={item.id}
+            className="group border border-neutral-200 rounded-2xl overflow-hidden bg-white"
+          >
+            {typeof item.img === "string" && item.img.trim().length > 0 ? (
+              <div className="aspect-[4/3] overflow-hidden">
+                <img
+                  src={item.img}
+                  alt={item.name}
+                  className="w-full h-full object-cover"
+                  loading="lazy"
+                  decoding="async"
+                />
+              </div>
+            ) : null}
+
+            <div className="p-4">
+              <h3 className="text-neutral-900 leading-tight">
+                {item.name}
+              </h3>
+
+              <p className="text-sm text-neutral-500 mt-2 leading-relaxed">
+                {item.description}
+              </p>
+
+              {item.tags?.length > 0 && (
+                <p className="text-[11px] text-neutral-400 mt-2">
+                  {item.tags.join(" · ")}
+                </p>
+              )}
+
+              <div className="mt-3 flex items-center justify-between gap-4">
+                <p className="text-sm text-neutral-500">
+                  {currency(item.price)}
+                </p>
+
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={() =>
+                      dispatch({ type: "remove", item })
+                    }
+                    className="px-3 py-2 rounded-xl border border-neutral-200"
+                  >
+                    -
+                  </button>
+
+                  <span className="w-6 text-center text-neutral-600">
+                    {cart[item.id]?.qty || 0}
+                  </span>
+
+                  <button
+                    onClick={() => {
+                      dispatch({ type: "add", item });
+                      showCartPeek();
+                      setCartHighlight(true);
+                      setTimeout(
+                        () => setCartHighlight(false),
+                        600
+                      );
+                    }}
+                    className={`px-3 py-2 rounded-xl border ${
+                      isOpen
+                        ? "border-neutral-200 bg-neutral-50"
+                        : "border-neutral-200 text-neutral-400 cursor-not-allowed"
+                    }`}
+                    disabled={!isOpen}
+                  >
+                    +
+                  </button>
+                </div>
+              </div>
+            </div>
+          </article>
+        ))}
+      </div>
+
+      <div className="mt-4">
+        <PokeBuilder
+          isOpen={isOpen}
+          onAdd={(item, qty) => {
+            dispatch({ type: "add", item, qty });
+            showCartPeek();
+            setCartHighlight(true);
+            setTimeout(() => setCartHighlight(false), 600);
+          }}
+        />
+      </div>
+    </div>
   );
 }
 
@@ -989,105 +967,9 @@ export default function SectoCafePedidos() {
 
       <main className="max-w-6xl mx-auto px-4 py-8 grid grid-cols-1 lg:grid-cols-3 gap-8">
         <section className="lg:col-span-2 space-y-8">
-          <div>
-            <div className="flex items-baseline justify-between mb-3">
-              <h2 className="text-sm tracking-[0.2em] text-neutral-500">
-                POKES
-              </h2>
-              <span className="h-[1px] flex-1 ml-4 bg-neutral-200"></span>
-            </div>
-
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              {FIXED_POKES.map((item) => (
-                <article
-                  key={item.id}
-                  className="group border border-neutral-200 rounded-2xl overflow-hidden bg-white"
-                >
-                  {typeof item.img === "string" && item.img.trim().length > 0 ? (
-                    <div className="aspect-[4/3] overflow-hidden">
-                      <img
-                        src={item.img}
-                        alt={item.name}
-                        className="w-full h-full object-cover"
-                        loading="lazy"
-                        decoding="async"
-                      />
-                    </div>
-                  ) : null}
-
-                  <div className="p-4">
-                    <h3 className="text-neutral-900 leading-tight">
-                      {item.name}
-                    </h3>
-
-                    <p className="text-sm text-neutral-500 mt-2 leading-relaxed">
-                      {item.description}
-                    </p>
-
-                    {item.tags?.length > 0 && (
-                      <p className="text-[11px] text-neutral-400 mt-2">
-                        {item.tags.join(" · ")}
-                      </p>
-                    )}
-
-                    <div className="mt-3 flex items-center justify-between gap-4">
-                      <p className="text-sm text-neutral-500">
-                        {currency(item.price)}
-                      </p>
-
-                      <div className="flex items-center gap-2">
-                        <button
-                          onClick={() =>
-                            dispatch({ type: "remove", item })
-                          }
-                          className="px-3 py-2 rounded-xl border border-neutral-200"
-                        >
-                          -
-                        </button>
-
-                        <span className="w-6 text-center text-neutral-600">
-                          {cart[item.id]?.qty || 0}
-                        </span>
-
-                        <button
-                          onClick={() => {
-                            dispatch({ type: "add", item });
-                            showCartPeek();
-                            setCartHighlight(true);
-                            setTimeout(
-                              () => setCartHighlight(false),
-                              600
-                            );
-                          }}
-                          className={`px-3 py-2 rounded-xl border ${
-                            isOpen
-                              ? "border-neutral-200 bg-neutral-50"
-                              : "border-neutral-200 text-neutral-400 cursor-not-allowed"
-                          }`}
-                          disabled={!isOpen}
-                        >
-                          +
-                        </button>
-                      </div>
-                    </div>
-                  </div>
-                </article>
-              ))}
-            </div>
-          </div>
-
-          <PokeBuilder
-            isOpen={isOpen}
-            onAdd={(item, qty) => {
-              dispatch({ type: "add", item, qty });
-              showCartPeek();
-              setCartHighlight(true);
-              setTimeout(() => setCartHighlight(false), 600);
-            }}
-          />
-
           {MENU.map((cat) => (
-            <div key={cat.id}>
+            <React.Fragment key={cat.id}>
+              <div>
               <div className="flex items-baseline justify-between mb-3">
                 <h2 className="text-sm tracking-[0.2em] text-neutral-500">
                   {cat.name}
@@ -1157,6 +1039,17 @@ export default function SectoCafePedidos() {
                 ))}
               </div>
             </div>
+
+            {cat.id === "combos" && (
+              <PokesSection
+                cart={cart}
+                dispatch={dispatch}
+                isOpen={isOpen}
+                showCartPeek={showCartPeek}
+                setCartHighlight={setCartHighlight}
+              />
+            )}
+          </React.Fragment>
           ))}
         </section>
 

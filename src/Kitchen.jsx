@@ -14,12 +14,6 @@ function loadMap() {
   }
 }
 
-function saveMap(m) {
-  try {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(m));
-  } catch {}
-}
-
 function cleanup(m) {
   const now = Date.now();
   const out = { ...m };
@@ -78,14 +72,13 @@ export default function Kitchen() {
   const [lastCheck, setLastCheck] = useState(null);
   const [soundEnabled, setSoundEnabled] = useState(false);
 
-  const printedRef = useRef(cleanup(loadMap()));
   const busyRef = useRef(false);
+  const navigatingRef = useRef(false);
 
   const audioContextRef = useRef(null);
   const soundEnabledRef = useRef(false);
 
   const pollTimerRef = useRef(null);
-  const titleTimerRef = useRef(null);
 
   const playTone = (ctx, frequency, startAt, duration, volume = 0.2) => {
     const oscillator = ctx.createOscillator();
@@ -129,8 +122,8 @@ export default function Kitchen() {
       setSoundEnabled(true);
 
       const now = ctx.currentTime;
-      playTone(ctx, 880, now, 0.10, 0.12);
-      playTone(ctx, 1174.66, now + 0.12, 0.12, 0.12);
+      playTone(ctx, 880, now, 0.1, 0.13);
+      playTone(ctx, 1174.66, now + 0.13, 0.13, 0.14);
 
       setStatus("Sonido activado. Esperando pedidos…");
     } catch (e) {
@@ -163,25 +156,13 @@ export default function Kitchen() {
     }
   };
 
-  const showNewOrderTitle = (id) => {
-    document.title = `🔔 PEDIDO ${id} — KITCHEN`;
-
-    if (titleTimerRef.current) {
-      clearTimeout(titleTimerRef.current);
-    }
-
-    titleTimerRef.current = setTimeout(() => {
-      document.title = "KITCHEN";
-    }, 10000);
-  };
-
   useEffect(() => {
     let stopped = false;
 
     document.title = "KITCHEN";
 
     const poll = async () => {
-      if (stopped || busyRef.current) return;
+      if (stopped || busyRef.current || navigatingRef.current) return;
 
       busyRef.current = true;
 
@@ -201,33 +182,37 @@ export default function Kitchen() {
           return;
         }
 
-        printedRef.current = cleanup(printedRef.current);
+        // Solo usamos el mapa para ignorar pedidos que YA fueron realmente
+        // impresos anteriormente. Kitchen NO agrega el id acá.
+        const printed = cleanup(loadMap());
 
-        if (printedRef.current[id]) {
+        if (printed[id]) {
           setStatus(`Esperando pedidos… (dedupe ${id})`);
           return;
         }
 
+        navigatingRef.current = true;
+
         setLastId(id);
         setStatus(`🔔 Nuevo pedido ${id}`);
+        document.title = `🔔 PEDIDO ${id} — KITCHEN`;
 
-        showNewOrderTitle(id);
         await playNotification();
 
-        // Evita volver a procesarlo durante esta navegación.
-        printedRef.current[id] = Date.now();
-        saveMap(printedRef.current);
-
-        setStatus(`Abriendo comanda ${id}…`);
-
-        // Usamos LA MISMA pestaña.
-        // Así Chrome no puede ignorar el cambio de foco.
         const url =
           `/ticket?id=${encodeURIComponent(id)}` +
           `&autoprint=1&returnTo=${encodeURIComponent("/kitchen")}`;
 
-        window.location.assign(url);
+        setStatus(`Abriendo comanda ${id}…`);
+
+        // Dejamos terminar el sonido y luego forzamos navegación
+        // en ESTA MISMA pestaña. No depende de popups ni de focus().
+        setTimeout(() => {
+          window.location.href = url;
+        }, 700);
       } catch (e) {
+        navigatingRef.current = false;
+
         if (!stopped) {
           setConnection("offline");
           setLastCheck(Date.now());
@@ -281,10 +266,6 @@ export default function Kitchen() {
 
       if (pollTimerRef.current) {
         clearTimeout(pollTimerRef.current);
-      }
-
-      if (titleTimerRef.current) {
-        clearTimeout(titleTimerRef.current);
       }
 
       document.removeEventListener("visibilitychange", onVisibilityChange);
@@ -411,7 +392,7 @@ export default function Kitchen() {
 
       <p style={{ opacity: 0.65, marginTop: 18, fontSize: 13 }}>
         Cuando entra un pedido, Kitchen pasa automáticamente a la comanda.
-        Al cerrar el diálogo de impresión vuelve solo a Kitchen.
+        No usa popups ni pestañas auxiliares.
       </p>
     </div>
   );

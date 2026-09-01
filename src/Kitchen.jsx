@@ -36,6 +36,7 @@ async function post(payload) {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(payload),
+    cache: "no-store",
   });
 
   const text = await res.text();
@@ -44,7 +45,9 @@ async function post(payload) {
   try {
     data = text ? JSON.parse(text) : null;
   } catch {
-    throw new Error(`Respuesta no JSON (HTTP ${res.status}): ${text.slice(0, 200)}`);
+    throw new Error(
+      `Respuesta no JSON (HTTP ${res.status}): ${text.slice(0, 200)}`
+    );
   }
 
   if (!res.ok) {
@@ -54,14 +57,135 @@ async function post(payload) {
   return data;
 }
 
+function formatTime(ts) {
+  if (!ts) return "—";
+
+  try {
+    return new Date(ts).toLocaleTimeString("es-UY", {
+      hour: "2-digit",
+      minute: "2-digit",
+      second: "2-digit",
+    });
+  } catch {
+    return "—";
+  }
+}
+
 export default function Kitchen() {
-  const [status, setStatus] = useState("Esperando pedidos…");
+  const [status, setStatus] = useState("Iniciando Kitchen…");
   const [lastId, setLastId] = useState(null);
   const [lastOrder, setLastOrder] = useState(null);
+
+  const [connection, setConnection] = useState("connecting");
+  const [lastCheck, setLastCheck] = useState(null);
+  const [soundEnabled, setSoundEnabled] = useState(false);
 
   const printedRef = useRef(cleanup(loadMap()));
   const busyRef = useRef(false);
   const ticketWinRef = useRef(null);
+
+  const audioContextRef = useRef(null);
+  const soundEnabledRef = useRef(false);
+
+  const titleTimerRef = useRef(null);
+  const pollTimerRef = useRef(null);
+
+  const playTone = (ctx, frequency, startAt, duration, volume = 0.18) => {
+    const oscillator = ctx.createOscillator();
+    const gain = ctx.createGain();
+
+    oscillator.type = "sine";
+    oscillator.frequency.value = frequency;
+
+    gain.gain.setValueAtTime(0.0001, startAt);
+    gain.gain.exponentialRampToValueAtTime(volume, startAt + 0.015);
+    gain.gain.exponentialRampToValueAtTime(
+      0.0001,
+      startAt + duration
+    );
+
+    oscillator.connect(gain);
+    gain.connect(ctx.destination);
+
+    oscillator.start(startAt);
+    oscillator.stop(startAt + duration + 0.02);
+  };
+
+  const playNotification = async () => {
+    if (!soundEnabledRef.current) return;
+
+    try {
+      const ctx = audioContextRef.current;
+      if (!ctx) return;
+
+      if (ctx.state === "suspended") {
+        await ctx.resume();
+      }
+
+      const now = ctx.currentTime;
+
+      playTone(ctx, 880, now, 0.14, 0.2);
+      playTone(ctx, 1174.66, now + 0.16, 0.18, 0.22);
+      playTone(ctx, 880, now + 0.38, 0.16, 0.18);
+    } catch (e) {
+      console.warn("No se pudo reproducir sonido:", e);
+    }
+  };
+
+  const enableSound = async () => {
+    try {
+      const AudioContextClass =
+        window.AudioContext || window.webkitAudioContext;
+
+      if (!AudioContextClass) {
+        setStatus("Este navegador no soporta audio para alertas.");
+        return;
+      }
+
+      if (!audioContextRef.current) {
+        audioContextRef.current = new AudioContextClass();
+      }
+
+      const ctx = audioContextRef.current;
+
+      if (ctx.state === "suspended") {
+        await ctx.resume();
+      }
+
+      soundEnabledRef.current = true;
+      setSoundEnabled(true);
+
+      const now = ctx.currentTime;
+      playTone(ctx, 880, now, 0.10, 0.12);
+      playTone(ctx, 1174.66, now + 0.12, 0.12, 0.12);
+
+      setStatus("Sonido activado. Esperando pedidos…");
+    } catch (e) {
+      soundEnabledRef.current = false;
+      setSoundEnabled(false);
+      setStatus(
+        "No se pudo activar el sonido: " + (e?.message || String(e))
+      );
+    }
+  };
+
+  const disableSound = () => {
+    soundEnabledRef.current = false;
+    setSoundEnabled(false);
+    setStatus("Sonido desactivado. Esperando pedidos…");
+  };
+
+  const showNewOrderTitle = (id) => {
+    document.title = `🔔 PEDIDO ${id} — SECTO`;
+
+    if (titleTimerRef.current) {
+      clearTimeout(titleTimerRef.current);
+    }
+
+    titleTimerRef.current = setTimeout(() => {
+      document.title = "SECTO — KITCHEN";
+    }, 10000);
+  };
 
   const openOrReuseTicket = (order) => {
     const id = order?.id;
@@ -95,7 +219,9 @@ export default function Kitchen() {
     const opened = openOrReuseTicket(lastOrder);
 
     if (!opened) {
-      setStatus("No se pudo abrir la pestaña de ticket. Revisá bloqueo de popups.");
+      setStatus(
+        "No se pudo abrir la pestaña de ticket. Revisá bloqueo de popups."
+      );
       return;
     }
 
@@ -103,15 +229,23 @@ export default function Kitchen() {
   };
 
   useEffect(() => {
-    let stop = false;
+    let stopped = false;
+
+    document.title = "SECTO — KITCHEN";
 
     const poll = async () => {
-      if (stop || busyRef.current) return;
+      if (stopped || busyRef.current) return;
 
       busyRef.current = true;
 
       try {
         const data = await post({ action: "next_unprinted" });
+
+        if (stopped) return;
+
+        setConnection("online");
+        setLastCheck(Date.now());
+
         const order = data?.order;
         const id = order?.id;
 
@@ -129,12 +263,19 @@ export default function Kitchen() {
 
         setLastId(id);
         setLastOrder(order);
+        setStatus("Nuevo pedido " + id);
+
+        showNewOrderTitle(id);
+        await playNotification();
+
         setStatus("Preparando ticket " + id);
 
         const opened = openOrReuseTicket(order);
 
         if (!opened) {
-          setStatus("No se pudo abrir /ticket. Revisá bloqueo de popups.");
+          setStatus(
+            "PEDIDO NUEVO, pero no se pudo abrir /ticket. Permití popups para este sitio."
+          );
           return;
         }
 
@@ -145,7 +286,9 @@ export default function Kitchen() {
 
         setStatus("Listo. Esperando pedidos…");
       } catch (e) {
-        if (!stop) {
+        if (!stopped) {
+          setConnection("offline");
+          setLastCheck(Date.now());
           setStatus("ERROR: " + (e?.message || String(e)));
         }
       } finally {
@@ -153,25 +296,215 @@ export default function Kitchen() {
       }
     };
 
-    const timer = setInterval(poll, POLL_MS);
+    const schedulePoll = () => {
+      if (stopped) return;
+
+      pollTimerRef.current = setTimeout(async () => {
+        await poll();
+        schedulePoll();
+      }, POLL_MS);
+    };
+
     poll();
+    schedulePoll();
+
+    const onVisibilityChange = () => {
+      if (document.visibilityState === "visible") {
+        poll();
+      }
+    };
+
+    const onFocus = () => {
+      poll();
+    };
+
+    const onOnline = () => {
+      setConnection("connecting");
+      setStatus("Conexión recuperada. Buscando pedidos…");
+      poll();
+    };
+
+    const onOffline = () => {
+      setConnection("offline");
+      setStatus("Sin conexión a internet.");
+    };
+
+    document.addEventListener("visibilitychange", onVisibilityChange);
+    window.addEventListener("focus", onFocus);
+    window.addEventListener("online", onOnline);
+    window.addEventListener("offline", onOffline);
 
     return () => {
-      stop = true;
-      clearInterval(timer);
+      stopped = true;
+
+      if (pollTimerRef.current) {
+        clearTimeout(pollTimerRef.current);
+      }
+
+      if (titleTimerRef.current) {
+        clearTimeout(titleTimerRef.current);
+      }
+
+      document.removeEventListener(
+        "visibilitychange",
+        onVisibilityChange
+      );
+      window.removeEventListener("focus", onFocus);
+      window.removeEventListener("online", onOnline);
+      window.removeEventListener("offline", onOffline);
     };
   }, []);
 
+  const connectionLabel =
+    connection === "online"
+      ? "CONECTADO"
+      : connection === "offline"
+      ? "SIN CONEXIÓN"
+      : "CONECTANDO…";
+
+  const connectionColor =
+    connection === "online"
+      ? "#16803a"
+      : connection === "offline"
+      ? "#c62828"
+      : "#777";
+
   return (
-    <div style={{ padding: 16, fontFamily: "system-ui" }}>
-      <h1>SECTO — KITCHEN</h1>
+    <div
+      style={{
+        padding: 16,
+        fontFamily: "system-ui",
+        maxWidth: 720,
+      }}
+    >
+      <h1 style={{ marginBottom: 10 }}>SECTO — KITCHEN</h1>
+
+      <div
+        style={{
+          border: "1px solid #ddd",
+          borderRadius: 12,
+          padding: 12,
+          marginBottom: 16,
+          display: "grid",
+          gap: 8,
+        }}
+      >
+        <div
+          style={{
+            display: "flex",
+            justifyContent: "space-between",
+            gap: 12,
+            flexWrap: "wrap",
+            alignItems: "center",
+          }}
+        >
+          <div
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: 7,
+              fontWeight: 800,
+              color: connectionColor,
+            }}
+          >
+            <span
+              style={{
+                width: 9,
+                height: 9,
+                borderRadius: "50%",
+                background: connectionColor,
+                display: "inline-block",
+              }}
+            />
+            {connectionLabel}
+          </div>
+
+          <div style={{ fontSize: 12, opacity: 0.6 }}>
+            Último chequeo: {formatTime(lastCheck)}
+          </div>
+        </div>
+
+        <div style={{ fontSize: 12, opacity: 0.65 }}>
+          Buscando pedidos automáticamente cada {POLL_MS / 1000} segundos.
+        </div>
+      </div>
+
+      {!soundEnabled ? (
+        <button
+          type="button"
+          onClick={enableSound}
+          style={{
+            width: "100%",
+            padding: "12px 14px",
+            borderRadius: 10,
+            border: "1px solid #111",
+            background: "#111",
+            color: "#fff",
+            cursor: "pointer",
+            fontWeight: 800,
+            marginBottom: 16,
+          }}
+        >
+          🔔 Activar sonido de pedidos
+        </button>
+      ) : (
+        <div
+          style={{
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
+            gap: 12,
+            border: "1px solid #ddd",
+            borderRadius: 10,
+            padding: 10,
+            marginBottom: 16,
+          }}
+        >
+          <span style={{ fontWeight: 700 }}>
+            🔔 Sonido activado
+          </span>
+
+          <button
+            type="button"
+            onClick={disableSound}
+            style={{
+              padding: "7px 10px",
+              borderRadius: 8,
+              border: "1px solid #ccc",
+              background: "#fff",
+              cursor: "pointer",
+            }}
+          >
+            Desactivar
+          </button>
+        </div>
+      )}
 
       <p style={{ fontWeight: 600 }}>{status}</p>
 
       {lastId && (
-        <p style={{ opacity: 0.7 }}>
-          Último ticket: <b>{lastId}</b>
-        </p>
+        <div
+          style={{
+            border: "1px solid #ddd",
+            borderRadius: 10,
+            padding: 12,
+            marginTop: 12,
+          }}
+        >
+          <div style={{ fontSize: 12, opacity: 0.6 }}>
+            Último ticket
+          </div>
+
+          <div
+            style={{
+              fontWeight: 800,
+              fontSize: 18,
+              marginTop: 2,
+            }}
+          >
+            {lastId}
+          </div>
+        </div>
       )}
 
       <button
@@ -196,7 +529,9 @@ export default function Kitchen() {
       </p>
 
       <p style={{ opacity: 0.55, fontSize: 13 }}>
-        Si el ticket no se abre, permití popups para este sitio.
+        Activá el sonido una vez después de abrir Kitchen y permití popups
+        para este sitio. Si el navegador frena la pestaña en segundo plano,
+        Kitchen vuelve a consultar inmediatamente cuando recupera foco.
       </p>
     </div>
   );

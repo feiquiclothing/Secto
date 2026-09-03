@@ -164,7 +164,11 @@ export default function Kitchen() {
     let win = ticketWinRef.current;
 
     if (!win || win.closed) {
-      win = window.open("", "secto_ticket");
+      win = window.open(
+        "",
+        "secto_ticket",
+        "popup=yes,width=520,height=760,left=40,top=40"
+      );
 
       if (!win) {
         setTicketReady(false);
@@ -267,11 +271,24 @@ export default function Kitchen() {
       return false;
     }
 
-    const url = `/ticket?id=${encodeURIComponent(id)}&autoprint=1`;
+    const url =
+      `/ticket?id=${encodeURIComponent(id)}` +
+      `&autoprint=1&popup=1`;
 
     try {
-      win.location.href = url;
+      // Intentamos poner la ventana al frente ANTES de navegar.
       win.focus();
+
+      // Cargamos la comanda en la ventana dedicada.
+      win.location.replace(url);
+
+      // Y volvemos a pedir foco después de iniciar la navegación.
+      setTimeout(() => {
+        try {
+          win.focus();
+        } catch {}
+      }, 150);
+
       return true;
     } catch {
       return false;

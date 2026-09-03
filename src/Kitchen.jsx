@@ -216,27 +216,6 @@ export default function Kitchen() {
     return true;
   };
 
-    const id = order?.id;
-    if (!id) return false;
-
-    const win = ticketWinRef.current;
-
-    if (!win || win.closed) {
-      setTicketReady(false);
-      return false;
-    }
-
-    const url = `/ticket?id=${encodeURIComponent(id)}&autoprint=1`;
-
-    try {
-      win.location.href = url;
-      win.focus();
-      return true;
-    } catch {
-      return false;
-    }
-  };
-
   useEffect(() => {
     let stopped = false;
 

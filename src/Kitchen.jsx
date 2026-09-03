@@ -82,7 +82,6 @@ function formatTime(ts) {
 export default function Kitchen() {
   const [started, setStarted] = useState(false);
   const [isLeader, setIsLeader] = useState(false);
-  const [ticketReady, setTicketReady] = useState(false);
   const [soundReady, setSoundReady] = useState(false);
   const [status, setStatus] = useState("Kitchen detenida.");
   const [connection, setConnection] = useState("connecting");
@@ -94,7 +93,6 @@ export default function Kitchen() {
   const isLeaderRef = useRef(false);
   const busyRef = useRef(false);
 
-  const ticketWinRef = useRef(null);
   const audioContextRef = useRef(null);
 
   const pollTimerRef = useRef(null);
@@ -160,64 +158,9 @@ export default function Kitchen() {
     return false;
   };
 
-  const prepareTicketWindow = () => {
-    let win = ticketWinRef.current;
-
-    if (!win || win.closed) {
-      win = window.open(
-        "",
-        "secto_ticket",
-        "popup=yes,width=520,height=760,left=40,top=40"
-      );
-
-      if (!win) {
-        setTicketReady(false);
-        return false;
-      }
-
-      try {
-        win.document.open();
-        win.document.write(`
-          <!doctype html>
-          <html>
-            <head>
-              <title>COMANDA — SECTO</title>
-              <style>
-                body {
-                  font-family: system-ui;
-                  padding: 24px;
-                  background: #fff;
-                  color: #111;
-                }
-              </style>
-            </head>
-            <body>
-              <h2>SECTO — COMANDAS</h2>
-              <p>Ventana preparada. Esperando pedido…</p>
-            </body>
-          </html>
-        `);
-        win.document.close();
-      } catch {}
-
-      ticketWinRef.current = win;
-    }
-
-    setTicketReady(true);
-    return true;
-  };
 
   const startKitchen = async () => {
     document.title = "KITCHEN";
-
-    const ticketOk = prepareTicketWindow();
-
-    if (!ticketOk) {
-      setStatus(
-        "Chrome bloqueó la pestaña de comandas. Permití popups y volvé a apretar INICIAR KITCHEN."
-      );
-      return;
-    }
 
     try {
       const AudioContextClass =
@@ -264,6 +207,18 @@ export default function Kitchen() {
     const id = order?.id;
     if (!id) return false;
 
+    const url =
+      `/ticket?id=${encodeURIComponent(id)}` +
+      `&autoprint=1&returnTo=${encodeURIComponent("/kitchen")}`;
+
+    // Una sola pestaña: Kitchen se transforma temporalmente en la comanda.
+    window.location.assign(url);
+    return true;
+  };
+
+    const id = order?.id;
+    if (!id) return false;
+
     const win = ticketWinRef.current;
 
     if (!win || win.closed) {
@@ -271,24 +226,11 @@ export default function Kitchen() {
       return false;
     }
 
-    const url =
-      `/ticket?id=${encodeURIComponent(id)}` +
-      `&autoprint=1&popup=1`;
+    const url = `/ticket?id=${encodeURIComponent(id)}&autoprint=1`;
 
     try {
-      // Intentamos poner la ventana al frente ANTES de navegar.
+      win.location.href = url;
       win.focus();
-
-      // Cargamos la comanda en la ventana dedicada.
-      win.location.replace(url);
-
-      // Y volvemos a pedir foco después de iniciar la navegación.
-      setTimeout(() => {
-        try {
-          win.focus();
-        } catch {}
-      }, 150);
-
       return true;
     } catch {
       return false;
@@ -343,10 +285,7 @@ export default function Kitchen() {
           return;
         }
 
-        // Conservamos el flujo de backend que ya venías usando.
-        await post({ action: "mark_printed", id });
-
-        setStatus(`Pedido ${id} enviado a impresión.`);
+        setStatus(`Abriendo comanda ${id}…`);
       } catch (e) {
         if (!stopped) {
           setConnection("offline");
@@ -481,10 +420,6 @@ export default function Kitchen() {
             : "DETENIDA"}
         </div>
 
-        <div>
-          <b>Pestaña de comanda:</b>{" "}
-          {ticketReady ? "✓ PREPARADA" : "✕ NO PREPARADA"}
-        </div>
 
         <div>
           <b>Sonido:</b>{" "}
@@ -505,24 +440,6 @@ export default function Kitchen() {
         </div>
       </div>
 
-      {started && !ticketReady ? (
-        <button
-          type="button"
-          onClick={prepareTicketWindow}
-          style={{
-            width: "100%",
-            padding: "12px",
-            borderRadius: 10,
-            border: "1px solid #111",
-            background: "#fff",
-            fontWeight: 800,
-            cursor: "pointer",
-            marginBottom: 16,
-          }}
-        >
-          PREPARAR COMANDA
-        </button>
-      ) : null}
 
       <div
         style={{
@@ -542,9 +459,8 @@ export default function Kitchen() {
       ) : null}
 
       <p style={{ marginTop: 18, fontSize: 13, opacity: 0.65 }}>
-        Dejá abiertas Kitchen y la pestaña de comandas. Solo una pestaña
-        Kitchen queda activa; las demás quedan en espera para evitar pedidos
-        duplicados.
+        Dejá abierta únicamente esta pestaña. Cuando entra un pedido,
+        Kitchen pasa a la comanda, abre impresión y después vuelve sola.
       </p>
     </div>
   );

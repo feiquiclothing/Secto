@@ -5,6 +5,7 @@ const POLL_MS = 2500;
 
 const LEADER_KEY = "secto_kitchen_leader_v2";
 const LEADER_TTL = 8000;
+const STARTED_KEY = "secto_kitchen_started_v1";
 
 function makeTabId() {
   return `kitchen_${Date.now()}_${Math.random().toString(36).slice(2)}`;
@@ -193,6 +194,7 @@ export default function Kitchen() {
 
     startedRef.current = true;
     setStarted(true);
+    sessionStorage.setItem(STARTED_KEY, "1");
 
     if (leader) {
       setStatus("Kitchen activa. Esperando pedidos…");
@@ -215,6 +217,32 @@ export default function Kitchen() {
     window.location.assign(url);
     return true;
   };
+
+  useEffect(() => {
+    // Si ya se inició Kitchen en esta sesión, al volver desde /ticket
+    // retomamos automáticamente sin pedir otro click.
+    if (sessionStorage.getItem(STARTED_KEY) !== "1") return;
+
+    startedRef.current = true;
+    setStarted(true);
+
+    const leader = claimLeadership();
+    setStatus(
+      leader
+        ? "Kitchen reanudada. Esperando pedidos…"
+        : "Kitchen reanudada en espera…"
+    );
+
+    try {
+      const AudioContextClass =
+        window.AudioContext || window.webkitAudioContext;
+      if (AudioContextClass) {
+        const ctx = new AudioContextClass();
+        audioContextRef.current = ctx;
+        if (ctx.state === "running") setSoundReady(true);
+      }
+    } catch {}
+  }, []);
 
   useEffect(() => {
     let stopped = false;

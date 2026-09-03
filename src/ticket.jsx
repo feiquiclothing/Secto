@@ -19,6 +19,7 @@ export default function Ticket() {
 
   const autoPrint = params.get("autoprint") === "1";
   const popupMode = params.get("popup") === "1";
+  const returnTo = params.get("returnTo");
   const id = params.get("id");
 
   const [order, setOrder] = useState(null);
@@ -27,6 +28,7 @@ export default function Ticket() {
   const printDialogOpenedRef = useRef(false);
   const printRetryTimerRef = useRef(null);
   const printAttemptsRef = useRef(0);
+  const finishedRef = useRef(false);
 
   useEffect(() => {
     document.title = id ? `COMANDA ${id}` : "COMANDA";
@@ -117,8 +119,43 @@ export default function Ticket() {
       }
     };
 
-    const onAfterPrint = () => {
-      setStatus("Impresión finalizada o cerrada.");
+    const onAfterPrint = async () => {
+      if (finishedRef.current) return;
+      finishedRef.current = true;
+
+      setStatus("Cerrando comanda…");
+
+      try {
+        const res = await fetch(ENDPOINT, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            action: "mark_printed",
+            id: order?.id || id,
+          }),
+          cache: "no-store",
+        });
+
+        const data = await res.json();
+
+        if (!res.ok || data?.ok === false) {
+          throw new Error(data?.error || "No se pudo marcar como impreso");
+        }
+
+        if (returnTo) {
+          window.location.replace(returnTo);
+        } else {
+          setStatus("Impresión finalizada.");
+        }
+      } catch (err) {
+        finishedRef.current = false;
+        setStatus(
+          "Se imprimió, pero no pude cerrar el pedido: " +
+            (err?.message || String(err))
+        );
+      }
     };
 
     window.addEventListener("beforeprint", onBeforePrint);
@@ -128,7 +165,7 @@ export default function Ticket() {
       window.removeEventListener("beforeprint", onBeforePrint);
       window.removeEventListener("afterprint", onAfterPrint);
     };
-  }, []);
+  }, [order, id, returnTo]);
 
   useEffect(() => {
     if (!order || !autoPrint || printStartedRef.current) return;

@@ -1352,7 +1352,6 @@ export default function SectoCafePedidos() {
                 TU PEDIDO
               </div>
               <div className="text-xs text-neutral-400 mt-1">
-                Elegí si querés seguir agregando o completar los datos
               </div>
             </div>
 

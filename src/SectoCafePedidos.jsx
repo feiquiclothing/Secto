@@ -1405,7 +1405,7 @@ export default function SectoCafePedidos() {
             <div className="mt-3 pt-3 border-t border-neutral-200 space-y-3">
               <div>
                 <div className="text-xs tracking-[0.16em] text-neutral-500">
-                  ELEGÍ TU COMBO
+                  ELEGÍ TUS ROLLS
                 </div>
                 <div className="text-[11px] text-neutral-400 mt-1">
                   Completá las opciones antes de enviar.

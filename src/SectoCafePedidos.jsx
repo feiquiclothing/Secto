@@ -938,7 +938,7 @@ export default function SectoCafePedidos() {
               <p className="text-xs tracking-[0.25em] text-neutral-500">
                 {isOpen
                   ? "Sushi vegano — pedidos de 12:00 a 00:00"
-                  : "Sushi vegano — pedidos abiertos lunes a sábado de 12:00 a 00:00"}
+                  : "Sushi vegano — CERRADO - Pedidos abiertos lunes a sábado de 12:00 a 00:00"}
               </p>
               <h1 className="text-lg text-neutral-900"></h1>
             </div>
@@ -1499,7 +1499,7 @@ export default function SectoCafePedidos() {
                     : "bg-neutral-100 text-neutral-400 cursor-not-allowed"
                 }`}
               >
-                {combosComplete ? "Continuar pedido" : "Completá tu combo"}
+                {combosComplete ? "Terminar pedido" : "Completá tu combo"}
               </button>
             </div>
 

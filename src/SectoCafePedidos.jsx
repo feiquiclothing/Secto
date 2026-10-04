@@ -17,7 +17,7 @@ const OPEN_DAYS = [1, 2, 3, 4, 5, 6];
 const OPEN_HOUR_START = 12;
 const OPEN_HOUR_END = 24;
 const FORCE_OPEN = false;
-const FORCE_CLOSED = false;
+const FORCE_CLOSED = true;
 
 function getNowInTZ() {
   const now = new Date();

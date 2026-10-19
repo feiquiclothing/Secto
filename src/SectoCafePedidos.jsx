@@ -1083,23 +1083,13 @@ export default function SectoCafePedidos() {
       <section className="max-w-6xl mx-auto px-4 pt-5">
         <div className="rounded-2xl bg-neutral-950 text-white px-5 py-4 flex flex-wrap items-center justify-between gap-2">
           <div>
-            {earlyDiscountActive ? (
-              <>
-                <p className="text-xs tracking-[0.18em] text-neutral-300">PEDÍ ANTES DE LAS 18:00</p>
-                <p className="text-lg font-semibold">10% OFF adicional en tu pedido</p>
-                <p className="text-xs text-neutral-300">También vale si programás la entrega para mañana u otro día.</p>
-              </>
-            ) : (
-              <>
-                <p className="text-xs tracking-[0.18em] text-neutral-300">ORGANIZÁ TU PRÓXIMO PEDIDO</p>
-                <p className="text-lg font-semibold">Programá tu pedido con anticipación</p>
-                <p className="text-xs text-neutral-300">Elegí fecha y horario hasta 7 días antes.</p>
-              </>
-            )}
+            <p className="text-xs tracking-[0.18em] text-neutral-300">RESERVÁ TU CENA ANTES DE LAS 18:00</p>
+            <p className="text-lg font-semibold">10% OFF adicional en tu pedido</p>
+            <p className="text-xs text-neutral-300">Se aplica al hacer el pedido antes de las 18:00, incluso si programás para mañana u otro día.</p>
           </div>
-          {earlyDiscountActive && (
-            <span className="text-sm font-medium tabular-nums">TERMINA EN {countdownText(promoRemainingSeconds())}</span>
-          )}
+          <span className="text-sm font-medium tabular-nums">
+            {earlyDiscountActive ? `TERMINA EN ${countdownText(promoRemainingSeconds())}` : "PEDIDOS PROGRAMADOS HASTA 7 DÍAS"}
+          </span>
         </div>
       </section>
 

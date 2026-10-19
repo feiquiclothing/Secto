@@ -1,4 +1,4 @@
-                import React, { useMemo, useReducer, useState, useRef, useEffect } from "react";
+import React, { useMemo, useReducer, useState, useRef, useEffect } from "react";
 
 /**
  * Secto Café – Página de pedidos
@@ -107,6 +107,8 @@ const MENU = [
 ];
 
 // ===== ZONAS =====
+const FREE_DELIVERY_MINIMUM = 1500;
+
 const ZONES = [
   { id: "cv", name: "Ciudad Vieja", fee: 0 },
   { id: "centro", name: "Centro / Cordón / Aguada", fee: 140 },
@@ -173,7 +175,8 @@ function futureHours() {
   const nowMin = getCurrentMinutesInTZ();
   return HOURS.filter((h) => {
     const [H, M] = h.split(":").map(Number);
-    return H * 60 + M > nowMin;
+    // Exigimos al menos 30 minutos completos para un horario programado.
+    return H * 60 + M > nowMin + 30;
   });
 }
 
@@ -760,6 +763,13 @@ export default function SectoCafePedidos() {
   const [cartHighlight, setCartHighlight] = useState(false);
   const [cartPeek, setCartPeek] = useState(false);
   const [sending, setSending] = useState(false);
+  const [clockTick, setClockTick] = useState(0);
+
+  // Actualizar horarios y apertura mientras el cliente tiene la página abierta.
+  useEffect(() => {
+    const timer = setInterval(() => setClockTick((n) => n + 1), 30000);
+    return () => clearInterval(timer);
+  }, []);
 
   const items = useMemo(() => Object.values(cart), [cart]);
 
@@ -806,14 +816,20 @@ export default function SectoCafePedidos() {
     [items]
   );
 
-  const fee = useMemo(
-    () => (method === "delivery" ? ZONES.find((z) => z.id === zone)?.fee || 0 : 0),
-    [method, zone]
-  );
+  const fee = useMemo(() => {
+    if (method !== "delivery" || subtotal >= FREE_DELIVERY_MINIMUM) return 0;
+    return ZONES.find((z) => z.id === zone)?.fee || 0;
+  }, [method, zone, subtotal]);
 
   const total = subtotal + fee;
 
   const scheduleOpen = isOpenBySchedule();
+  const availableHours = useMemo(() => futureHours(), [clockTick]);
+  const validTime = time === "asap" || availableHours.includes(time);
+
+  useEffect(() => {
+    if (time !== "asap" && !availableHours.includes(time)) setTime("asap");
+  }, [time, availableHours]);
 
   const isOpen =
     (FORCE_OPEN && !FORCE_CLOSED) ||
@@ -823,7 +839,7 @@ export default function SectoCafePedidos() {
     subtotal > 0 &&
     name &&
     phone &&
-    time &&
+    validTime &&
     combosComplete &&
     (method === "pickup" || address || zone === "cv");
 
@@ -879,7 +895,7 @@ export default function SectoCafePedidos() {
   }, [items.length]);
 
   const sendOrder = async (paid = false) => {
-    if (!canSendNow) {
+    if (!canSendNow || (time !== "asap" && !futureHours().includes(time))) {
       alert("Revisá los datos del pedido. Completá nombre, teléfono, dirección/zona y todas las opciones de los combos.");
       return;
     }
@@ -1292,10 +1308,21 @@ export default function SectoCafePedidos() {
               </div>
 
               {method === "delivery" && (
-                <div className="flex justify-between">
-                  <span className="text-neutral-500">Envío</span>
-                  <span>{currency(fee)}</span>
-                </div>
+                <>
+                  <div className="flex justify-between">
+                    <span className="text-neutral-500">Envío</span>
+                    <span>{fee === 0 ? "GRATIS" : currency(fee)}</span>
+                  </div>
+                  {subtotal < FREE_DELIVERY_MINIMUM && (
+                    <p className="text-xs text-neutral-500">
+                      Envío gratis desde {currency(FREE_DELIVERY_MINIMUM)} en productos.
+                      Te faltan {currency(FREE_DELIVERY_MINIMUM - subtotal)}.
+                    </p>
+                  )}
+                  {subtotal >= FREE_DELIVERY_MINIMUM && (
+                    <p className="text-xs text-green-700">¡Tu pedido tiene envío gratis!</p>
+                  )}
+                </>
               )}
 
               <div className="flex justify-between text-neutral-900 font-medium">
@@ -1305,6 +1332,10 @@ export default function SectoCafePedidos() {
             </div>
 
             <div className="grid grid-cols-1 gap-2 mt-4">
+              <div className="rounded-xl border border-amber-300 bg-amber-50 p-3 text-sm text-amber-950" role="alert">
+                <strong>Tu pedido todavía no fue enviado.</strong>
+                <p className="mt-1">Al tocar el botón se abrirá WhatsApp. Tenés que presionar ENVIAR allí para terminar tu pedido. Abrir WhatsApp no lo confirma.</p>
+              </div>
               <button
                 onClick={() => sendOrder(false)}
                 disabled={!canSendNow}
@@ -1314,7 +1345,7 @@ export default function SectoCafePedidos() {
                     : "bg-neutral-100 text-neutral-600"
                 }`}
               >
-                {sending ? "Registrando pedido..." : "Enviar pedido por WhatsApp"}
+                {sending ? "Preparando WhatsApp..." : "ENVIAR MENSAJE PARA TERMINAR PEDIDO"}
               </button>
 
               <button
@@ -1331,7 +1362,7 @@ export default function SectoCafePedidos() {
               )}
 
               <p className="text-xs text-neutral-500 mt-1">
-                Pagás por transferencia o al recibir (efectivo | POS).
+                Pagás por transferencia o al recibir (efectivo | POS). El pedido se confirma cuando Secto lo acepta por WhatsApp.
               </p>
             </div>
           </div>

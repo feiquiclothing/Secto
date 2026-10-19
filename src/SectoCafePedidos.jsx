@@ -108,7 +108,7 @@ function PromoPrice({ price, active, className = "" }) {
 
 function isEarlyDiscountActive() {
   const now = getNowInTZ();
-  return OPEN_DAYS.includes(now.day) && now.hour >= OPEN_HOUR_START && now.hour < EARLY_DISCOUNT_END_HOUR;
+  return now.hour < EARLY_DISCOUNT_END_HOUR;
 }
 
 function isOpenBySchedule() {
@@ -936,7 +936,7 @@ export default function SectoCafePedidos() {
     phone &&
     validTime &&
     combosComplete &&
-    (method === "pickup" || address || zone === "cv");
+    (method === "pickup" || address.trim().length > 0);
 
   const canSendNow = canSend && !FORCE_CLOSED && !sending;
 
@@ -1053,7 +1053,7 @@ export default function SectoCafePedidos() {
               <p className="text-xs tracking-[0.25em] text-neutral-500">
                 {isOpen
                   ? "Sushi vegano — pedidos de 12:00 a 00:00"
-                  : "Sushi vegano — CERRADO - Pedidos abiertos lunes a sábado de 12:00 a 00:00"}
+                  : "Sushi vegano — local cerrado · programá tu pedido para otro día"}
               </p>
               <h1 className="text-lg text-neutral-900"></h1>
             </div>
@@ -1085,9 +1085,9 @@ export default function SectoCafePedidos() {
           <div>
             <p className="text-xs tracking-[0.18em] text-neutral-300">RESERVÁ TU CENA ANTES DE LAS 18:00</p>
             <p className="text-lg font-semibold">10% OFF adicional en tu pedido</p>
-            <p className="text-xs text-neutral-300">Se aplica al confirmar el pedido antes de las 18:00, incluso si programás para otro día.</p>
+            <p className="text-xs text-neutral-300">Disponible desde la mañana hasta las 18:00, incluso si programás para otro día.</p>
           </div>
-          <span className="text-sm font-medium tabular-nums">{earlyDiscountActive ? `TERMINA EN ${countdownText(promoRemainingSeconds())}` : "ENTREGAS A PARTIR DE LAS 19HS"}</span>
+          <span className="text-sm font-medium tabular-nums">{earlyDiscountActive ? `TERMINA EN ${countdownText(promoRemainingSeconds())}` : "PROMO DISPONIBLE NUEVAMENTE MAÑANA"}</span>
         </div>
       </section>
 

@@ -16,7 +16,7 @@ const TZ = "America/Montevideo";
 const OPEN_DAYS = [1, 2, 3, 4, 5, 6];
 const OPEN_HOUR_START = 12;
 const OPEN_HOUR_END = 24;
-const FORCE_OPEN = false;
+const FORCE_OPEN = true;
 const FORCE_CLOSED = false;
 
 function getNowInTZ() {
@@ -375,7 +375,7 @@ const FIXED_POKES = [
   },
 ];
 
-const POKE_BASE_PRICE = 620;
+const POKE_BASE_PRICE = 660;
 const POKE_EXTRA_TOPPING = 60;
 const POKE_EXTRA_SAUCE = 40;
 

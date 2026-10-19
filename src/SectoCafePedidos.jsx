@@ -16,7 +16,7 @@ const TZ = "America/Montevideo";
 const OPEN_DAYS = [1, 2, 3, 4, 5, 6];
 const OPEN_HOUR_START = 12;
 const OPEN_HOUR_END = 24;
-const FORCE_OPEN = true;
+const FORCE_OPEN = false;
 const FORCE_CLOSED = false;
 
 function getNowInTZ() {
@@ -326,6 +326,9 @@ function buildWhatsAppText(order) {
     "Metodo: " + (method === "pickup" ? "Retiro en local" : "Delivery"),
     method === "delivery" ? "Zona: " + zona + " (" + currency(fee) + ")" : null,
     "Entrega: " + (time === "asap" ? "Lo antes posible (hoy)" : time),
+    method === "delivery" && time !== "asap" && /(?:^|\s)(?:1[89]|2[0-3]):\d{2}$/.test(time)
+      ? "Importante: horario de salida del local, no de entrega."
+      : null,
     "Nombre: " + name,
     "Tel: " + phone,
     method === "delivery" ? "Direccion: " + address : null,
@@ -908,6 +911,9 @@ export default function SectoCafePedidos() {
   const availableDates = scheduleDates();
   const selectedDate = availableDates.includes(deliveryDate) ? deliveryDate : (availableDates[0] || today);
   const availableHours = hoursForDate(selectedDate);
+  const isEveningDeparture = method === "delivery" && time !== "asap" && /^\d{2}:\d{2}$/.test(time) && Number(time.slice(0, 2)) >= 18;
+  const departureNote = "Los horarios a partir de las 18:00 corresponden a la salida del local, no a la entrega.";
+
   const validTime = time === "asap"
     ? selectedDate === today && scheduleOpen
     : availableHours.includes(time);
@@ -1321,6 +1327,9 @@ export default function SectoCafePedidos() {
                 <label className="text-xs text-neutral-500">
                   Zona de entrega
                 </label>
+                {subtotal >= FREE_DELIVERY_MINIMUM && (
+                  <p className="text-xs font-semibold text-neutral-900">Envío gratis a todas las zonas por superar $1.500 en productos.</p>
+                )}
 
                 <select
                   value={zone}
@@ -1329,7 +1338,7 @@ export default function SectoCafePedidos() {
                 >
                   {ZONES.map((z) => (
                     <option key={z.id} value={z.id}>
-                      {z.name} — {currency(z.fee)}
+                      {z.name} — {subtotal >= FREE_DELIVERY_MINIMUM || z.fee === 0 ? "GRATIS" : currency(z.fee)}
                     </option>
                   ))}
                 </select>
@@ -1401,6 +1410,11 @@ export default function SectoCafePedidos() {
                 </select>
               </div>
               <p className="text-xs text-neutral-500 mt-1">Programá tu pedido hasta 7 días antes · lunes a sábado.</p>
+              {isEveningDeparture && (
+                <p className="mt-2 text-xs font-medium text-neutral-800">
+                  {departureNote}
+                </p>
+              )}
             </div>
 
             <div className="mt-3">

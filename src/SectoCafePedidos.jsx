@@ -1409,7 +1409,7 @@ export default function SectoCafePedidos() {
                   {availableHours.length === 0 && !(selectedDate === today && scheduleOpen) && <option value="">Elegí otro día</option>}
                 </select>
               </div>
-              <p className="text-xs text-neutral-500 mt-1">Programá tu pedido hasta 7 días antes · lunes a sábado.</p>
+              <p className="text-xs text-neutral-500 mt-1">Programá tu pedido hasta 7 días antes - Lunes a Sábado.</p>
               {isEveningDeparture && (
                 <p className="mt-2 text-xs font-medium text-neutral-800">
                   {departureNote}
@@ -1504,7 +1504,7 @@ export default function SectoCafePedidos() {
               )}
 
               <p className="text-xs text-neutral-500 mt-1">
-                Pagás por transferencia o al recibir (efectivo | POS). El pedido se confirma cuando Secto lo acepta por WhatsApp.
+                Pagás por transferencia o al recibir (efectivo | POS).
               </p>
             </div>
           </div>

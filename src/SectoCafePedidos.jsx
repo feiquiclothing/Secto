@@ -1,4 +1,4 @@
-import React, { useMemo, useReducer, useState, useRef, useEffect } from "react";
+                import React, { useMemo, useReducer, useState, useRef, useEffect } from "react";
 
 /**
  * Secto Café – Página de pedidos
@@ -52,11 +52,11 @@ const MENU = [
     id: "combos",
     name: "COMBOS",
     items: [
-      { id: "c01", name: "Combo individual", price: 440, img: "/Photos/combo ind.jpeg"  },
-      { id: "c02", name: "Combo pareja", price: 860, img: "/Photos/combo pareja.jpeg"  },
-      { id: "c03", name: "Combo doble", price: 650, img: "/Photos/combo doble.jpeg"  },
-      { id: "c04", name: "Combo triple", price: 930, img: "/Photos/combo triple.jpg"  },
-      { id: "c05", name: "3x2 Phila hot roll", price: 760, img: "/Photos/3x2.jpeg"  },
+      { id: "c01", name: "Combo individual", price: 570, img: "/Photos/combo ind.jpeg"  },
+      { id: "c02", name: "Combo pareja", price: 940, img: "/Photos/combo pareja.jpeg"  },
+      { id: "c03", name: "Combo doble", price: 760, img: "/Photos/combo doble.jpeg"  },
+      { id: "c04", name: "Combo triple", price: 1160, img: "/Photos/combo triple.jpg"  },
+      { id: "c05", name: "3x2 Phila hot roll", price: 880, img: "/Photos/3x2.jpeg"  },
       
     ],
   },
@@ -64,16 +64,16 @@ const MENU = [
     id: "rolls",
     name: "ROLLS 10 piezas",
     items: [
-      { id: "r01", name: "Mango Roll - Mango | Palta | Pepino | Sésamo | Salsa Mango", price: 350, img: "/Photos/mango.jpg" },
-      { id: "r02", name: "Green Roll - Palta | Pepino | Rúcula | Philadelphia vegano | Sésamo", price: 350, img: "/Photos/green.jpg" },
-      { id: "r03", name: "Philadelphia Roll - Boniato | Palta | Philadelphia vegano | Sésamo", price: 350, img: "/Photos/phila.jpg" },
-      { id: "r04", name: "Philadelphia Hot Roll - Boniato | Palta | Philadelphia vegano | Sésamo | Frito en panko | Taré | Verdeo", price: 380, img: "/Photos/hotroll.jpg" },
-      { id: "r05", name: "Sweet Crunch - Boniato | Mango | Philadelphia vegano | Quinoa frita | Batayaki | Boniato frito", price: 380, img: "/Photos/sweet.jpg" },
-      { id: "r06", name: "Tempura Veggie - Zucchini tempura | Palta | Philadelphia vegano | Sésamo | Verdeo", price: 380, img: "/Photos/tempura.jpg" },
-      { id: "r07", name: "Spicy carrot - Boniato | Palta | Philadelphia vegano | Spicy carrot | Verdeo", price: 380, img: "/Photos/spicy.jpg" },
-      { id: "r08", name: "Nori furai - Boniato | Palta | Spicy carrot | Verdeo | Sésamo", price: 420, img: "/Photos/nori.jpg" },
-      { id: "r09", name: "Creamy Tomato - Tomate seco | Palta | Rúcula | Philadelphia vegano | Batayaki | Verdeo", price: 380, img: "/Photos/creamy.jpg" },
-      { id: "r10", name: "Teriyaki Roll - Boniato tempura | Mango | Quinoa frita | Verdeo | Teriyaki", price: 420, img: "/Photos/teri.jpg" },
+      { id: "r01", name: "Mango Roll - Mango | Palta | Pepino | Sésamo | Salsa Mango", price: 410, img: "/Photos/mango.jpg" },
+      { id: "r02", name: "Green Roll - Palta | Pepino | Rúcula | Philadelphia vegano | Sésamo", price: 410, img: "/Photos/green.jpg" },
+      { id: "r03", name: "Philadelphia Roll - Boniato | Palta | Philadelphia vegano | Sésamo", price: 410, img: "/Photos/phila.jpg" },
+      { id: "r04", name: "Philadelphia Hot Roll - Boniato | Palta | Philadelphia vegano | Sésamo | Frito en panko | Taré | Verdeo", price: 440, img: "/Photos/hotroll.jpg" },
+      { id: "r05", name: "Sweet Crunch - Boniato | Mango | Philadelphia vegano | Quinoa frita | Batayaki | Boniato frito", price: 440, img: "/Photos/sweet.jpg" },
+      { id: "r06", name: "Tempura Veggie - Zucchini tempura | Palta | Philadelphia vegano | Sésamo | Verdeo", price: 430, img: "/Photos/tempura.jpg" },
+      { id: "r07", name: "Spicy carrot - Boniato | Palta | Philadelphia vegano | Spicy carrot | Verdeo", price: 440, img: "/Photos/spicy.jpg" },
+      { id: "r08", name: "Nori furai - Boniato | Palta | Spicy carrot | Verdeo | Sésamo", price: 440, img: "/Photos/nori.jpg" },
+      { id: "r09", name: "Creamy Tomato - Tomate seco | Palta | Rúcula | Philadelphia vegano | Batayaki | Verdeo", price: 430, img: "/Photos/creamy.jpg" },
+      { id: "r10", name: "Teriyaki Roll - Boniato tempura | Mango | Quinoa frita | Verdeo | Teriyaki", price: 430, img: "/Photos/teri.jpg" },
     ],
   },
 
@@ -81,7 +81,7 @@ const MENU = [
     id: "acompañamientos",
     name: "ACOMPAÑAMIENTOS",
     items: [
-      { id: "a01", name: "Gyozas fritas (veganas)", price: 215, img: "/Photos/gyoza.JPG" },
+      { id: "a01", name: "Gyozas fritas (veganas)", price: 240, img: "/Photos/gyoza.JPG" },
     ],
   },
   
@@ -98,10 +98,10 @@ const MENU = [
     id: "bebidas",
     name: "BEBIDAS",
     items: [
-      { id: "b03", name: "Coca Cola 600cc", price: 135, img: "/Photos/coca.png" },
-      { id: "b02", name: "Coca Cola Zero 600cc", price: 135, img: "/Photos/coca zero.png" },
-      { id: "b05", name: "Sprite 600cc", price: 135, img: "/Photos/sprite.png" },
-       { id: "b06", name: "Sprite Zero 600cc", price: 135, img: "/Photos/sprite zero.png" },
+      { id: "b03", name: "Coca Cola 600cc", price: 130, img: "/Photos/coca.png" },
+      { id: "b02", name: "Coca Cola Zero 600cc", price: 130, img: "/Photos/coca zero.png" },
+      { id: "b05", name: "Sprite 600cc", price: 130, img: "/Photos/sprite.png" },
+       { id: "b06", name: "Sprite Zero 600cc", price: 130, img: "/Photos/sprite zero.png" },
     ],
   },
 ];
@@ -279,7 +279,7 @@ const FIXED_POKES = [
     name: "Seitan tonkatsu",
     description:
       "Arroz de sushi, milanesa panko, palta, zanahoria, repollo, Philadelphia vegano, pepino, mayo spicy, verdeo, sésamo.",
-    price: 580,
+    price: 640,
     img: "/Photos/tonkatsu.jpeg",
     tags: ["Vegano", "Picante"],
   },
@@ -288,13 +288,13 @@ const FIXED_POKES = [
     name: "Crispy protein",
     description:
       "Arroz de sushi, tofu, cebolla crispy, quinoa frita, edamame, Philadelphia vegano, palta, zanahoria, repollo, teriyaki, verdeo, sésamo.",
-    price: 550,
+    price: 640,
     img: "/Photos/crispy.jpeg",
     tags: ["Sin gluten", "Vegano"],
   },
 ];
 
-const POKE_BASE_PRICE = 530;
+const POKE_BASE_PRICE = 620;
 const POKE_EXTRA_TOPPING = 60;
 const POKE_EXTRA_SAUCE = 40;
 

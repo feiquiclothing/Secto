@@ -41,6 +41,71 @@ function getNowInTZ() {
   return { day, hour };
 }
 
+function montevideoParts(date = new Date()) {
+  const parts = new Intl.DateTimeFormat("en-US", {
+    timeZone: TZ, year: "numeric", month: "2-digit", day: "2-digit",
+    hour: "2-digit", minute: "2-digit", second: "2-digit", hourCycle: "h23",
+  }).formatToParts(date);
+  const value = (key) => Number(parts.find((p) => p.type === key)?.value || 0);
+  return { year: value("year"), month: value("month"), date: value("day"),
+    hour: value("hour"), minute: value("minute"), second: value("second") };
+}
+
+function todayInMontevideo() {
+  const { year, month, date } = montevideoParts();
+  return `${year}-${String(month).padStart(2, "0")}-${String(date).padStart(2, "0")}`;
+}
+
+function advanceISODate(iso, days) {
+  const [year, month, date] = iso.split("-").map(Number);
+  return new Date(Date.UTC(year, month - 1, date + days)).toISOString().slice(0, 10);
+}
+
+function isBusinessDate(iso) {
+  const [year, month, date] = iso.split("-").map(Number);
+  const weekday = new Date(Date.UTC(year, month - 1, date)).getUTCDay();
+  return OPEN_DAYS.includes(weekday);
+}
+
+function scheduleDates() {
+  const today = todayInMontevideo();
+  return Array.from({ length: 8 }, (_, i) => advanceISODate(today, i))
+    .filter(isBusinessDate);
+}
+
+function formatDeliveryDate(iso) {
+  const [year, month, date] = iso.split("-").map(Number);
+  return new Intl.DateTimeFormat("es-UY", { weekday: "short", day: "numeric", month: "short", timeZone: "UTC" })
+    .format(new Date(Date.UTC(year, month - 1, date)));
+}
+
+function hoursForDate(iso) {
+  if (!iso || !isBusinessDate(iso)) return [];
+  return iso === todayInMontevideo() ? futureHours() : HOURS;
+}
+
+function promoRemainingSeconds() {
+  const now = montevideoParts();
+  const secondsNow = now.hour * 3600 + now.minute * 60 + now.second;
+  return Math.max(0, EARLY_DISCOUNT_END_HOUR * 3600 - secondsNow);
+}
+
+function countdownText(seconds) {
+  const h = Math.floor(seconds / 3600);
+  const m = Math.floor((seconds % 3600) / 60);
+  const sec = seconds % 60;
+  return `${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}:${String(sec).padStart(2, "0")}`;
+}
+
+function PromoPrice({ price, active, className = "" }) {
+  return active ? (
+    <span className={className}>
+      <span className="line-through text-neutral-400 mr-2">{currency(price)}</span>
+      <span className="font-semibold text-neutral-900">{currency(Math.round(price * (1 - EARLY_DISCOUNT_PERCENT / 100)))}</span>
+    </span>
+  ) : <span className={className}>{currency(price)}</span>;
+}
+
 function isEarlyDiscountActive() {
   const now = getNowInTZ();
   return OPEN_DAYS.includes(now.day) && now.hour >= OPEN_HOUR_START && now.hour < EARLY_DISCOUNT_END_HOUR;
@@ -260,7 +325,7 @@ function buildWhatsAppText(order) {
   const info = [
     "Metodo: " + (method === "pickup" ? "Retiro en local" : "Delivery"),
     method === "delivery" ? "Zona: " + zona + " (" + currency(fee) + ")" : null,
-    "Horario: " + (time === "asap" ? "Lo antes posible" : time),
+    "Entrega: " + (time === "asap" ? "Lo antes posible (hoy)" : time),
     "Nombre: " + name,
     "Tel: " + phone,
     method === "delivery" ? "Direccion: " + address : null,
@@ -394,7 +459,7 @@ function PokeBuilder({ onAdd, isOpen }) {
     sauces.length >= 1;
 
   const handleAdd = () => {
-    if (!canAdd || !isOpen) return;
+    if (!canAdd || FORCE_CLOSED) return;
 
     const description =
       "Armá tu poke — Base: " +
@@ -620,17 +685,17 @@ function PokeBuilder({ onAdd, isOpen }) {
               Total poke
             </span>
             <span className="text-lg font-medium text-neutral-900">
-              {currency(unitPrice)}
+              <PromoPrice price={unitPrice} active={isEarlyDiscountActive()} />
             </span>
           </div>
 
           <button
             type="button"
             onClick={handleAdd}
-            disabled={!canAdd || !isOpen}
+            disabled={!canAdd || FORCE_CLOSED}
             className={
               "w-full rounded-2xl py-3 text-sm " +
-              (canAdd && isOpen
+              (canAdd && !FORCE_CLOSED
                 ? "bg-black text-white"
                 : "bg-neutral-100 text-neutral-400 cursor-not-allowed")
             }
@@ -700,7 +765,7 @@ function PokesSection({ cart, dispatch, isOpen, showCartPeek, setCartHighlight }
 
               <div className="mt-3 flex items-center justify-between gap-4">
                 <p className="text-sm text-neutral-500">
-                  {currency(item.price)}
+                  <PromoPrice price={item.price} active={isEarlyDiscountActive()} />
                 </p>
 
                 <div className="flex items-center gap-2">
@@ -728,11 +793,11 @@ function PokesSection({ cart, dispatch, isOpen, showCartPeek, setCartHighlight }
                       );
                     }}
                     className={`px-3 py-2 rounded-xl border ${
-                      isOpen
+                      !FORCE_CLOSED
                         ? "border-neutral-200 bg-neutral-50"
                         : "border-neutral-200 text-neutral-400 cursor-not-allowed"
                     }`}
-                    disabled={!isOpen}
+                    disabled={FORCE_CLOSED}
                   >
                     +
                   </button>
@@ -767,6 +832,7 @@ export default function SectoCafePedidos() {
   const [address, setAddress] = useState("");
   const [notes, setNotes] = useState("");
   const [time, setTime] = useState("asap");
+  const [deliveryDate, setDeliveryDate] = useState(todayInMontevideo);
   const [comboSelections, setComboSelections] = useState({});
 
   const cartRef = useRef(null);
@@ -777,7 +843,7 @@ export default function SectoCafePedidos() {
 
   // Actualizar horarios y apertura mientras el cliente tiene la página abierta.
   useEffect(() => {
-    const timer = setInterval(() => setClockTick((n) => n + 1), 30000);
+    const timer = setInterval(() => setClockTick((n) => n + 1), 1000);
     return () => clearInterval(timer);
   }, []);
 
@@ -838,12 +904,21 @@ export default function SectoCafePedidos() {
   const total = discountedSubtotal + fee;
 
   const scheduleOpen = isOpenBySchedule();
-  const availableHours = useMemo(() => futureHours(), [clockTick]);
-  const validTime = time === "asap" || availableHours.includes(time);
+  const today = todayInMontevideo();
+  const availableDates = scheduleDates();
+  const selectedDate = availableDates.includes(deliveryDate) ? deliveryDate : (availableDates[0] || today);
+  const availableHours = hoursForDate(selectedDate);
+  const validTime = time === "asap"
+    ? selectedDate === today && scheduleOpen
+    : availableHours.includes(time);
 
   useEffect(() => {
-    if (time !== "asap" && !availableHours.includes(time)) setTime("asap");
-  }, [time, availableHours]);
+    if (deliveryDate !== selectedDate) setDeliveryDate(selectedDate);
+    if (time === "asap" && selectedDate !== today) setTime(availableHours[0] || "");
+    else if (time !== "asap" && !availableHours.includes(time)) {
+      setTime(selectedDate === today && scheduleOpen ? "asap" : (availableHours[0] || ""));
+    }
+  }, [deliveryDate, selectedDate, today, time, scheduleOpen, clockTick]);
 
   const isOpen =
     (FORCE_OPEN && !FORCE_CLOSED) ||
@@ -857,7 +932,7 @@ export default function SectoCafePedidos() {
     combosComplete &&
     (method === "pickup" || address || zone === "cv");
 
-  const canSendNow = canSend && isOpen && !sending;
+  const canSendNow = canSend && !FORCE_CLOSED && !sending;
 
   const showCartPeek = () => {
     setCartPeek(true);
@@ -876,7 +951,8 @@ export default function SectoCafePedidos() {
     phone,
     address,
     notes,
-    time,
+    time: time === "asap" ? "asap" : `${selectedDate} ${time}`,
+    deliveryDate: time === "asap" ? todayInMontevideo() : selectedDate,
     comboSelections: comboInstances.map(({ item, key }) => {
       const selection = comboSelections[key] || {};
       return {
@@ -911,7 +987,7 @@ export default function SectoCafePedidos() {
   }, [items.length]);
 
   const sendOrder = async (paid = false) => {
-    if (!canSendNow || (time !== "asap" && !futureHours().includes(time))) {
+    if (!canSendNow || !validTime) {
       alert("Revisá los datos del pedido. Completá nombre, teléfono, dirección/zona y todas las opciones de los combos.");
       return;
     }
@@ -1003,9 +1079,9 @@ export default function SectoCafePedidos() {
           <div>
             <p className="text-xs tracking-[0.18em] text-neutral-300">PROMO ANTES DE LAS 18:00</p>
             <p className="text-lg font-semibold">10% OFF adicional en tu pedido</p>
-            <p className="text-xs text-neutral-300">Se aplica automáticamente a los productos al hacer el pedido antes de las 18:00.</p>
+            <p className="text-xs text-neutral-300">Se aplica al confirmar el pedido antes de las 18:00, incluso si programás para otro día.</p>
           </div>
-          <span className="text-sm font-medium">{earlyDiscountActive ? "PROMO ACTIVA" : "LUN–SÁB · 12 A 18 H"}</span>
+          <span className="text-sm font-medium tabular-nums">{earlyDiscountActive ? `TERMINA EN ${countdownText(promoRemainingSeconds())}` : "LUN–SÁB · 12 A 18 H"}</span>
         </div>
       </section>
 
@@ -1045,7 +1121,7 @@ export default function SectoCafePedidos() {
                           {item.name}
                         </h3>
                         <p className="text-sm text-neutral-500 mt-1">
-                          {currency(item.price)}
+                          <PromoPrice price={item.price} active={earlyDiscountActive} />
                         </p>
                       </div>
 
@@ -1069,11 +1145,11 @@ export default function SectoCafePedidos() {
                             setTimeout(() => setCartHighlight(false), 600);
                           }}
                           className={`px-3 py-2 rounded-xl border ${
-                            isOpen
+                            !FORCE_CLOSED
                               ? "border-neutral-200 bg-neutral-50"
                               : "border-neutral-200 text-neutral-400 cursor-not-allowed"
                           }`}
-                          disabled={!isOpen}
+                          disabled={FORCE_CLOSED}
                         >
                           +
                         </button>
@@ -1128,7 +1204,7 @@ export default function SectoCafePedidos() {
 
                   <div className="flex items-center gap-2">
                     <div className="text-neutral-700">
-                      {currency(item.price * qty)}
+                      <PromoPrice price={item.price * qty} active={earlyDiscountActive} />
                     </div>
                     <button
                       type="button"
@@ -1296,25 +1372,35 @@ export default function SectoCafePedidos() {
             <div className="mt-3">
               <label className="text-xs text-neutral-500">¿Cuándo lo querés?</label>
 
-              <select
-                value={time}
-                onChange={(e) => setTime(e.target.value)}
-                disabled={!isOpen}
-                className="w-full bg-white border border-neutral-200 rounded-xl p-2 disabled:bg-neutral-100 disabled:text-neutral-500"
-              >
-                {isOpen ? (
-                  <>
-                    <option value="asap">Lo antes posible</option>
-                    {futureHours().map((h) => (
-                      <option key={h} value={h}>
-                        {h}
-                      </option>
-                    ))}
-                  </>
-                ) : (
-                  <option value="">Pedidos cerrados</option>
-                )}
-              </select>
+              <div className="grid grid-cols-2 gap-2 mt-1">
+                <select
+                  aria-label="Día de entrega"
+                  value={selectedDate}
+                  onChange={(e) => {
+                    const next = e.target.value;
+                    setDeliveryDate(next);
+                    setTime(next === today && scheduleOpen ? "asap" : (hoursForDate(next)[0] || ""));
+                  }}
+                  className="w-full bg-white border border-neutral-200 rounded-xl p-2"
+                >
+                  {availableDates.map((d) => (
+                    <option key={d} value={d}>
+                      {d === today ? "Hoy" : d === advanceISODate(today, 1) ? "Mañana" : formatDeliveryDate(d)}
+                    </option>
+                  ))}
+                </select>
+                <select
+                  aria-label="Horario de entrega"
+                  value={time}
+                  onChange={(e) => setTime(e.target.value)}
+                  className="w-full bg-white border border-neutral-200 rounded-xl p-2"
+                >
+                  {selectedDate === today && scheduleOpen && <option value="asap">Lo antes posible</option>}
+                  {availableHours.map((h) => <option key={h} value={h}>{h}</option>)}
+                  {availableHours.length === 0 && !(selectedDate === today && scheduleOpen) && <option value="">Elegí otro día</option>}
+                </select>
+              </div>
+              <p className="text-xs text-neutral-500 mt-1">Programá tu pedido hasta 7 días antes · lunes a sábado.</p>
             </div>
 
             <div className="mt-3">
@@ -1398,8 +1484,8 @@ export default function SectoCafePedidos() {
               </button>
 
               {!isOpen && (
-                <p className="text-xs text-red-600 mt-1">
-                  Cerrado — pedidos habilitados lunes a sábado de 12:00 a 00:00.
+                <p className="text-xs text-neutral-500 mt-1">
+                  El local está cerrado ahora, pero podés programar un pedido para los próximos días.
                 </p>
               )}
 
@@ -1448,7 +1534,7 @@ export default function SectoCafePedidos() {
 
                   <div className="flex items-center gap-2 whitespace-nowrap">
                     <div className="text-neutral-700">
-                      {currency(item.price * qty)}
+                      <PromoPrice price={item.price * qty} active={earlyDiscountActive} />
                     </div>
                     <button
                       type="button"

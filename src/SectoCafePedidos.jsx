@@ -16,7 +16,7 @@ const TZ = "America/Montevideo";
 const OPEN_DAYS = [1, 2, 3, 4, 5, 6];
 const OPEN_HOUR_START = 12;
 const OPEN_HOUR_END = 24;
-const FORCE_OPEN = true;
+const FORCE_OPEN = false;
 const FORCE_CLOSED = false;
 
 function getNowInTZ() {
@@ -39,6 +39,11 @@ function getNowInTZ() {
   const hour = Number(hourStr);
 
   return { day, hour };
+}
+
+function isEarlyDiscountActive() {
+  const now = getNowInTZ();
+  return OPEN_DAYS.includes(now.day) && now.hour >= OPEN_HOUR_START && now.hour < EARLY_DISCOUNT_END_HOUR;
 }
 
 function isOpenBySchedule() {
@@ -108,6 +113,8 @@ const MENU = [
 
 // ===== ZONAS =====
 const FREE_DELIVERY_MINIMUM = 1500;
+const EARLY_DISCOUNT_PERCENT = 10;
+const EARLY_DISCOUNT_END_HOUR = 18;
 
 const ZONES = [
   { id: "cv", name: "Ciudad Vieja", fee: 0 },
@@ -220,6 +227,7 @@ function buildWhatsAppText(order) {
   const {
     items,
     subtotal,
+    discount = 0,
     zone,
     fee,
     total,
@@ -268,6 +276,8 @@ function buildWhatsAppText(order) {
     ...comboLines,
     "",
     "Subtotal: " + currency(subtotal),
+    ...(discount > 0 ? ["Descuento antes de las 18:00 (10%): -" + currency(discount)] : []),
+    "Envio: " + (method === "delivery" ? (fee === 0 ? "GRATIS" : currency(fee)) : "Retiro en local"),
     "Total: " + currency(total),
     ...info,
   ].join("\n");
@@ -816,12 +826,16 @@ export default function SectoCafePedidos() {
     [items]
   );
 
+  const earlyDiscountActive = isEarlyDiscountActive();
+  const discount = earlyDiscountActive ? Math.round(subtotal * EARLY_DISCOUNT_PERCENT / 100) : 0;
+  const discountedSubtotal = subtotal - discount;
+
   const fee = useMemo(() => {
     if (method !== "delivery" || subtotal >= FREE_DELIVERY_MINIMUM) return 0;
     return ZONES.find((z) => z.id === zone)?.fee || 0;
   }, [method, zone, subtotal]);
 
-  const total = subtotal + fee;
+  const total = discountedSubtotal + fee;
 
   const scheduleOpen = isOpenBySchedule();
   const availableHours = useMemo(() => futureHours(), [clockTick]);
@@ -852,6 +866,8 @@ export default function SectoCafePedidos() {
   const getOrder = (extra = {}) => ({
     items,
     subtotal,
+    discount,
+    discountedSubtotal,
     zone,
     fee,
     total,
@@ -881,7 +897,7 @@ export default function SectoCafePedidos() {
     const text = buildWhatsAppText(order);
     const encoded = encodeURIComponent(text);
     const phoneDigits = PHONE_URUGUAY.replace(/\D/g, "");
-    return "https://wa.me/598" + phoneDigits + "?text=" + encoded;
+    return "https://wa.me/598" + phoneDigits.replace(/^0/, "") + "?text=" + encoded;
   };
 
   const openWhatsAppWithOrder = (order) => {
@@ -900,6 +916,7 @@ export default function SectoCafePedidos() {
       return;
     }
 
+    setClockTick((n) => n + 1);
     const order = getOrder({
       paid,
       createdAt: Date.now(),
@@ -980,6 +997,17 @@ export default function SectoCafePedidos() {
           </div>
         </section>
       )}
+
+      <section className="max-w-6xl mx-auto px-4 pt-5">
+        <div className="rounded-2xl bg-neutral-950 text-white px-5 py-4 flex flex-wrap items-center justify-between gap-2">
+          <div>
+            <p className="text-xs tracking-[0.18em] text-neutral-300">PROMO ANTES DE LAS 18:00</p>
+            <p className="text-lg font-semibold">10% OFF adicional en tu pedido</p>
+            <p className="text-xs text-neutral-300">Se aplica automáticamente a los productos al hacer el pedido antes de las 18:00.</p>
+          </div>
+          <span className="text-sm font-medium">{earlyDiscountActive ? "PROMO ACTIVA" : "LUN–SÁB · 12 A 18 H"}</span>
+        </div>
+      </section>
 
       <main className="max-w-6xl mx-auto px-4 py-8 grid grid-cols-1 lg:grid-cols-3 gap-8">
         <section className="lg:col-span-2 space-y-8">
@@ -1301,11 +1329,34 @@ export default function SectoCafePedidos() {
               />
             </div>
 
+            {method === "delivery" && (
+              <div className="rounded-xl border border-neutral-200 bg-neutral-50 px-3 py-3 text-xs">
+                {subtotal >= FREE_DELIVERY_MINIMUM ? (
+                  <p className="font-semibold text-neutral-900">✓ ¡Conseguiste envío gratis!</p>
+                ) : (
+                  <>
+                    <p className="font-semibold text-neutral-900">Envío gratis desde {currency(FREE_DELIVERY_MINIMUM)}</p>
+                    <p className="mt-1 text-neutral-600">Agregá {currency(FREE_DELIVERY_MINIMUM - subtotal)} en productos para conseguirlo.</p>
+                    <div className="mt-2 h-1.5 rounded-full bg-neutral-200 overflow-hidden">
+                      <div className="h-full bg-neutral-900 rounded-full" style={{ width: `${Math.min(100, subtotal / FREE_DELIVERY_MINIMUM * 100)}%` }} />
+                    </div>
+                  </>
+                )}
+              </div>
+            )}
+
             <div className="text-sm space-y-1 mt-4">
               <div className="flex justify-between">
                 <span className="text-neutral-500">Subtotal</span>
                 <span>{currency(subtotal)}</span>
               </div>
+
+              {discount > 0 && (
+                <div className="flex justify-between font-medium text-neutral-900">
+                  <span>Promo antes de las 18 · 10% OFF</span>
+                  <span>−{currency(discount)}</span>
+                </div>
+              )}
 
               {method === "delivery" && (
                 <>
@@ -1313,15 +1364,6 @@ export default function SectoCafePedidos() {
                     <span className="text-neutral-500">Envío</span>
                     <span>{fee === 0 ? "GRATIS" : currency(fee)}</span>
                   </div>
-                  {subtotal < FREE_DELIVERY_MINIMUM && (
-                    <p className="text-xs text-neutral-500">
-                      Envío gratis desde {currency(FREE_DELIVERY_MINIMUM)} en productos.
-                      Te faltan {currency(FREE_DELIVERY_MINIMUM - subtotal)}.
-                    </p>
-                  )}
-                  {subtotal >= FREE_DELIVERY_MINIMUM && (
-                    <p className="text-xs text-green-700">¡Tu pedido tiene envío gratis!</p>
-                  )}
                 </>
               )}
 
@@ -1333,8 +1375,8 @@ export default function SectoCafePedidos() {
 
             <div className="grid grid-cols-1 gap-2 mt-4">
               <div className="rounded-xl border border-amber-300 bg-amber-50 p-3 text-sm text-amber-950" role="alert">
-                <strong>Tu pedido todavía no fue enviado.</strong>
-                <p className="mt-1">Al tocar el botón se abrirá WhatsApp. Tenés que presionar ENVIAR allí para terminar tu pedido. Abrir WhatsApp no lo confirma.</p>
+                <strong>Un último paso para confirmar</strong>
+                <p className="mt-1">Al abrir WhatsApp, enviá el mensaje para completar tu pedido.</p>
               </div>
               <button
                 onClick={() => sendOrder(false)}
@@ -1345,7 +1387,7 @@ export default function SectoCafePedidos() {
                     : "bg-neutral-100 text-neutral-600"
                 }`}
               >
-                {sending ? "Preparando WhatsApp..." : "ENVIAR MENSAJE PARA TERMINAR PEDIDO"}
+                {sending ? "Preparando WhatsApp..." : "Confirmar por WhatsApp"}
               </button>
 
               <button
@@ -1494,6 +1536,27 @@ export default function SectoCafePedidos() {
           )}
 
           <div className="mt-3 pt-3 border-t border-neutral-200 text-sm space-y-3">
+            {method === "delivery" && (
+              <div className="rounded-xl border border-neutral-200 bg-neutral-50 px-3 py-3 text-xs">
+                {subtotal >= FREE_DELIVERY_MINIMUM ? (
+                  <p className="font-semibold text-neutral-900">✓ ¡Conseguiste envío gratis!</p>
+                ) : (
+                  <>
+                    <p className="font-semibold text-neutral-900">Envío gratis desde {currency(FREE_DELIVERY_MINIMUM)}</p>
+                    <p className="mt-1 text-neutral-600">Agregá {currency(FREE_DELIVERY_MINIMUM - subtotal)} en productos para conseguirlo.</p>
+                    <div className="mt-2 h-1.5 rounded-full bg-neutral-200 overflow-hidden">
+                      <div className="h-full bg-neutral-900 rounded-full" style={{ width: `${Math.min(100, subtotal / FREE_DELIVERY_MINIMUM * 100)}%` }} />
+                    </div>
+                  </>
+                )}
+              </div>
+            )}
+            {discount > 0 && (
+              <div className="flex justify-between text-xs font-medium">
+                <span>10% OFF antes de las 18</span>
+                <span>−{currency(discount)}</span>
+              </div>
+            )}
             <div className="flex justify-between">
               <span className="text-neutral-500">Total</span>
               <span className="text-neutral-900 font-medium">

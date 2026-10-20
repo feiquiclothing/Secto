@@ -86,10 +86,25 @@ function orderDate(order) {
   return Number.isNaN(date.getTime()) ? "" : localISO(date);
 }
 function departureHour(order) {
+  if (DEPARTURES.includes(order.serviceSlot)) return order.serviceSlot;
   const time = String(order.time || "");
   if (time === "asap" || /lo antes posible/i.test(time)) return "Sin horario";
   const match = time.match(/(?:^|\s)(\d{2}:\d{2})$/);
   return match ? match[1] : "Sin horario";
+}
+const SECTO_ADDRESS = "Piedras 276, Montevideo, Uruguay";
+function isDelivery(order) {
+  return String(order.method || "").toLowerCase() === "delivery" && !!String(order.address || "").trim();
+}
+function mapsRouteUrl(orders) {
+  const stops = orders.map(o => `${o.address}, Montevideo, Uruguay`);
+  // Google Maps Directions URLs: origen y destino en Secto, paradas en orden manual.
+  const params = new URLSearchParams({
+    api: "1", origin: SECTO_ADDRESS, destination: SECTO_ADDRESS,
+    travelmode: "driving",
+  });
+  if (stops.length) params.set("waypoints", stops.join("|"));
+  return `https://www.google.com/maps/dir/?${params.toString()}`;
 }
 function orderRolls(order) {
   let rolls = 0;
@@ -134,6 +149,9 @@ export default function Kitchen() {
   const [search, setSearch] = useState("");
   const [selectedHour, setSelectedHour] = useState("");
   const [expandedId, setExpandedId] = useState("");
+  const [routeHour, setRouteHour] = useState("19:00");
+  const [routeIds, setRouteIds] = useState([]);
+  const [deliveredIds, setDeliveredIds] = useState([]);
 
   const tabIdRef = useRef(makeTabId());
   const startedRef = useRef(false);
@@ -444,6 +462,21 @@ export default function Kitchen() {
   const dayTotal = orders.reduce((sum, o) => sum + (Number(o.total) || 0), 0);
   const dayRolls = orders.reduce((sum, o) => sum + orderRolls(o), 0);
 
+  const routeOrders = orders.filter(o => isDelivery(o) && departureHour(o) === routeHour);
+  const orderedRoute = [...routeOrders].sort((a,b) => {
+    const ai = routeIds.indexOf(String(a.id));
+    const bi = routeIds.indexOf(String(b.id));
+    return (ai < 0 ? 99999 : ai) - (bi < 0 ? 99999 : bi);
+  });
+  const moveStop = (id, direction) => {
+    const ids = orderedRoute.map(o => String(o.id));
+    const index = ids.indexOf(String(id));
+    const next = index + direction;
+    if (index < 0 || next < 0 || next >= ids.length) return;
+    [ids[index], ids[next]] = [ids[next], ids[index]];
+    setRouteIds(ids);
+  };
+
   const connectionLabel =
     connection === "online"
       ? "CONECTADO"
@@ -486,8 +519,29 @@ export default function Kitchen() {
       <div style={{display:"flex",gap:8,marginBottom:16}}>
         <button onClick={() => {setView("today");setSelectedDate(localISO());setSelectedHour("");}} style={{padding:10,fontWeight:view==="today"?800:400}}>HOY</button>
         <button onClick={() => {setView("history");setSelectedHour("");}} style={{padding:10,fontWeight:view==="history"?800:400}}>HISTORIAL / FUTUROS</button>
+        <button onClick={() => {setView("routes");setSelectedHour("");}} style={{padding:10,fontWeight:view==="routes"?800:400}}>REPARTOS</button>
       </div>
-      <section style={{border:"1px solid #ddd",borderRadius:12,padding:14,marginBottom:18}}>
+      {view === "routes" && <section style={{border:"1px solid #ddd",borderRadius:12,padding:14,marginBottom:18}}>
+        <h2 style={{marginTop:0}}>REPARTOS · MOTO</h2>
+        <label>Fecha: <input type="date" value={selectedDate} onChange={e=>{setSelectedDate(e.target.value);setRouteIds([]);}} /></label>
+        <div style={{display:"flex",gap:6,flexWrap:"wrap",margin:"14px 0"}}>
+          {DEPARTURES.map(h=><button key={h} onClick={()=>{setRouteHour(h);setRouteIds([]);}} style={{padding:10,borderRadius:8,border:routeHour===h?"2px solid #111":"1px solid #ddd",background:"white",fontWeight:routeHour===h?800:400}}>{h} ({orders.filter(o=>isDelivery(o)&&departureHour(o)===h).length})</button>)}
+        </div>
+        {ordersError && <p style={{color:"#b91c1c"}}>{ordersError}</p>}
+        <p><b>Salida {routeHour} · {orderedRoute.length} entregas</b></p>
+        <p style={{fontSize:13}}>Inicio y regreso: <b>{SECTO_ADDRESS}</b>. Ordená las paradas con las flechas y abrí el recorrido en Google Maps.</p>
+        {orderedRoute.map((o,i)=><div key={o.id} style={{padding:12,border:"1px solid #ddd",borderRadius:10,marginBottom:8}}>
+          <div style={{display:"flex",justifyContent:"space-between",gap:8}}>
+            <div><b>{i+1}. {o.address}</b><div style={{fontSize:13}}>{o.name || "Cliente"} · {o.id}</div>{o.phone && <a href={`tel:${String(o.phone).replace(/[^+\d]/g,"")}`}>{o.phone}</a>}{o.notes && <div style={{fontSize:12}}>Notas: {o.notes}</div>}</div>
+            <div style={{display:"flex",gap:4,alignItems:"flex-start"}}><button disabled={i===0} onClick={()=>moveStop(o.id,-1)} title="Subir parada">↑</button><button disabled={i===orderedRoute.length-1} onClick={()=>moveStop(o.id,1)} title="Bajar parada">↓</button></div>
+          </div>
+          <label style={{fontSize:13,display:"block",marginTop:8}}><input type="checkbox" checked={deliveredIds.includes(String(o.id))} onChange={e=>setDeliveredIds(old=>e.target.checked?[...old,String(o.id)]:old.filter(x=>x!==String(o.id)))} /> Entregado (solo en esta sesión)</label>
+        </div>)}
+        {orderedRoute.length===0 && <p style={{color:"#777"}}>No hay pedidos de delivery con dirección para esta salida.</p>}
+        {orderedRoute.length>0 && <a href={mapsRouteUrl(orderedRoute)} target="_blank" rel="noopener noreferrer" style={{display:"block",padding:14,background:"#111",color:"white",borderRadius:10,textAlign:"center",fontWeight:800,textDecoration:"none"}}>ABRIR RECORRIDO EN GOOGLE MAPS ↗</a>}
+        <p style={{fontSize:12,color:"#666"}}>Esta primera versión no optimiza automáticamente el orden por tránsito o calles. Google Maps recibe las paradas en el orden indicado; verificá el recorrido antes de salir. Con muchas paradas, Maps puede limitar la cantidad de destinos admitidos.</p>
+      </section>}
+      {view !== "routes" && <section style={{border:"1px solid #ddd",borderRadius:12,padding:14,marginBottom:18}}>
         {view === "history" && <label>Fecha de salida: <input type="date" value={selectedDate} onChange={e=>{setSelectedDate(e.target.value);setSelectedHour("");}} /></label>}
         {view === "today" && <h2 style={{marginTop:0}}>Salidas de hoy · {selectedDate}</h2>}
         {ordersError && <p style={{color:"#b91c1c"}}>Historial: {ordersError}. Revisá que el Apps Script actualizado esté publicado.</p>}
@@ -515,7 +569,7 @@ export default function Kitchen() {
           </div>)}
           {!loadingOrders && filteredOrders.length===0 && <p style={{fontSize:13,color:"#777"}}>No hay pedidos para este filtro.</p>}
         </div>
-      </section>
+      </section>}
 
       {!started ? (
         <button

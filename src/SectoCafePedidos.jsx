@@ -1067,8 +1067,8 @@ export default function SectoCafePedidos() {
             <div className="leading-tight">
               <p className="text-xs tracking-[0.25em] text-neutral-500">
                 {isOpen
-                  ? "Sushi vegano — pedidos inmediatos hasta las 23:30"
-                  : "Sushi vegano — programá tu pedido nocturno"}
+                  ? "Sushi vegano — pedidos abiertos hasta las 23:30"
+                  : "Sushi vegano — programá tu pedido"}
               </p>
               <h1 className="text-lg text-neutral-900"></h1>
             </div>
@@ -1098,8 +1098,8 @@ export default function SectoCafePedidos() {
       <section className="max-w-6xl mx-auto px-4 pt-5">
         <div className="rounded-2xl bg-neutral-950 text-white px-5 py-4 flex flex-wrap items-center justify-between gap-2">
           <div>
-            <p className="text-xs tracking-[0.18em] text-neutral-300">RESERVÁ TU CENA ANTES DE LAS 18:00</p>
-            <p className="text-lg font-semibold">10% OFF adicional en tu pedido</p>
+            <p className="text-xs tracking-[0.18em] text-neutral-300">Reservá tu cena antes de las 18hs y recibí</p>
+            <p className="text-lg font-semibold">10% OFF ADICIONAL EN TU PEDIDO</p>
             <p className="text-xs text-neutral-300">Se aplica al hacer el pedido antes de las 18:00, incluso si programás para mañana u otro día.</p>
           </div>
           <span className="text-sm font-medium tabular-nums">
@@ -1428,7 +1428,7 @@ export default function SectoCafePedidos() {
                 </select>
               </div>
               {earlyDiscountActive && <p className="text-xs font-semibold text-green-700 mt-2">✓ 10% OFF aplicado · {selectedDate === today ? "pedido antes de las 18:00" : "pedido para otro día"}</p>}
-              <p className="text-xs text-neutral-500 mt-1">Lo antes posible se asigna a la próxima salida con 30 min de preparación · Salidas de 19:00 a 00:00 · Programá hasta 7 días · Lunes a sábado.</p>
+              <p className="text-xs text-neutral-500 mt-1">Lo antes posible se asigna a la siguiente salida · Salidas de 19:00 a 00:00.</p>
               {(isEveningDeparture || time === "asap") && (
                 <p className="mt-2 text-xs font-medium text-neutral-800">
                   {departureNote}

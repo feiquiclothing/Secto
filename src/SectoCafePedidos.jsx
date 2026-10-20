@@ -908,7 +908,7 @@ export default function SectoCafePedidos() {
   const today = todayInMontevideo();
   const availableDates = scheduleDates();
   const selectedDate = availableDates.includes(deliveryDate) ? deliveryDate : (availableDates[0] || today);
-  const earlyDiscountActive = isEarlyDiscountActive(selectedDate);
+  const earlyDiscountActive = selectedDate > today || (selectedDate === today && montevideoParts().hour < EARLY_DISCOUNT_END_HOUR);
   const discount = earlyDiscountActive ? Math.round(subtotal * EARLY_DISCOUNT_PERCENT / 100) : 0;
   const discountedSubtotal = subtotal - discount;
 
@@ -1427,6 +1427,7 @@ export default function SectoCafePedidos() {
                   {availableHours.length === 0 && !(selectedDate === today && asapAvailable) && <option value="">Elegí otro día</option>}
                 </select>
               </div>
+              {earlyDiscountActive && <p className="text-xs font-semibold text-green-700 mt-2">✓ 10% OFF aplicado · {selectedDate === today ? "pedido antes de las 18:00" : "pedido para otro día"}</p>}
               <p className="text-xs text-neutral-500 mt-1">Lo antes posible se asigna a la próxima salida con 30 min de preparación · Salidas de 19:00 a 00:00 · Programá hasta 7 días · Lunes a sábado.</p>
               {(isEveningDeparture || time === "asap") && (
                 <p className="mt-2 text-xs font-medium text-neutral-800">

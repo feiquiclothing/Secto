@@ -107,9 +107,11 @@ function PromoPrice({ price, active, className = "" }) {
   ) : <span className={className}>{currency(price)}</span>;
 }
 
-function isEarlyDiscountActive() {
-  // La promoción depende de cuándo se compra, nunca de la fecha de entrega.
-  return montevideoParts().hour < EARLY_DISCOUNT_END_HOUR;
+function isEarlyDiscountActive(deliveryDate) {
+  // Hoy: solamente antes de las 18. Días futuros: siempre.
+  const today = todayInMontevideo();
+  return (deliveryDate && deliveryDate > today) ||
+    (deliveryDate === today && montevideoParts().hour < EARLY_DISCOUNT_END_HOUR);
 }
 
 function isOpenBySchedule() {
@@ -425,7 +427,7 @@ const POKE_SAUCES = [
   "Teriyaki",
 ];
 
-function PokeBuilder({ onAdd, isOpen }) {
+function PokeBuilder({ onAdd, isOpen, earlyDiscountActive }) {
   const [base, setBase] = useState("");
   const [proteins, setProteins] = useState([]);
   const [toppings, setToppings] = useState([]);
@@ -695,7 +697,7 @@ function PokeBuilder({ onAdd, isOpen }) {
               Total poke
             </span>
             <span className="text-lg font-medium text-neutral-900">
-              <PromoPrice price={unitPrice} active={isEarlyDiscountActive()} />
+              <PromoPrice price={unitPrice} active={earlyDiscountActive} />
             </span>
           </div>
 
@@ -730,7 +732,7 @@ function PokeBuilder({ onAdd, isOpen }) {
   );
 }
 
-function PokesSection({ cart, dispatch, isOpen, showCartPeek, setCartHighlight }) {
+function PokesSection({ cart, dispatch, isOpen, showCartPeek, setCartHighlight, earlyDiscountActive }) {
   return (
     <div>
       <div className="flex items-baseline justify-between mb-3">
@@ -775,7 +777,7 @@ function PokesSection({ cart, dispatch, isOpen, showCartPeek, setCartHighlight }
 
               <div className="mt-3 flex items-center justify-between gap-4">
                 <p className="text-sm text-neutral-500">
-                  <PromoPrice price={item.price} active={isEarlyDiscountActive()} />
+                  <PromoPrice price={item.price} active={earlyDiscountActive} />
                 </p>
 
                 <div className="flex items-center gap-2">
@@ -821,6 +823,7 @@ function PokesSection({ cart, dispatch, isOpen, showCartPeek, setCartHighlight }
       <div className="mt-4">
         <PokeBuilder
           isOpen={isOpen}
+          earlyDiscountActive={earlyDiscountActive}
           onAdd={(item, qty) => {
             dispatch({ type: "add", item, qty });
             showCartPeek();
@@ -902,7 +905,10 @@ export default function SectoCafePedidos() {
     [items]
   );
 
-  const earlyDiscountActive = isEarlyDiscountActive();
+  const today = todayInMontevideo();
+  const availableDates = scheduleDates();
+  const selectedDate = availableDates.includes(deliveryDate) ? deliveryDate : (availableDates[0] || today);
+  const earlyDiscountActive = isEarlyDiscountActive(selectedDate);
   const discount = earlyDiscountActive ? Math.round(subtotal * EARLY_DISCOUNT_PERCENT / 100) : 0;
   const discountedSubtotal = subtotal - discount;
 
@@ -916,9 +922,6 @@ export default function SectoCafePedidos() {
   const scheduleOpen = isOpenBySchedule();
   const asapDeparture = nextAsapDeparture();
   const asapAvailable = scheduleOpen && !!asapDeparture;
-  const today = todayInMontevideo();
-  const availableDates = scheduleDates();
-  const selectedDate = availableDates.includes(deliveryDate) ? deliveryDate : (availableDates[0] || today);
   const availableHours = hoursForDate(selectedDate);
   const isEveningDeparture = method === "delivery" && time !== "asap" && /^\d{2}:\d{2}$/.test(time);
   const departureNote = "Los horarios indicados son de salida del local, no de llegada. La salida de las 00:00 es la medianoche posterior al día elegido.";
@@ -1100,7 +1103,7 @@ export default function SectoCafePedidos() {
             <p className="text-xs text-neutral-300">Se aplica al hacer el pedido antes de las 18:00, incluso si programás para mañana u otro día.</p>
           </div>
           <span className="text-sm font-medium tabular-nums">
-            {earlyDiscountActive ? `TERMINA EN ${countdownText(promoRemainingSeconds())}` : "PEDIDOS PROGRAMADOS HASTA 7 DÍAS"}
+            {montevideoParts().hour < EARLY_DISCOUNT_END_HOUR ? `TERMINA EN ${countdownText(promoRemainingSeconds())}` : "PEDIDOS PROGRAMADOS HASTA 7 DÍAS"}
           </span>
         </div>
       </section>
@@ -1185,6 +1188,7 @@ export default function SectoCafePedidos() {
                 cart={cart}
                 dispatch={dispatch}
                 isOpen={isOpen}
+                earlyDiscountActive={earlyDiscountActive}
                 showCartPeek={showCartPeek}
                 setCartHighlight={setCartHighlight}
               />

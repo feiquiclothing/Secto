@@ -489,7 +489,7 @@ export default function Kitchen() {
               {(o.items||[]).map((entry,i)=><div key={i}>{entry.qty} × {entry.item?.name || "Producto"}</div>)}
               {(o.comboSelections||[]).map((c,i)=><p key={i}>{c.comboName}: {(c.rolls||[]).join(" / ")} {(c.drinks||[]).join(" / ")}</p>)}
               <p><b>Total: ${Number(o.total||0).toLocaleString("es-UY")}</b></p>
-              <button onClick={()=>window.open(`/ticket?id=${encodeURIComponent(o.id)}&autoprint=1`,"_blank","noopener,noreferrer")} style={{padding:10,border:"1px solid #111",borderRadius:8,background:"white"}}>REIMPRIMIR COMANDA</button>
+              <button onClick={()=>window.open(`/ticket?id=${encodeURIComponent(o.id)}&autoprint=1&reprint=1`,"_blank","noopener,noreferrer")} style={{padding:10,border:"1px solid #111",borderRadius:8,background:"white"}}>REIMPRIMIR COMANDA</button>
             </div>}
           </div>)}
           {!loadingOrders && filteredOrders.length===0 && <p style={{fontSize:13,color:"#777"}}>No hay pedidos para este filtro.</p>}

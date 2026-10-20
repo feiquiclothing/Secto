@@ -66,6 +66,44 @@ async function post(payload) {
   return data;
 }
 
+const TZ = "America/Montevideo";
+const DEPARTURES = ["19:00", "20:00", "21:00", "22:00", "23:00", "00:00"];
+
+function localISO(date = new Date()) {
+  const parts = new Intl.DateTimeFormat("en-CA", { timeZone: TZ, year: "numeric", month: "2-digit", day: "2-digit" }).formatToParts(date);
+  const part = (type) => parts.find((p) => p.type === type)?.value || "";
+  return `${part("year")}-${part("month")}-${part("day")}`;
+}
+function orderDate(order) {
+  const explicit = String(order.deliveryDate || "");
+  if (/^\d{4}-\d{2}-\d{2}$/.test(explicit)) return explicit;
+  const time = String(order.time || "");
+  const match = time.match(/^(\d{4}-\d{2}-\d{2})/);
+  if (match) return match[1];
+  const created = order.createdAt;
+  if (!created) return "";
+  const date = new Date(created);
+  return Number.isNaN(date.getTime()) ? "" : localISO(date);
+}
+function departureHour(order) {
+  const time = String(order.time || "");
+  if (time === "asap" || /lo antes posible/i.test(time)) return "Sin horario";
+  const match = time.match(/(?:^|\s)(\d{2}:\d{2})$/);
+  return match ? match[1] : "Sin horario";
+}
+function orderRolls(order) {
+  let rolls = 0;
+  for (const entry of order.items || []) {
+    const id = String(entry?.item?.id || "");
+    const qty = Number(entry.qty) || 0;
+    if (id.startsWith("r")) rolls += qty;
+    if (id === "c01") rolls += qty;
+    if (id === "c02" || id === "c03") rolls += qty * 2;
+    if (id === "c04" || id === "c05") rolls += qty * 3;
+  }
+  return rolls;
+}
+
 function formatTime(ts) {
   if (!ts) return "—";
 
@@ -88,6 +126,14 @@ export default function Kitchen() {
   const [connection, setConnection] = useState("connecting");
   const [lastCheck, setLastCheck] = useState(null);
   const [lastId, setLastId] = useState(null);
+  const [view, setView] = useState("today");
+  const [selectedDate, setSelectedDate] = useState(localISO);
+  const [orders, setOrders] = useState([]);
+  const [ordersError, setOrdersError] = useState("");
+  const [loadingOrders, setLoadingOrders] = useState(false);
+  const [search, setSearch] = useState("");
+  const [selectedHour, setSelectedHour] = useState("");
+  const [expandedId, setExpandedId] = useState("");
 
   const tabIdRef = useRef(makeTabId());
   const startedRef = useRef(false);
@@ -362,6 +408,35 @@ export default function Kitchen() {
     };
   }, []);
 
+  // Consulta independiente: no altera el polling ni marca pedidos impresos.
+  useEffect(() => {
+    let disposed = false;
+    const load = async () => {
+      try {
+        setLoadingOrders(true);
+        const data = await post({ action: "list_orders", date: selectedDate, limit: 1000 });
+        if (!data?.ok) throw new Error(data?.error || "No se pudo consultar el historial");
+        if (!disposed) { setOrders(Array.isArray(data.orders) ? data.orders : []); setOrdersError(""); }
+      } catch (err) {
+        if (!disposed) setOrdersError(String(err?.message || err));
+      } finally {
+        if (!disposed) setLoadingOrders(false);
+      }
+    };
+    load();
+    const timer = setInterval(load, 15000);
+    return () => { disposed = true; clearInterval(timer); };
+  }, [selectedDate]);
+
+  const filteredOrders = orders.filter((o) => {
+    const haystack = `${o.id || ""} ${o.name || ""} ${o.phone || ""}`.toLowerCase();
+    const matchesSearch = haystack.includes(search.trim().toLowerCase());
+    return matchesSearch && (!selectedHour || departureHour(o) === selectedHour);
+  });
+  const countForHour = (hour) => orders.filter((o) => departureHour(o) === hour).length;
+  const dayTotal = orders.reduce((sum, o) => sum + (Number(o.total) || 0), 0);
+  const dayRolls = orders.reduce((sum, o) => sum + orderRolls(o), 0);
+
   const connectionLabel =
     connection === "online"
       ? "CONECTADO"
@@ -386,6 +461,40 @@ export default function Kitchen() {
       }}
     >
       <h1 style={{ marginBottom: 10 }}>KITCHEN</h1>
+
+      <div style={{display:"flex",gap:8,marginBottom:16}}>
+        <button onClick={() => {setView("today");setSelectedDate(localISO());setSelectedHour("");}} style={{padding:10,fontWeight:view==="today"?800:400}}>HOY</button>
+        <button onClick={() => {setView("history");setSelectedHour("");}} style={{padding:10,fontWeight:view==="history"?800:400}}>HISTORIAL / FUTUROS</button>
+      </div>
+      <section style={{border:"1px solid #ddd",borderRadius:12,padding:14,marginBottom:18}}>
+        {view === "history" && <label>Fecha de salida: <input type="date" value={selectedDate} onChange={e=>{setSelectedDate(e.target.value);setSelectedHour("");}} /></label>}
+        {view === "today" && <h2 style={{marginTop:0}}>Salidas de hoy · {selectedDate}</h2>}
+        {ordersError && <p style={{color:"#b91c1c"}}>Historial: {ordersError}. Revisá que el Apps Script actualizado esté publicado.</p>}
+        <div style={{display:"flex",justifyContent:"space-between",gap:8,flexWrap:"wrap",margin:"12px 0"}}>
+          <strong>{orders.length} pedidos</strong><strong>{dayRolls} rolls</strong><strong>${dayTotal.toLocaleString("es-UY")} ventas</strong>
+        </div>
+        <div style={{display:"grid",gap:8}}>
+          {DEPARTURES.map(hour => { const count = countForHour(hour); const max = Math.max(1,...DEPARTURES.map(countForHour)); return <button key={hour} onClick={()=>setSelectedHour(old=>old===hour?"":hour)} style={{border:selectedHour===hour?"2px solid #111":"1px solid #ddd",background:"white",padding:8,cursor:"pointer",textAlign:"left",borderRadius:8}}><div style={{display:"flex",gap:8,alignItems:"center"}}><span style={{width:48}}>{hour}</span><div style={{flex:1,background:"#eee",height:16,borderRadius:4,overflow:"hidden"}}><div style={{height:"100%",width:`${count/max*100}%`,background:"#111"}} /></div><b style={{width:22,textAlign:"right"}}>{count}</b></div></button>; })}
+        </div>
+        {orders.some(o=>departureHour(o)==="Sin horario") && <p style={{fontSize:12}}>Pedidos sin horario asignado: {countForHour("Sin horario")}. Los pedidos «Lo antes posible» no se asignan automáticamente a una salida.</p>}
+        <div style={{marginTop:14,display:"flex",gap:8,alignItems:"center"}}>
+          <input placeholder="Buscar número, cliente o teléfono" value={search} onChange={e=>setSearch(e.target.value)} style={{padding:10,border:"1px solid #ddd",borderRadius:8,flex:1,minWidth:0}} />
+          {selectedHour && <button onClick={()=>setSelectedHour("")}>Ver todos</button>}
+        </div>
+        <div style={{maxHeight:440,overflow:"auto",marginTop:12}}>
+          {filteredOrders.map(o=><div key={o.id} style={{borderTop:"1px solid #eee",padding:"10px 0"}}>
+            <button onClick={()=>setExpandedId(old=>old===o.id?"":o.id)} style={{width:"100%",textAlign:"left",border:0,background:"white",cursor:"pointer",display:"flex",justifyContent:"space-between",gap:8}}><span><b>{o.id}</b><br/>{o.name || "Sin nombre"} · {departureHour(o)}</span><span>${Number(o.total||0).toLocaleString("es-UY")}<br/>{o.printed?"Impresa":"Pendiente"}</span></button>
+            {expandedId===o.id && <div style={{padding:10,background:"#fafafa",whiteSpace:"pre-wrap",overflowWrap:"anywhere",fontSize:13}}>
+              <p>Teléfono: {o.phone || "—"}<br/>Entrega: {o.time || "—"}<br/>Dirección: {o.address || "—"}<br/>Notas: {o.notes || "—"}</p>
+              {(o.items||[]).map((entry,i)=><div key={i}>{entry.qty} × {entry.item?.name || "Producto"}</div>)}
+              {(o.comboSelections||[]).map((c,i)=><p key={i}>{c.comboName}: {(c.rolls||[]).join(" / ")} {(c.drinks||[]).join(" / ")}</p>)}
+              <p><b>Total: ${Number(o.total||0).toLocaleString("es-UY")}</b></p>
+              <button onClick={()=>window.open(`/ticket?id=${encodeURIComponent(o.id)}&autoprint=1`,"_blank","noopener,noreferrer")} style={{padding:10,border:"1px solid #111",borderRadius:8,background:"white"}}>REIMPRIMIR COMANDA</button>
+            </div>}
+          </div>)}
+          {!loadingOrders && filteredOrders.length===0 && <p style={{fontSize:13,color:"#777"}}>No hay pedidos para este filtro.</p>}
+        </div>
+      </section>
 
       {!started ? (
         <button

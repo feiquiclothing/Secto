@@ -19,6 +19,7 @@ export default function Ticket() {
 
   const autoPrint = params.get("autoprint") === "1";
   const popupMode = params.get("popup") === "1";
+  const reprintMode = params.get("reprint") === "1";
   const returnTo = params.get("returnTo");
   const id = params.get("id");
 
@@ -123,6 +124,11 @@ export default function Ticket() {
       if (finishedRef.current) return;
       finishedRef.current = true;
 
+      if (reprintMode) {
+        setStatus("Reimpresión finalizada. El pedido original no fue modificado.");
+        return;
+      }
+
       setStatus("Cerrando comanda…");
 
       try {
@@ -165,7 +171,7 @@ export default function Ticket() {
       window.removeEventListener("beforeprint", onBeforePrint);
       window.removeEventListener("afterprint", onAfterPrint);
     };
-  }, [order, id, returnTo]);
+  }, [order, id, returnTo, reprintMode]);
 
   useEffect(() => {
     if (!order || !autoPrint || printStartedRef.current) return;
@@ -278,7 +284,7 @@ export default function Ticket() {
     <>
       <div className="noprint controls">
         <div style={{ fontWeight: 800 }}>
-          {status || "Comanda lista"}
+          {status || (reprintMode ? "REIMPRESIÓN · Comanda original" : "Comanda lista")}
         </div>
 
         <button type="button" onClick={triggerPrint}>
@@ -294,6 +300,7 @@ export default function Ticket() {
 
         <div className="hr" />
 
+        {reprintMode ? <div className="b">*** REIMPRESIÓN ***</div> : null}
         <div>Pedido: {order.id || id || "-"}</div>
         <div>Metodo: {displayMethod}</div>
         <div>Horario: {time || "ASAP"}</div>

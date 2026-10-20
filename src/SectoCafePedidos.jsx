@@ -14,8 +14,9 @@ const GALLERY = [];
 // ===== APERTURA =====
 const TZ = "America/Montevideo";
 const OPEN_DAYS = [1, 2, 3, 4, 5, 6];
-const OPEN_HOUR_START = 12;
+const OPEN_HOUR_START = 18;
 const OPEN_HOUR_END = 24;
+const ASAP_CUTOFF_MINUTES = 23 * 60 + 30;
 const FORCE_OPEN = false;
 const FORCE_CLOSED = false;
 
@@ -107,8 +108,8 @@ function PromoPrice({ price, active, className = "" }) {
 }
 
 function isEarlyDiscountActive() {
-  const now = getNowInTZ();
-  return now.hour < EARLY_DISCOUNT_END_HOUR;
+  // La promoción depende de cuándo se compra, nunca de la fecha de entrega.
+  return montevideoParts().hour < EARLY_DISCOUNT_END_HOUR;
 }
 
 function isOpenBySchedule() {
@@ -209,7 +210,7 @@ function buildHours(start = "12:00", end = "23:59", stepMin = 60) {
   return out;
 }
 
-const HOURS = buildHours("12:00", "23:59", 60);
+const HOURS = ["19:00", "20:00", "21:00", "22:00", "23:00", "00:00"];
 
 const COMBO_CONFIG = {
   c01: { rolls: 1, drinks: 1 },
@@ -247,9 +248,15 @@ function futureHours() {
   const nowMin = getCurrentMinutesInTZ();
   return HOURS.filter((h) => {
     const [H, M] = h.split(":").map(Number);
-    // Exigimos al menos 30 minutos completos para un horario programado.
-    return H * 60 + M > nowMin + 30;
+    // 00:00 es la última salida de la noche seleccionada (medianoche siguiente).
+    const departureMinutes = h === "00:00" ? 24 * 60 : H * 60 + M;
+    return nowMin < ASAP_CUTOFF_MINUTES && departureMinutes >= nowMin + 30;
   });
+}
+
+// Asigna los pedidos ASAP a la siguiente salida con al menos 30 minutos de preparación.
+function nextAsapDeparture() {
+  return futureHours()[0] || null;
 }
 
 const currency = (uy) =>
@@ -907,24 +914,26 @@ export default function SectoCafePedidos() {
   const total = discountedSubtotal + fee;
 
   const scheduleOpen = isOpenBySchedule();
+  const asapDeparture = nextAsapDeparture();
+  const asapAvailable = scheduleOpen && !!asapDeparture;
   const today = todayInMontevideo();
   const availableDates = scheduleDates();
   const selectedDate = availableDates.includes(deliveryDate) ? deliveryDate : (availableDates[0] || today);
   const availableHours = hoursForDate(selectedDate);
-  const isEveningDeparture = method === "delivery" && time !== "asap" && /^\d{2}:\d{2}$/.test(time) && Number(time.slice(0, 2)) >= 18;
-  const departureNote = "Los horarios a partir de las 18:00 corresponden a la salida del local, no a la entrega.";
+  const isEveningDeparture = method === "delivery" && time !== "asap" && /^\d{2}:\d{2}$/.test(time);
+  const departureNote = "Los horarios indicados son de salida del local, no de llegada. La salida de las 00:00 es la medianoche posterior al día elegido.";
 
   const validTime = time === "asap"
-    ? selectedDate === today && scheduleOpen
+    ? selectedDate === today && asapAvailable
     : availableHours.includes(time);
 
   useEffect(() => {
     if (deliveryDate !== selectedDate) setDeliveryDate(selectedDate);
-    if (time === "asap" && selectedDate !== today) setTime(availableHours[0] || "");
+    if (time === "asap" && !asapAvailable) setTime(availableHours[0] || "");
     else if (time !== "asap" && !availableHours.includes(time)) {
-      setTime(selectedDate === today && scheduleOpen ? "asap" : (availableHours[0] || ""));
+      setTime(selectedDate === today && asapAvailable ? "asap" : (availableHours[0] || ""));
     }
-  }, [deliveryDate, selectedDate, today, time, scheduleOpen, clockTick]);
+  }, [deliveryDate, selectedDate, today, time, asapAvailable, clockTick]);
 
   const isOpen =
     (FORCE_OPEN && !FORCE_CLOSED) ||
@@ -957,8 +966,11 @@ export default function SectoCafePedidos() {
     phone,
     address,
     notes,
-    time: time === "asap" ? "asap" : `${selectedDate} ${time}`,
+    time: `${(time === "asap" ? asapDeparture : time) === "00:00" ? advanceISODate(selectedDate, 1) : selectedDate} ${time === "asap" ? asapDeparture : time}`,
+    // deliveryDate es el día de servicio; a las 00:00 la fecha real es la siguiente.
     deliveryDate: time === "asap" ? todayInMontevideo() : selectedDate,
+    serviceSlot: time === "asap" ? asapDeparture : time,
+    requestedAsap: time === "asap",
     comboSelections: comboInstances.map(({ item, key }) => {
       const selection = comboSelections[key] || {};
       return {
@@ -1052,8 +1064,8 @@ export default function SectoCafePedidos() {
             <div className="leading-tight">
               <p className="text-xs tracking-[0.25em] text-neutral-500">
                 {isOpen
-                  ? "Sushi vegano — pedidos de 12:00 a 00:00"
-                  : "Sushi vegano — local cerrado · programá tu pedido para otro día"}
+                  ? "Sushi vegano — pedidos inmediatos hasta las 23:30"
+                  : "Sushi vegano — programá tu pedido nocturno"}
               </p>
               <h1 className="text-lg text-neutral-900"></h1>
             </div>
@@ -1390,7 +1402,7 @@ export default function SectoCafePedidos() {
                   onChange={(e) => {
                     const next = e.target.value;
                     setDeliveryDate(next);
-                    setTime(next === today && scheduleOpen ? "asap" : (hoursForDate(next)[0] || ""));
+                    setTime(next === today && asapAvailable ? "asap" : (hoursForDate(next)[0] || ""));
                   }}
                   className="w-full bg-white border border-neutral-200 rounded-xl p-2"
                 >
@@ -1406,13 +1418,13 @@ export default function SectoCafePedidos() {
                   onChange={(e) => setTime(e.target.value)}
                   className="w-full bg-white border border-neutral-200 rounded-xl p-2"
                 >
-                  {selectedDate === today && scheduleOpen && <option value="asap">Lo antes posible</option>}
+                  {selectedDate === today && asapAvailable && <option value="asap">Lo antes posible · salida {asapDeparture}</option>}
                   {availableHours.map((h) => <option key={h} value={h}>{h}</option>)}
-                  {availableHours.length === 0 && !(selectedDate === today && scheduleOpen) && <option value="">Elegí otro día</option>}
+                  {availableHours.length === 0 && !(selectedDate === today && asapAvailable) && <option value="">Elegí otro día</option>}
                 </select>
               </div>
-              <p className="text-xs text-neutral-500 mt-1">Programá tu pedido hasta 7 días antes - Lunes a Sábado.</p>
-              {isEveningDeparture && (
+              <p className="text-xs text-neutral-500 mt-1">Lo antes posible se asigna a la próxima salida con 30 min de preparación · Salidas de 19:00 a 00:00 · Programá hasta 7 días · Lunes a sábado.</p>
+              {(isEveningDeparture || time === "asap") && (
                 <p className="mt-2 text-xs font-medium text-neutral-800">
                   {departureNote}
                 </p>
@@ -1717,7 +1729,7 @@ export default function SectoCafePedidos() {
 
       <footer className="max-w-6xl mx-auto px-4 pb-10 text-xs text-neutral-500">
         <hr className="border-neutral-200 mb-4" />
-        © {new Date().getFullYear()} - Secto Cafe · Lun - Sab | 12hs - 00hs
+        © {new Date().getFullYear()} - Secto Cafe · Lun - Sab | Delivery nocturno · 18 a 00 hs
       </footer>
     </div>
   );

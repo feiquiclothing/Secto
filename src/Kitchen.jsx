@@ -139,6 +139,7 @@ export default function Kitchen() {
   const startedRef = useRef(false);
   const isLeaderRef = useRef(false);
   const busyRef = useRef(false);
+  const pollNowRef = useRef(null);
 
   const audioContextRef = useRef(null);
 
@@ -315,6 +316,8 @@ export default function Kitchen() {
         setConnection("online");
         setLastCheck(Date.now());
 
+        if (data?.ok === false) throw new Error(data.error || "Error del servidor");
+
         const order = data?.order;
         const id = order?.id;
 
@@ -327,7 +330,8 @@ export default function Kitchen() {
         setStatus(`🔔 Nuevo pedido ${id}`);
         document.title = `🔔 PEDIDO ${id} — KITCHEN`;
 
-        await playNotification();
+        // El audio no debe bloquear la apertura de la comanda.
+        void playNotification();
 
         const opened = openTicket(order);
 
@@ -349,6 +353,8 @@ export default function Kitchen() {
         busyRef.current = false;
       }
     };
+
+    pollNowRef.current = poll;
 
     const schedulePoll = () => {
       if (stopped) return;
@@ -392,6 +398,7 @@ export default function Kitchen() {
 
     return () => {
       stopped = true;
+      pollNowRef.current = null;
 
       if (pollTimerRef.current) {
         clearTimeout(pollTimerRef.current);
@@ -461,6 +468,20 @@ export default function Kitchen() {
       }}
     >
       <h1 style={{ marginBottom: 10 }}>KITCHEN</h1>
+      <button type="button" onClick={() => {
+        if (!startedRef.current) {
+          setStatus("Primero tocá INICIAR KITCHEN.");
+          return;
+        }
+        // Permite recuperar el control si quedó una sesión vieja en otra pestaña.
+        writeLeader(tabIdRef.current);
+        isLeaderRef.current = true;
+        setIsLeader(true);
+        setStatus("Buscando pedidos pendientes…");
+        pollNowRef.current?.();
+      }} style={{padding:"12px 16px",marginBottom:12,borderRadius:10,border:"1px solid #111",background:"#fff",fontWeight:800,cursor:"pointer"}}>
+        REVISAR PEDIDOS PENDIENTES
+      </button>
 
       <div style={{display:"flex",gap:8,marginBottom:16}}>
         <button onClick={() => {setView("today");setSelectedDate(localISO());setSelectedHour("");}} style={{padding:10,fontWeight:view==="today"?800:400}}>HOY</button>

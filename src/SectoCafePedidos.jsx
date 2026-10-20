@@ -1734,7 +1734,7 @@ export default function SectoCafePedidos() {
 
       <footer className="max-w-6xl mx-auto px-4 pb-10 text-xs text-neutral-500">
         <hr className="border-neutral-200 mb-4" />
-        © {new Date().getFullYear()} - Secto Cafe · Lun - Sab | Delivery nocturno · 18 a 00 hs
+        © {new Date().getFullYear()} - Secto Cafe · Lun - Sab | 18 a 00 hs
       </footer>
     </div>
   );

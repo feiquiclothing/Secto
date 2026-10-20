@@ -145,6 +145,7 @@ export default function Kitchen() {
   const [selectedDate, setSelectedDate] = useState(localISO);
   const [orders, setOrders] = useState([]);
   const [ordersError, setOrdersError] = useState("");
+  const [cancelBusyId, setCancelBusyId] = useState("");
   const [loadingOrders, setLoadingOrders] = useState(false);
   const [search, setSearch] = useState("");
   const [selectedHour, setSelectedHour] = useState("");
@@ -453,6 +454,26 @@ export default function Kitchen() {
     return () => { disposed = true; clearInterval(timer); };
   }, [selectedDate]);
 
+  const cancelOrder = async (order) => {
+    if (!window.confirm(`¿Anular el pedido ${order.id}? Dejará de aparecer en estadísticas, repartos y pendientes de impresión.`)) return;
+    const key = window.prompt("Clave administrativa para anular el pedido:");
+    if (!key) return;
+    const reason = window.prompt("Motivo (opcional):", "Pedido de prueba / fallido");
+    if (reason === null) return;
+    setCancelBusyId(String(order.id));
+    try {
+      const data = await post({ action: "cancel_order", id: order.id, key, reason });
+      if (!data?.ok) throw new Error(data?.error === "unauthorized" ? "Clave incorrecta o no configurada" : data?.error || "No se pudo anular");
+      setOrders((prev) => prev.filter((o) => String(o.id) !== String(order.id)));
+      setExpandedId("");
+      setStatus(`Pedido ${order.id} anulado.`);
+    } catch (err) {
+      window.alert("No se pudo anular: " + (err?.message || err));
+    } finally {
+      setCancelBusyId("");
+    }
+  };
+
   const filteredOrders = orders.filter((o) => {
     const haystack = `${o.id || ""} ${o.name || ""} ${o.phone || ""}`.toLowerCase();
     const matchesSearch = haystack.includes(search.trim().toLowerCase());
@@ -565,6 +586,7 @@ export default function Kitchen() {
               {(o.comboSelections||[]).map((c,i)=><p key={i}>{c.comboName}: {(c.rolls||[]).join(" / ")} {(c.drinks||[]).join(" / ")}</p>)}
               <p><b>Total: ${Number(o.total||0).toLocaleString("es-UY")}</b></p>
               <button onClick={()=>window.open(`/ticket?id=${encodeURIComponent(o.id)}&autoprint=1&reprint=1`,"_blank","noopener,noreferrer")} style={{padding:10,border:"1px solid #111",borderRadius:8,background:"white"}}>REIMPRIMIR COMANDA</button>
+              <button type="button" disabled={cancelBusyId===String(o.id)} onClick={()=>cancelOrder(o)} style={{marginLeft:8,padding:10,border:"1px solid #b91c1c",borderRadius:8,background:"white",color:"#b91c1c"}}>{cancelBusyId===String(o.id)?"ANULANDO…":"ANULAR PEDIDO"}</button>
             </div>}
           </div>)}
           {!loadingOrders && filteredOrders.length===0 && <p style={{fontSize:13,color:"#777"}}>No hay pedidos para este filtro.</p>}

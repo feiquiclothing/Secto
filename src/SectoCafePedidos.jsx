@@ -1,3 +1,4 @@
+
 import React, { useMemo, useReducer, useState, useRef, useEffect } from "react";
 
 /**
@@ -28,7 +29,10 @@ function getNowInTZ() {
     weekday: "short",
   }).format(now);
 
-  const dayMap = { Sun: 0, Mon: 1, Tue: 2, Wed: 3, Thu: 4, Fri: 5, Sat: 6 };
+  const dayMap = {
+    Sun: 0, Mon: 1, Tue: 2, Wed: 3,
+    Thu: 4, Fri: 5, Sat: 6,
+  };
   const day = dayMap[weekdayStr];
 
   const hourStr = new Intl.DateTimeFormat("en-US", {
@@ -44,12 +48,27 @@ function getNowInTZ() {
 
 function montevideoParts(date = new Date()) {
   const parts = new Intl.DateTimeFormat("en-US", {
-    timeZone: TZ, year: "numeric", month: "2-digit", day: "2-digit",
-    hour: "2-digit", minute: "2-digit", second: "2-digit", hourCycle: "h23",
+    timeZone: TZ,
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+    second: "2-digit",
+    hourCycle: "h23",
   }).formatToParts(date);
-  const value = (key) => Number(parts.find((p) => p.type === key)?.value || 0);
-  return { year: value("year"), month: value("month"), date: value("day"),
-    hour: value("hour"), minute: value("minute"), second: value("second") };
+
+  const value = (key) =>
+    Number(parts.find((p) => p.type === key)?.value || 0);
+
+  return {
+    year: value("year"),
+    month: value("month"),
+    date: value("day"),
+    hour: value("hour"),
+    minute: value("minute"),
+    second: value("second"),
+  };
 }
 
 function todayInMontevideo() {
@@ -59,25 +78,38 @@ function todayInMontevideo() {
 
 function advanceISODate(iso, days) {
   const [year, month, date] = iso.split("-").map(Number);
-  return new Date(Date.UTC(year, month - 1, date + days)).toISOString().slice(0, 10);
+  return new Date(
+    Date.UTC(year, month - 1, date + days)
+  ).toISOString().slice(0, 10);
 }
 
 function isBusinessDate(iso) {
   const [year, month, date] = iso.split("-").map(Number);
-  const weekday = new Date(Date.UTC(year, month - 1, date)).getUTCDay();
+  const weekday = new Date(
+    Date.UTC(year, month - 1, date)
+  ).getUTCDay();
+
   return OPEN_DAYS.includes(weekday);
 }
 
 function scheduleDates() {
   const today = todayInMontevideo();
-  return Array.from({ length: 8 }, (_, i) => advanceISODate(today, i))
-    .filter(isBusinessDate);
+
+  return Array.from(
+    { length: 8 },
+    (_, i) => advanceISODate(today, i)
+  ).filter(isBusinessDate);
 }
 
 function formatDeliveryDate(iso) {
   const [year, month, date] = iso.split("-").map(Number);
-  return new Intl.DateTimeFormat("es-UY", { weekday: "short", day: "numeric", month: "short", timeZone: "UTC" })
-    .format(new Date(Date.UTC(year, month - 1, date)));
+
+  return new Intl.DateTimeFormat("es-UY", {
+    weekday: "short",
+    day: "numeric",
+    month: "short",
+    timeZone: "UTC",
+  }).format(new Date(Date.UTC(year, month - 1, date)));
 }
 
 function hoursForDate(iso) {
@@ -87,94 +119,238 @@ function hoursForDate(iso) {
 
 function promoRemainingSeconds() {
   const now = montevideoParts();
-  const secondsNow = now.hour * 3600 + now.minute * 60 + now.second;
-  return Math.max(0, EARLY_DISCOUNT_END_HOUR * 3600 - secondsNow);
+  const secondsNow =
+    now.hour * 3600 +
+    now.minute * 60 +
+    now.second;
+
+  return Math.max(
+    0,
+    EARLY_DISCOUNT_END_HOUR * 3600 - secondsNow
+  );
 }
 
 function countdownText(seconds) {
   const h = Math.floor(seconds / 3600);
   const m = Math.floor((seconds % 3600) / 60);
   const sec = seconds % 60;
+
   return `${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}:${String(sec).padStart(2, "0")}`;
 }
 
 function PromoPrice({ price, active, className = "" }) {
   return active ? (
     <span className={className}>
-      <span className="line-through text-neutral-400 mr-2">{currency(price)}</span>
-      <span className="font-semibold text-neutral-900">{currency(Math.round(price * (1 - EARLY_DISCOUNT_PERCENT / 100)))}</span>
+      <span className="line-through text-neutral-400 mr-2">
+        {currency(price)}
+      </span>
+      <span className="font-semibold text-neutral-900">
+        {currency(
+          Math.round(
+            price * (1 - EARLY_DISCOUNT_PERCENT / 100)
+          )
+        )}
+      </span>
     </span>
-  ) : <span className={className}>{currency(price)}</span>;
+  ) : (
+    <span className={className}>
+      {currency(price)}
+    </span>
+  );
 }
 
 function isEarlyDiscountActive(deliveryDate) {
-  // Hoy: solamente antes de las 18. Días futuros: siempre.
+  // Hoy: antes de las 18.
+  // Días futuros: siempre.
   const today = todayInMontevideo();
-  return (deliveryDate && deliveryDate > today) ||
-    (deliveryDate === today && montevideoParts().hour < EARLY_DISCOUNT_END_HOUR);
+
+  return (
+    (deliveryDate && deliveryDate > today) ||
+    (
+      deliveryDate === today &&
+      montevideoParts().hour < EARLY_DISCOUNT_END_HOUR
+    )
+  );
 }
 
 function isOpenBySchedule() {
   const { day, hour } = getNowInTZ();
-  return OPEN_DAYS.includes(day) && hour >= OPEN_HOUR_START && hour < OPEN_HOUR_END;
+
+  return (
+    OPEN_DAYS.includes(day) &&
+    hour >= OPEN_HOUR_START &&
+    hour < OPEN_HOUR_END
+  );
 }
 
 // ===== MENU =====
 const MENU = [
-   {
+  {
     id: "combos",
     name: "COMBOS",
     items: [
-      { id: "c01", name: "Combo individual", price: 570, img: "/Photos/combo ind.jpeg"  },
-      { id: "c02", name: "Combo pareja", price: 940, img: "/Photos/combo pareja.jpeg"  },
-      { id: "c03", name: "Combo doble", price: 760, img: "/Photos/combo doble.jpeg"  },
-      { id: "c04", name: "Combo triple", price: 1060, img: "/Photos/combo triple.jpg"  },
-      { id: "c05", name: "3x2 Phila hot roll", price: 880, img: "/Photos/3x2.jpeg"  },
-      
+      {
+        id: "c01",
+        name: "Combo individual",
+        price: 570,
+        img: "/Photos/combo ind.jpeg",
+      },
+      {
+        id: "c02",
+        name: "Combo pareja",
+        price: 940,
+        img: "/Photos/combo pareja.jpeg",
+      },
+      {
+        id: "c03",
+        name: "Combo doble",
+        price: 760,
+        img: "/Photos/combo doble.jpeg",
+      },
+      {
+        id: "c04",
+        name: "Combo triple",
+        price: 1060,
+        img: "/Photos/combo triple.jpg",
+      },
+      {
+        id: "c05",
+        name: "3x2 Phila hot roll",
+        price: 880,
+        img: "/Photos/3x2.jpeg",
+      },
     ],
   },
   {
     id: "rolls",
     name: "ROLLS 10 piezas",
     items: [
-      { id: "r01", name: "Mango Roll - Mango | Palta | Pepino | Sésamo | Salsa Mango", price: 410, img: "/Photos/mango.jpg" },
-      { id: "r02", name: "Green Roll - Palta | Pepino | Rúcula | Philadelphia vegano | Sésamo", price: 410, img: "/Photos/green.jpg" },
-      { id: "r03", name: "Philadelphia Roll - Boniato | Palta | Philadelphia vegano | Sésamo", price: 410, img: "/Photos/phila.jpg" },
-      { id: "r04", name: "Philadelphia Hot Roll - Boniato | Palta | Philadelphia vegano | Sésamo | Frito en panko | Taré | Verdeo", price: 440, img: "/Photos/hotroll.jpg" },
-      { id: "r05", name: "Sweet Crunch - Boniato | Mango | Philadelphia vegano | Quinoa frita | Batayaki | Boniato frito", price: 440, img: "/Photos/sweet.jpg" },
-      { id: "r06", name: "Tempura Veggie - Zucchini tempura | Palta | Philadelphia vegano | Sésamo | Verdeo", price: 430, img: "/Photos/tempura.jpg" },
-      { id: "r07", name: "Spicy carrot - Boniato | Palta | Philadelphia vegano | Spicy carrot | Verdeo", price: 440, img: "/Photos/spicy.jpg" },
-      { id: "r08", name: "Nori furai - Boniato | Palta | Spicy carrot | Verdeo | Sésamo", price: 440, img: "/Photos/nori.jpg" },
-      { id: "r09", name: "Creamy Tomato - Tomate seco | Palta | Rúcula | Philadelphia vegano | Batayaki | Verdeo", price: 430, img: "/Photos/creamy.jpg" },
-      { id: "r10", name: "Teriyaki Roll - Boniato tempura | Mango | Quinoa frita | Verdeo | Teriyaki", price: 430, img: "/Photos/teri.jpg" },
+      {
+        id: "r01",
+        name: "Mango Roll - Mango | Palta | Pepino | Sésamo | Salsa Mango",
+        price: 410,
+        img: "/Photos/mango.jpg",
+      },
+      {
+        id: "r02",
+        name: "Green Roll - Palta | Pepino | Rúcula | Philadelphia vegano | Sésamo",
+        price: 410,
+        img: "/Photos/green.jpg",
+      },
+      {
+        id: "r03",
+        name: "Philadelphia Roll - Boniato | Palta | Philadelphia vegano | Sésamo",
+        price: 410,
+        img: "/Photos/phila.jpg",
+      },
+      {
+        id: "r04",
+        name: "Philadelphia Hot Roll - Boniato | Palta | Philadelphia vegano | Sésamo | Frito en panko | Taré | Verdeo",
+        price: 440,
+        img: "/Photos/hotroll.jpg",
+      },
+      {
+        id: "r05",
+        name: "Sweet Crunch - Boniato | Mango | Philadelphia vegano | Quinoa frita | Batayaki | Boniato frito",
+        price: 440,
+        img: "/Photos/sweet.jpg",
+      },
+      {
+        id: "r06",
+        name: "Tempura Veggie - Zucchini tempura | Palta | Philadelphia vegano | Sésamo | Verdeo",
+        price: 430,
+        img: "/Photos/tempura.jpg",
+      },
+      {
+        id: "r07",
+        name: "Spicy carrot - Boniato | Palta | Philadelphia vegano | Spicy carrot | Verdeo",
+        price: 440,
+        img: "/Photos/spicy.jpg",
+      },
+      {
+        id: "r08",
+        name: "Nori furai - Boniato | Palta | Spicy carrot | Verdeo | Sésamo",
+        price: 440,
+        img: "/Photos/nori.jpg",
+      },
+      {
+        id: "r09",
+        name: "Creamy Tomato - Tomate seco | Palta | Rúcula | Philadelphia vegano | Batayaki | Verdeo",
+        price: 430,
+        img: "/Photos/creamy.jpg",
+      },
+      {
+        id: "r10",
+        name: "Teriyaki Roll - Boniato tempura | Mango | Quinoa frita | Verdeo | Teriyaki",
+        price: 430,
+        img: "/Photos/teri.jpg",
+      },
     ],
   },
-
   {
     id: "acompañamientos",
     name: "ACOMPAÑAMIENTOS",
     items: [
-      { id: "a01", name: "Gyozas fritas (veganas)", price: 240, img: "/Photos/gyoza.JPG" },
+      {
+        id: "a01",
+        name: "Gyozas fritas (veganas)",
+        price: 240,
+        img: "/Photos/gyoza.JPG",
+      },
     ],
   },
-  
   {
     id: "extras",
     name: "EXTRAS",
     items: [
-      { id: "e01", name: "Salsa de soja", price: 60, img: "/Photos/soja.jpeg" },
-      { id: "e03", name: "Wasabi", price: 60, img: "/Photos/wasabi.jpeg" },
-      { id: "e04", name: "Gari (Jengibre)", price: 60, img: "/Photos/gari.jpeg" },
+      {
+        id: "e01",
+        name: "Salsa de soja",
+        price: 60,
+        img: "/Photos/soja.jpeg",
+      },
+      {
+        id: "e03",
+        name: "Wasabi",
+        price: 60,
+        img: "/Photos/wasabi.jpeg",
+      },
+      {
+        id: "e04",
+        name: "Gari (Jengibre)",
+        price: 60,
+        img: "/Photos/gari.jpeg",
+      },
     ],
   },
   {
     id: "bebidas",
     name: "BEBIDAS",
     items: [
-      { id: "b03", name: "Coca Cola 600cc", price: 130, img: "/Photos/coca.png" },
-      { id: "b02", name: "Coca Cola Zero 600cc", price: 130, img: "/Photos/coca zero.png" },
-      { id: "b05", name: "Sprite 600cc", price: 130, img: "/Photos/sprite.png" },
-       { id: "b06", name: "Sprite Zero 600cc", price: 130, img: "/Photos/sprite zero.png" },
+      {
+        id: "b03",
+        name: "Coca Cola 600cc",
+        price: 130,
+        img: "/Photos/coca.png",
+      },
+      {
+        id: "b02",
+        name: "Coca Cola Zero 600cc",
+        price: 130,
+        img: "/Photos/coca zero.png",
+      },
+      {
+        id: "b05",
+        name: "Sprite 600cc",
+        price: 130,
+        img: "/Photos/sprite.png",
+      },
+      {
+        id: "b06",
+        name: "Sprite Zero 600cc",
+        price: 130,
+        img: "/Photos/sprite zero.png",
+      },
     ],
   },
 ];
@@ -186,13 +362,29 @@ const EARLY_DISCOUNT_END_HOUR = 18;
 
 const ZONES = [
   { id: "cv", name: "Ciudad Vieja", fee: 0 },
-  { id: "centro", name: "Centro / Cordón / Aguada", fee: 140 },
-  { id: "pocitos", name: "Parque Rodó / Punta Carretas / Pocitos", fee: 220 },
-  { id: "otras", name: "Otras zonas coordinar", fee: 300 },
+  {
+    id: "centro",
+    name: "Centro / Cordón / Aguada",
+    fee: 140,
+  },
+  {
+    id: "pocitos",
+    name: "Parque Rodó / Punta Carretas / Pocitos",
+    fee: 220,
+  },
+  {
+    id: "otras",
+    name: "Otras zonas coordinar",
+    fee: 300,
+  },
 ];
 
 // ===== HORARIOS =====
-function buildHours(start = "12:00", end = "23:59", stepMin = 60) {
+function buildHours(
+  start = "12:00",
+  end = "23:59",
+  stepMin = 60
+) {
   const toMin = (h) => {
     const [H, M] = h.split(":").map(Number);
     return H * 60 + M;
@@ -205,14 +397,26 @@ function buildHours(start = "12:00", end = "23:59", stepMin = 60) {
   };
 
   const out = [];
-  for (let m = toMin(start); m <= toMin(end); m += stepMin) {
+
+  for (
+    let m = toMin(start);
+    m <= toMin(end);
+    m += stepMin
+  ) {
     out.push(fromMin(m));
   }
 
   return out;
 }
 
-const HOURS = ["19:00", "20:00", "21:00", "22:00", "23:00", "00:00"];
+const HOURS = [
+  "19:00",
+  "20:00",
+  "21:00",
+  "22:00",
+  "23:00",
+  "00:00",
+];
 
 const COMBO_CONFIG = {
   c01: { rolls: 1, drinks: 1 },
@@ -222,16 +426,20 @@ const COMBO_CONFIG = {
 };
 
 const ROLL_OPTIONS =
-  MENU.find((cat) => cat.id === "rolls")?.items.map((item) => ({
-    id: item.id,
-    name: item.name.split(" - ")[0],
-  })) || [];
+  MENU.find((cat) => cat.id === "rolls")?.items.map(
+    (item) => ({
+      id: item.id,
+      name: item.name.split(" - ")[0],
+    })
+  ) || [];
 
 const DRINK_OPTIONS =
-  MENU.find((cat) => cat.id === "bebidas")?.items.map((item) => ({
-    id: item.id,
-    name: item.name,
-  })) || [];
+  MENU.find((cat) => cat.id === "bebidas")?.items.map(
+    (item) => ({
+      id: item.id,
+      name: item.name,
+    })
+  ) || [];
 
 function getCurrentMinutesInTZ() {
   const parts = new Intl.DateTimeFormat("en-US", {
@@ -241,22 +449,34 @@ function getCurrentMinutesInTZ() {
     hour12: false,
   }).formatToParts(new Date());
 
-  const hour = Number(parts.find((p) => p.type === "hour")?.value || 0);
-  const minute = Number(parts.find((p) => p.type === "minute")?.value || 0);
+  const hour = Number(
+    parts.find((p) => p.type === "hour")?.value || 0
+  );
+
+  const minute = Number(
+    parts.find((p) => p.type === "minute")?.value || 0
+  );
+
   return hour * 60 + minute;
 }
 
 function futureHours() {
   const nowMin = getCurrentMinutesInTZ();
+
   return HOURS.filter((h) => {
     const [H, M] = h.split(":").map(Number);
-    // 00:00 es la última salida de la noche seleccionada (medianoche siguiente).
-    const departureMinutes = h === "00:00" ? 24 * 60 : H * 60 + M;
-    return nowMin < ASAP_CUTOFF_MINUTES && departureMinutes >= nowMin + 30;
+
+    // 00:00 es la última salida de la noche elegida.
+    const departureMinutes =
+      h === "00:00" ? 24 * 60 : H * 60 + M;
+
+    return (
+      nowMin < ASAP_CUTOFF_MINUTES &&
+      departureMinutes >= nowMin + 30
+    );
   });
 }
 
-// Asigna los pedidos ASAP a la siguiente salida con al menos 30 minutos de preparación.
 function nextAsapDeparture() {
   return futureHours()[0] || null;
 }
@@ -273,17 +493,27 @@ function reducer(state, action) {
 
   if (action.type === "add") {
     const key = action.item.id;
-    const delta = typeof action.qty === "number" && action.qty > 0 ? action.qty : 1;
+    const delta =
+      typeof action.qty === "number" && action.qty > 0
+        ? action.qty
+        : 1;
+
     const qty = (state[key]?.qty || 0) + delta;
     next[key] = { item: action.item, qty };
   }
 
   if (action.type === "remove") {
     const key = action.item.id;
-    const qty = Math.max(0, (state[key]?.qty || 0) - 1);
+    const qty = Math.max(
+      0,
+      (state[key]?.qty || 0) - 1
+    );
 
-    if (qty > 0) next[key] = { item: action.item, qty };
-    else delete next[key];
+    if (qty > 0) {
+      next[key] = { item: action.item, qty };
+    } else {
+      delete next[key];
+    }
   }
 
   if (action.type === "removeAll") {
@@ -315,34 +545,87 @@ function buildWhatsAppText(order) {
     paid,
   } = order;
 
-  const header = "Pedido Secto Cafe — " + new Date().toLocaleString("es-UY");
+  const header =
+    "Pedido Secto Cafe — " +
+    new Date().toLocaleString("es-UY");
 
   const lines = items.map(
     ({ item, qty }) =>
-      "• " + item.name + " x" + qty + " — " + currency(item.price * qty)
+      "• " +
+      item.name +
+      " x" +
+      qty +
+      " — " +
+      currency(item.price * qty)
   );
 
-  const comboLines = comboSelections.flatMap((combo) => {
-    const details = [];
-    if (combo.rolls?.length) details.push("Rolls: " + combo.rolls.join(" / "));
-    if (combo.drinks?.length) details.push("Bebidas: " + combo.drinks.join(" / "));
-    return details.length ? ["  ↳ " + combo.comboName + " — " + details.join(" · ")] : [];
-  });
+  const comboLines = comboSelections.flatMap(
+    (combo) => {
+      const details = [];
 
-  const zona = ZONES.find((z) => z.id === zone)?.name || "";
+      if (combo.rolls?.length) {
+        details.push(
+          "Rolls: " + combo.rolls.join(" / ")
+        );
+      }
+
+      if (combo.drinks?.length) {
+        details.push(
+          "Bebidas: " + combo.drinks.join(" / ")
+        );
+      }
+
+      return details.length
+        ? [
+            "  ↳ " +
+              combo.comboName +
+              " — " +
+              details.join(" · "),
+          ]
+        : [];
+    }
+  );
+
+  const zona =
+    ZONES.find((z) => z.id === zone)?.name || "";
 
   const info = [
-    "Metodo: " + (method === "pickup" ? "Retiro en local" : "Delivery"),
-    method === "delivery" ? "Zona: " + zona + " (" + currency(fee) + ")" : null,
-    "Entrega: " + (time === "asap" ? "Lo antes posible (hoy)" : time),
-    method === "delivery" && time !== "asap" && /(?:^|\s)(?:1[89]|2[0-3]):\d{2}$/.test(time)
+    "Metodo: " +
+      (method === "pickup"
+        ? "Retiro en local"
+        : "Delivery"),
+
+    method === "delivery"
+      ? "Zona: " +
+        zona +
+        " (" +
+        currency(fee) +
+        ")"
+      : null,
+
+    "Entrega: " +
+      (time === "asap"
+        ? "Lo antes posible (hoy)"
+        : time),
+
+    method === "delivery" &&
+    time !== "asap" &&
+    /(?:^|\s)(?:1[89]|2[0-3]):\d{2}$/.test(time)
       ? "Importante: horario de salida del local, no de entrega."
       : null,
+
     "Nombre: " + name,
     "Tel: " + phone,
-    method === "delivery" ? "Direccion: " + address : null,
+
+    method === "delivery"
+      ? "Direccion: " + address
+      : null,
+
     notes ? "Notas: " + notes : null,
-    paid ? "Estado: Pagado" : "Estado: A pagar",
+
+    paid
+      ? "Estado: Pagado"
+      : "Estado: A pagar",
   ].filter(Boolean);
 
   return [
@@ -353,13 +636,22 @@ function buildWhatsAppText(order) {
     ...comboLines,
     "",
     "Subtotal: " + currency(subtotal),
-    ...(discount > 0 ? ["Descuento antes de las 18:00 (10%): -" + currency(discount)] : []),
-    "Envio: " + (method === "delivery" ? (fee === 0 ? "GRATIS" : currency(fee)) : "Retiro en local"),
+    ...(discount > 0
+      ? [
+          "Descuento antes de las 18:00 (10%): -" +
+            currency(discount),
+        ]
+      : []),
+    "Envio: " +
+      (method === "delivery"
+        ? fee === 0
+          ? "GRATIS"
+          : currency(fee)
+        : "Retiro en local"),
     "Total: " + currency(total),
     ...info,
   ].join("\n");
 }
-
 
 // ===== POKES =====
 
@@ -427,7 +719,11 @@ const POKE_SAUCES = [
   "Teriyaki",
 ];
 
-function PokeBuilder({ onAdd, isOpen, earlyDiscountActive }) {
+function PokeBuilder({
+  onAdd,
+  isOpen,
+  earlyDiscountActive,
+}) {
   const [base, setBase] = useState("");
   const [proteins, setProteins] = useState([]);
   const [toppings, setToppings] = useState([]);
@@ -443,20 +739,37 @@ function PokeBuilder({ onAdd, isOpen, earlyDiscountActive }) {
   };
 
   // La primera proteína está incluida.
-  // A partir de la segunda se suma el valor específico de esa proteína.
-  const extraProteinTotal = proteins.slice(1).reduce((sum, name) => {
-    const found = POKE_PROTEINS.find((p) => p.name === name);
-    return sum + (found?.extraPrice || 0);
-  }, 0);
+  // Las siguientes suman su precio correspondiente.
+  const extraProteinTotal = proteins
+    .slice(1)
+    .reduce((sum, name) => {
+      const found = POKE_PROTEINS.find(
+        (p) => p.name === name
+      );
+      return sum + (found?.extraPrice || 0);
+    }, 0);
 
-  // Sésamo no suma como topping extra.
-  const chargeableToppings = toppings.filter((t) => t !== "Sésamo");
-  const extraToppingCount = Math.max(0, chargeableToppings.length - 5);
-  const extraToppingTotal = extraToppingCount * POKE_EXTRA_TOPPING;
+  // El sésamo es gratis y no ocupa un topping.
+  const chargeableToppings = toppings.filter(
+    (t) => t !== "Sésamo"
+  );
 
-  // Las primeras 2 salsas están incluidas.
-  const extraSauceCount = Math.max(0, sauces.length - 2);
-  const extraSauceTotal = extraSauceCount * POKE_EXTRA_SAUCE;
+  const extraToppingCount = Math.max(
+    0,
+    chargeableToppings.length - 5
+  );
+
+  const extraToppingTotal =
+    extraToppingCount * POKE_EXTRA_TOPPING;
+
+  // Dos salsas incluidas.
+  const extraSauceCount = Math.max(
+    0,
+    sauces.length - 2
+  );
+
+  const extraSauceTotal =
+    extraSauceCount * POKE_EXTRA_SAUCE;
 
   const unitPrice =
     POKE_BASE_PRICE +
@@ -499,7 +812,10 @@ function PokeBuilder({ onAdd, isOpen, earlyDiscountActive }) {
     setSauces([]);
 
     setFeedback("Poke agregado al pedido");
-    setTimeout(() => setFeedback(""), 1500);
+
+    setTimeout(() => {
+      setFeedback("");
+    }, 1500);
   };
 
   return (
@@ -509,6 +825,7 @@ function PokeBuilder({ onAdd, isOpen, earlyDiscountActive }) {
           <h3 className="text-neutral-900 leading-tight">
             Armá tu poke
           </h3>
+
           <p className="text-xs text-neutral-500 mt-1">
             1 proteína · 5 toppings · 2 salsas incluidas
           </p>
@@ -518,6 +835,7 @@ function PokeBuilder({ onAdd, isOpen, earlyDiscountActive }) {
           <p className="text-sm text-neutral-900">
             Desde {currency(POKE_BASE_PRICE)}
           </p>
+
           <p className="text-[11px] text-neutral-400">
             Tocá para armar
           </p>
@@ -542,6 +860,7 @@ function PokeBuilder({ onAdd, isOpen, earlyDiscountActive }) {
                 }
               >
                 <span>{option}</span>
+
                 <input
                   type="radio"
                   name="poke-base"
@@ -559,6 +878,7 @@ function PokeBuilder({ onAdd, isOpen, earlyDiscountActive }) {
             <p className="text-xs text-neutral-500 uppercase tracking-[0.15em]">
               Proteína · 1 incluida
             </p>
+
             <span className="text-[11px] text-neutral-400">
               {proteins.length > 1
                 ? `${proteins.length - 1} extra`
@@ -568,8 +888,14 @@ function PokeBuilder({ onAdd, isOpen, earlyDiscountActive }) {
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
             {POKE_PROTEINS.map((option) => {
-              const selected = proteins.includes(option.name);
-              const index = proteins.indexOf(option.name);
+              const selected = proteins.includes(
+                option.name
+              );
+
+              const index = proteins.indexOf(
+                option.name
+              );
+
               const isExtra = selected && index > 0;
 
               return (
@@ -577,7 +903,10 @@ function PokeBuilder({ onAdd, isOpen, earlyDiscountActive }) {
                   key={option.name}
                   type="button"
                   onClick={() =>
-                    toggleInArray(option.name, setProteins)
+                    toggleInArray(
+                      option.name,
+                      setProteins
+                    )
                   }
                   className={
                     "flex items-center justify-between text-xs border rounded-xl px-3 py-2 text-left " +
@@ -587,8 +916,13 @@ function PokeBuilder({ onAdd, isOpen, earlyDiscountActive }) {
                   }
                 >
                   <span>{option.name}</span>
+
                   <span>
-                    {isExtra ? `+ ${currency(option.extraPrice)}` : selected ? "✓" : "+"}
+                    {isExtra
+                      ? `+ ${currency(option.extraPrice)}`
+                      : selected
+                        ? "✓"
+                        : "+"}
                   </span>
                 </button>
               );
@@ -601,6 +935,7 @@ function PokeBuilder({ onAdd, isOpen, earlyDiscountActive }) {
             <p className="text-xs text-neutral-500 uppercase tracking-[0.15em]">
               Toppings · 5 incluidos
             </p>
+
             <span className="text-[11px] text-neutral-400">
               {chargeableToppings.length}/5
               {extraToppingCount > 0
@@ -611,11 +946,17 @@ function PokeBuilder({ onAdd, isOpen, earlyDiscountActive }) {
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
             {POKE_TOPPINGS.map((option) => {
-              const selected = toppings.includes(option);
+              const selected = toppings.includes(
+                option
+              );
+
               const chargeableIndex =
                 option === "Sésamo"
                   ? -1
-                  : chargeableToppings.indexOf(option);
+                  : chargeableToppings.indexOf(
+                      option
+                    );
+
               const isExtra =
                 selected &&
                 option !== "Sésamo" &&
@@ -626,7 +967,10 @@ function PokeBuilder({ onAdd, isOpen, earlyDiscountActive }) {
                   key={option}
                   type="button"
                   onClick={() =>
-                    toggleInArray(option, setToppings)
+                    toggleInArray(
+                      option,
+                      setToppings
+                    )
                   }
                   className={
                     "flex items-center justify-between text-xs border rounded-xl px-3 py-2 text-left " +
@@ -637,10 +981,17 @@ function PokeBuilder({ onAdd, isOpen, earlyDiscountActive }) {
                 >
                   <span>
                     {option}
-                    {option === "Sésamo" ? " · gratis" : ""}
+                    {option === "Sésamo"
+                      ? " · gratis"
+                      : ""}
                   </span>
+
                   <span>
-                    {isExtra ? `+ ${currency(POKE_EXTRA_TOPPING)}` : selected ? "✓" : "+"}
+                    {isExtra
+                      ? `+ ${currency(POKE_EXTRA_TOPPING)}`
+                      : selected
+                        ? "✓"
+                        : "+"}
                   </span>
                 </button>
               );
@@ -653,6 +1004,7 @@ function PokeBuilder({ onAdd, isOpen, earlyDiscountActive }) {
             <p className="text-xs text-neutral-500 uppercase tracking-[0.15em]">
               Salsas · 2 incluidas
             </p>
+
             <span className="text-[11px] text-neutral-400">
               {sauces.length}/2
               {extraSauceCount > 0
@@ -663,16 +1015,26 @@ function PokeBuilder({ onAdd, isOpen, earlyDiscountActive }) {
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
             {POKE_SAUCES.map((option) => {
-              const selected = sauces.includes(option);
-              const index = sauces.indexOf(option);
-              const isExtra = selected && index >= 2;
+              const selected = sauces.includes(
+                option
+              );
+
+              const index = sauces.indexOf(
+                option
+              );
+
+              const isExtra =
+                selected && index >= 2;
 
               return (
                 <button
                   key={option}
                   type="button"
                   onClick={() =>
-                    toggleInArray(option, setSauces)
+                    toggleInArray(
+                      option,
+                      setSauces
+                    )
                   }
                   className={
                     "flex items-center justify-between text-xs border rounded-xl px-3 py-2 text-left " +
@@ -682,8 +1044,13 @@ function PokeBuilder({ onAdd, isOpen, earlyDiscountActive }) {
                   }
                 >
                   <span>{option}</span>
+
                   <span>
-                    {isExtra ? `+ ${currency(POKE_EXTRA_SAUCE)}` : selected ? "✓" : "+"}
+                    {isExtra
+                      ? `+ ${currency(POKE_EXTRA_SAUCE)}`
+                      : selected
+                        ? "✓"
+                        : "+"}
                   </span>
                 </button>
               );
@@ -696,8 +1063,12 @@ function PokeBuilder({ onAdd, isOpen, earlyDiscountActive }) {
             <span className="text-sm text-neutral-500">
               Total poke
             </span>
+
             <span className="text-lg font-medium text-neutral-900">
-              <PromoPrice price={unitPrice} active={earlyDiscountActive} />
+              <PromoPrice
+                price={unitPrice}
+                active={earlyDiscountActive}
+              />
             </span>
           </div>
 
@@ -717,7 +1088,8 @@ function PokeBuilder({ onAdd, isOpen, earlyDiscountActive }) {
 
           {!canAdd && (
             <p className="text-[11px] text-neutral-400 mt-2">
-              Elegí base, al menos 1 proteína, 1 topping y 1 salsa.
+              Elegí base, al menos 1 proteína,
+              1 topping y 1 salsa.
             </p>
           )}
 
@@ -732,13 +1104,21 @@ function PokeBuilder({ onAdd, isOpen, earlyDiscountActive }) {
   );
 }
 
-function PokesSection({ cart, dispatch, isOpen, showCartPeek, setCartHighlight, earlyDiscountActive }) {
+function PokesSection({
+  cart,
+  dispatch,
+  isOpen,
+  showCartPeek,
+  setCartHighlight,
+  earlyDiscountActive,
+}) {
   return (
     <div>
       <div className="flex items-baseline justify-between mb-3">
         <h2 className="text-sm tracking-[0.2em] text-neutral-500">
           POKES
         </h2>
+
         <span className="h-[1px] flex-1 ml-4 bg-neutral-200"></span>
       </div>
 
@@ -748,7 +1128,8 @@ function PokesSection({ cart, dispatch, isOpen, showCartPeek, setCartHighlight, 
             key={item.id}
             className="group border border-neutral-200 rounded-2xl overflow-hidden bg-white"
           >
-            {typeof item.img === "string" && item.img.trim().length > 0 ? (
+            {typeof item.img === "string" &&
+            item.img.trim().length > 0 ? (
               <div className="aspect-[4/3] overflow-hidden">
                 <img
                   src={item.img}
@@ -777,13 +1158,19 @@ function PokesSection({ cart, dispatch, isOpen, showCartPeek, setCartHighlight, 
 
               <div className="mt-3 flex items-center justify-between gap-4">
                 <p className="text-sm text-neutral-500">
-                  <PromoPrice price={item.price} active={earlyDiscountActive} />
+                  <PromoPrice
+                    price={item.price}
+                    active={earlyDiscountActive}
+                  />
                 </p>
 
                 <div className="flex items-center gap-2">
                   <button
                     onClick={() =>
-                      dispatch({ type: "remove", item })
+                      dispatch({
+                        type: "remove",
+                        item,
+                      })
                     }
                     className="px-3 py-2 rounded-xl border border-neutral-200"
                   >
@@ -796,9 +1183,14 @@ function PokesSection({ cart, dispatch, isOpen, showCartPeek, setCartHighlight, 
 
                   <button
                     onClick={() => {
-                      dispatch({ type: "add", item });
+                      dispatch({
+                        type: "add",
+                        item,
+                      });
+
                       showCartPeek();
                       setCartHighlight(true);
+
                       setTimeout(
                         () => setCartHighlight(false),
                         600
@@ -825,16 +1217,27 @@ function PokesSection({ cart, dispatch, isOpen, showCartPeek, setCartHighlight, 
           isOpen={isOpen}
           earlyDiscountActive={earlyDiscountActive}
           onAdd={(item, qty) => {
-            dispatch({ type: "add", item, qty });
+            dispatch({
+              type: "add",
+              item,
+              qty,
+            });
+
             showCartPeek();
             setCartHighlight(true);
-            setTimeout(() => setCartHighlight(false), 600);
+
+            setTimeout(
+              () => setCartHighlight(false),
+              600
+            );
           }}
         />
       </div>
     </div>
   );
 }
+
+// ===== COMPONENTE PRINCIPAL =====
 
 export default function SectoCafePedidos() {
   const [cart, dispatch] = useReducer(reducer, {});
@@ -854,32 +1257,51 @@ export default function SectoCafePedidos() {
   const [sending, setSending] = useState(false);
   const [clockTick, setClockTick] = useState(0);
 
-  // Actualizar horarios y apertura mientras el cliente tiene la página abierta.
+  // Actualizar horarios, descuentos y apertura
+  // mientras el cliente tiene la página abierta.
   useEffect(() => {
-    const timer = setInterval(() => setClockTick((n) => n + 1), 1000);
+    const timer = setInterval(
+      () => setClockTick((n) => n + 1),
+      1000
+    );
     return () => clearInterval(timer);
   }, []);
 
-  const items = useMemo(() => Object.values(cart), [cart]);
-
+  const items = useMemo(
+    () => Object.values(cart),
+    [cart]
+  );
 
   const comboInstances = useMemo(() => {
     const result = [];
+
     items.forEach(({ item, qty }) => {
       const config = COMBO_CONFIG[item.id];
       if (!config) return;
+
       for (let i = 0; i < qty; i += 1) {
-        result.push({ item, index: i, key: `${item.id}-${i}`, config });
+        result.push({
+          item,
+          index: i,
+          key: `${item.id}-${i}`,
+          config,
+        });
       }
     });
+
     return result;
   }, [items]);
 
   const setComboChoice = (key, type, index, value) => {
     setComboSelections((prev) => {
-      const current = prev[key] || { rolls: [], drinks: [] };
+      const current = prev[key] || {
+        rolls: [],
+        drinks: [],
+      };
+
       const nextValues = [...(current[type] || [])];
       nextValues[index] = value;
+
       return {
         ...prev,
         [key]: {
@@ -890,53 +1312,142 @@ export default function SectoCafePedidos() {
     });
   };
 
-  const combosComplete = comboInstances.every(({ key, config }) => {
-    const selection = comboSelections[key] || {};
-    const rolls = selection.rolls || [];
-    const drinks = selection.drinks || [];
-    return (
-      rolls.slice(0, config.rolls).filter(Boolean).length === config.rolls &&
-      drinks.slice(0, config.drinks).filter(Boolean).length === config.drinks
-    );
-  });
+  const combosComplete = comboInstances.every(
+    ({ key, config }) => {
+      const selection = comboSelections[key] || {};
+      const rolls = selection.rolls || [];
+      const drinks = selection.drinks || [];
+
+      return (
+        rolls
+          .slice(0, config.rolls)
+          .filter(Boolean).length === config.rolls &&
+        drinks
+          .slice(0, config.drinks)
+          .filter(Boolean).length === config.drinks
+      );
+    }
+  );
 
   const subtotal = useMemo(
-    () => items.reduce((s, { item, qty }) => s + item.price * qty, 0),
+    () =>
+      items.reduce(
+        (sum, { item, qty }) =>
+          sum + item.price * qty,
+        0
+      ),
     [items]
   );
 
   const today = todayInMontevideo();
   const availableDates = scheduleDates();
-  const selectedDate = availableDates.includes(deliveryDate) ? deliveryDate : (availableDates[0] || today);
-  const earlyDiscountActive = selectedDate > today || (selectedDate === today && montevideoParts().hour < EARLY_DISCOUNT_END_HOUR);
-  const discount = earlyDiscountActive ? Math.round(subtotal * EARLY_DISCOUNT_PERCENT / 100) : 0;
+
+  const selectedDate = availableDates.includes(deliveryDate)
+    ? deliveryDate
+    : (availableDates[0] || today);
+
+  // Hoy antes de las 18: 10% OFF.
+  // Otro día: 10% OFF incluso si se pide después de las 18.
+  const earlyDiscountActive =
+    selectedDate > today ||
+    (
+      selectedDate === today &&
+      montevideoParts().hour < EARLY_DISCOUNT_END_HOUR
+    );
+
+  const discount = earlyDiscountActive
+    ? Math.round(
+        subtotal * EARLY_DISCOUNT_PERCENT / 100
+      )
+    : 0;
+
   const discountedSubtotal = subtotal - discount;
 
+  // ===== ENVÍO GRATIS CORREGIDO =====
+  // Se activa desde $1.500 DESPUÉS del descuento.
+  const hasFreeDelivery =
+    discountedSubtotal >= FREE_DELIVERY_MINIMUM;
+
   const fee = useMemo(() => {
-    if (method !== "delivery" || subtotal >= FREE_DELIVERY_MINIMUM) return 0;
-    return ZONES.find((z) => z.id === zone)?.fee || 0;
-  }, [method, zone, subtotal]);
+    if (
+      method !== "delivery" ||
+      discountedSubtotal >= FREE_DELIVERY_MINIMUM
+    ) {
+      return 0;
+    }
+
+    return ZONES.find(
+      (z) => z.id === zone
+    )?.fee || 0;
+  }, [method, zone, discountedSubtotal]);
 
   const total = discountedSubtotal + fee;
 
+  // Cuánto falta agregar en productos para alcanzar
+  // $1.500 finales, contemplando el descuento.
+  const missingForFreeDelivery = hasFreeDelivery
+    ? 0
+    : Math.max(
+        0,
+        Math.ceil(
+          FREE_DELIVERY_MINIMUM /
+            (earlyDiscountActive
+              ? 1 - EARLY_DISCOUNT_PERCENT / 100
+              : 1)
+          - subtotal
+        )
+      );
+
+  const freeDeliveryProgress = Math.min(
+    100,
+    (discountedSubtotal / FREE_DELIVERY_MINIMUM) * 100
+  );
+
   const scheduleOpen = isOpenBySchedule();
   const asapDeparture = nextAsapDeparture();
-  const asapAvailable = scheduleOpen && !!asapDeparture;
-  const availableHours = hoursForDate(selectedDate);
-  const isEveningDeparture = method === "delivery" && time !== "asap" && /^\d{2}:\d{2}$/.test(time);
-  const departureNote = "Los horarios indicados son de salida del local, no de llegada. La salida de las 00:00 es la medianoche posterior al día elegido.";
+  const asapAvailable =
+    scheduleOpen && !!asapDeparture;
 
-  const validTime = time === "asap"
-    ? selectedDate === today && asapAvailable
-    : availableHours.includes(time);
+  const availableHours = hoursForDate(selectedDate);
+
+  const isEveningDeparture =
+    method === "delivery" &&
+    time !== "asap" &&
+    /^\d{2}:\d{2}$/.test(time);
+
+  const departureNote =
+    "Los horarios indicados son de salida del local, no de llegada. La salida de las 00:00 es la medianoche posterior al día elegido.";
+
+  const validTime =
+    time === "asap"
+      ? selectedDate === today && asapAvailable
+      : availableHours.includes(time);
 
   useEffect(() => {
-    if (deliveryDate !== selectedDate) setDeliveryDate(selectedDate);
-    if (time === "asap" && !asapAvailable) setTime(availableHours[0] || "");
-    else if (time !== "asap" && !availableHours.includes(time)) {
-      setTime(selectedDate === today && asapAvailable ? "asap" : (availableHours[0] || ""));
+    if (deliveryDate !== selectedDate) {
+      setDeliveryDate(selectedDate);
     }
-  }, [deliveryDate, selectedDate, today, time, asapAvailable, clockTick]);
+
+    if (time === "asap" && !asapAvailable) {
+      setTime(availableHours[0] || "");
+    } else if (
+      time !== "asap" &&
+      !availableHours.includes(time)
+    ) {
+      setTime(
+        selectedDate === today && asapAvailable
+          ? "asap"
+          : (availableHours[0] || "")
+      );
+    }
+  }, [
+    deliveryDate,
+    selectedDate,
+    today,
+    time,
+    asapAvailable,
+    clockTick,
+  ]);
 
   const isOpen =
     (FORCE_OPEN && !FORCE_CLOSED) ||
@@ -948,9 +1459,13 @@ export default function SectoCafePedidos() {
     phone &&
     validTime &&
     combosComplete &&
-    (method === "pickup" || address.trim().length > 0);
+    (
+      method === "pickup" ||
+      address.trim().length > 0
+    );
 
-  const canSendNow = canSend && !FORCE_CLOSED && !sending;
+  const canSendNow =
+    canSend && !FORCE_CLOSED && !sending;
 
   const showCartPeek = () => {
     setCartPeek(true);
@@ -969,32 +1484,68 @@ export default function SectoCafePedidos() {
     phone,
     address,
     notes,
-    time: `${(time === "asap" ? asapDeparture : time) === "00:00" ? advanceISODate(selectedDate, 1) : selectedDate} ${time === "asap" ? asapDeparture : time}`,
-    // deliveryDate es el día de servicio; a las 00:00 la fecha real es la siguiente.
-    deliveryDate: time === "asap" ? todayInMontevideo() : selectedDate,
-    serviceSlot: time === "asap" ? asapDeparture : time,
+
+    time: `${
+      (time === "asap" ? asapDeparture : time) === "00:00"
+        ? advanceISODate(selectedDate, 1)
+        : selectedDate
+    } ${time === "asap" ? asapDeparture : time}`,
+
+    // deliveryDate es el día de servicio.
+    // A las 00:00, la fecha real es la siguiente.
+    deliveryDate:
+      time === "asap"
+        ? todayInMontevideo()
+        : selectedDate,
+
+    serviceSlot:
+      time === "asap"
+        ? asapDeparture
+        : time,
+
     requestedAsap: time === "asap",
-    comboSelections: comboInstances.map(({ item, key }) => {
-      const selection = comboSelections[key] || {};
-      return {
-        comboId: item.id,
-        comboName: item.name,
-        rolls: (selection.rolls || []).map(
-          (id) => ROLL_OPTIONS.find((r) => r.id === id)?.name || id
-        ),
-        drinks: (selection.drinks || []).map(
-          (id) => DRINK_OPTIONS.find((d) => d.id === id)?.name || id
-        ),
-      };
-    }),
+
+    comboSelections: comboInstances.map(
+      ({ item, key }) => {
+        const selection = comboSelections[key] || {};
+
+        return {
+          comboId: item.id,
+          comboName: item.name,
+
+          rolls: (selection.rolls || []).map(
+            (id) =>
+              ROLL_OPTIONS.find(
+                (r) => r.id === id
+              )?.name || id
+          ),
+
+          drinks: (selection.drinks || []).map(
+            (id) =>
+              DRINK_OPTIONS.find(
+                (d) => d.id === id
+              )?.name || id
+          ),
+        };
+      }
+    ),
+
     ...extra,
   });
 
   const getWhatsAppUrl = (order) => {
     const text = buildWhatsAppText(order);
     const encoded = encodeURIComponent(text);
-    const phoneDigits = PHONE_URUGUAY.replace(/\D/g, "");
-    return "https://wa.me/598" + phoneDigits.replace(/^0/, "") + "?text=" + encoded;
+
+    const phoneDigits =
+      PHONE_URUGUAY.replace(/\D/g, "");
+
+    return (
+      "https://wa.me/598" +
+      phoneDigits.replace(/^0/, "") +
+      "?text=" +
+      encoded
+    );
   };
 
   const openWhatsAppWithOrder = (order) => {
@@ -1009,11 +1560,14 @@ export default function SectoCafePedidos() {
 
   const sendOrder = async (paid = false) => {
     if (!canSendNow || !validTime) {
-      alert("Revisá los datos del pedido. Completá nombre, teléfono, dirección/zona y todas las opciones de los combos.");
+      alert(
+        "Revisá los datos del pedido. Completá nombre, teléfono, dirección/zona y todas las opciones de los combos."
+      );
       return;
     }
 
     setClockTick((n) => n + 1);
+
     const order = getOrder({
       paid,
       createdAt: Date.now(),
@@ -1037,7 +1591,9 @@ export default function SectoCafePedidos() {
       const data = await res.json().catch(() => null);
 
       if (!res.ok || data?.ok === false) {
-        throw new Error(data?.error || "No se pudo guardar el pedido");
+        throw new Error(
+          data?.error || "No se pudo guardar el pedido"
+        );
       }
 
       openWhatsAppWithOrder({
@@ -1045,7 +1601,10 @@ export default function SectoCafePedidos() {
         id: data?.id || order.id,
       });
     } catch (err) {
-      alert("No se pudo registrar el pedido para impresión: " + (err?.message || err));
+      alert(
+        "No se pudo registrar el pedido para impresión: " +
+        (err?.message || err)
+      );
     } finally {
       setSending(false);
     }
@@ -1098,12 +1657,25 @@ export default function SectoCafePedidos() {
       <section className="max-w-6xl mx-auto px-4 pt-5">
         <div className="rounded-2xl bg-neutral-950 text-white px-5 py-4 flex flex-wrap items-center justify-between gap-2">
           <div>
-            <p className="text-xs tracking-[0.18em] text-neutral-300">Reservá tu cena antes de las 18hs y recibí</p>
-            <p className="text-lg font-semibold">10% OFF ADICIONAL EN TU PEDIDO</p>
-            <p className="text-xs text-neutral-300">Se aplica al hacer el pedido antes de las 18:00, incluso si programás para mañana u otro día.</p>
+            <p className="text-xs tracking-[0.18em] text-neutral-300">
+              Reservá tu cena antes de las 18hs y recibí
+            </p>
+
+            <p className="text-lg font-semibold">
+              10% OFF ADICIONAL EN TU PEDIDO
+            </p>
+
+            <p className="text-xs text-neutral-300">
+              Se aplica al hacer el pedido antes de las
+              18:00, incluso si programás para mañana u
+              otro día.
+            </p>
           </div>
+
           <span className="text-sm font-medium tabular-nums">
-            {montevideoParts().hour < EARLY_DISCOUNT_END_HOUR ? `TERMINA EN ${countdownText(promoRemainingSeconds())}` : "PEDIDOS PROGRAMADOS HASTA 7 DÍAS"}
+            {montevideoParts().hour < EARLY_DISCOUNT_END_HOUR
+              ? `TERMINA EN ${countdownText(promoRemainingSeconds())}`
+              : "PEDIDOS PROGRAMADOS HASTA 7 DÍAS"}
           </span>
         </div>
       </section>
@@ -1113,87 +1685,105 @@ export default function SectoCafePedidos() {
           {MENU.map((cat) => (
             <React.Fragment key={cat.id}>
               <div>
-              <div className="flex items-baseline justify-between mb-3">
-                <h2 className="text-sm tracking-[0.2em] text-neutral-500">
-                  {cat.name}
-                </h2>
-                <span className="h-[1px] flex-1 ml-4 bg-neutral-200"></span>
+                <div className="flex items-baseline justify-between mb-3">
+                  <h2 className="text-sm tracking-[0.2em] text-neutral-500">
+                    {cat.name}
+                  </h2>
+                  <span className="h-[1px] flex-1 ml-4 bg-neutral-200"></span>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  {cat.items.map((item) => (
+                    <article
+                      key={item.id}
+                      className="group border border-neutral-200 rounded-2xl overflow-hidden bg-white"
+                    >
+                      {typeof item.img === "string" &&
+                      item.img.trim().length > 0 ? (
+                        <div className="aspect-[4/3] overflow-hidden">
+                          <img
+                            src={item.img}
+                            alt={item.name}
+                            className="w-full h-full object-cover"
+                            loading="lazy"
+                            decoding="async"
+                          />
+                        </div>
+                      ) : null}
+
+                      <div className="p-4 flex items-start justify-between gap-4">
+                        <div>
+                          <h3 className="text-neutral-900 leading-tight">
+                            {item.name}
+                          </h3>
+
+                          <p className="text-sm text-neutral-500 mt-1">
+                            <PromoPrice
+                              price={item.price}
+                              active={earlyDiscountActive}
+                            />
+                          </p>
+                        </div>
+
+                        <div className="flex items-center gap-2">
+                          <button
+                            onClick={() =>
+                              dispatch({
+                                type: "remove",
+                                item,
+                              })
+                            }
+                            className="px-3 py-2 rounded-xl border border-neutral-200"
+                          >
+                            -
+                          </button>
+
+                          <span className="w-6 text-center text-neutral-600">
+                            {cart[item.id]?.qty || 0}
+                          </span>
+
+                          <button
+                            onClick={() => {
+                              dispatch({
+                                type: "add",
+                                item,
+                              });
+
+                              showCartPeek();
+                              setCartHighlight(true);
+
+                              setTimeout(
+                                () => setCartHighlight(false),
+                                600
+                              );
+                            }}
+                            className={`px-3 py-2 rounded-xl border ${
+                              !FORCE_CLOSED
+                                ? "border-neutral-200 bg-neutral-50"
+                                : "border-neutral-200 text-neutral-400 cursor-not-allowed"
+                            }`}
+                            disabled={FORCE_CLOSED}
+                          >
+                            +
+                          </button>
+                        </div>
+                      </div>
+                    </article>
+                  ))}
+                </div>
               </div>
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                {cat.items.map((item) => (
-                  <article
-                    key={item.id}
-                    className="group border border-neutral-200 rounded-2xl overflow-hidden bg-white"
-                  >
-                    {typeof item.img === "string" && item.img.trim().length > 0 ? (
-                      <div className="aspect-[4/3] overflow-hidden">
-                        <img
-                          src={item.img}
-                          alt={item.name}
-                          className="w-full h-full object-cover"
-                          loading="lazy"
-                          decoding="async"
-                        />
-                      </div>
-                    ) : null}
-
-                    <div className="p-4 flex items-start justify-between gap-4">
-                      <div>
-                        <h3 className="text-neutral-900 leading-tight">
-                          {item.name}
-                        </h3>
-                        <p className="text-sm text-neutral-500 mt-1">
-                          <PromoPrice price={item.price} active={earlyDiscountActive} />
-                        </p>
-                      </div>
-
-                      <div className="flex items-center gap-2">
-                        <button
-                          onClick={() => dispatch({ type: "remove", item })}
-                          className="px-3 py-2 rounded-xl border border-neutral-200"
-                        >
-                          -
-                        </button>
-
-                        <span className="w-6 text-center text-neutral-600">
-                          {cart[item.id]?.qty || 0}
-                        </span>
-
-                        <button
-                          onClick={() => {
-                            dispatch({ type: "add", item });
-                            showCartPeek();
-                            setCartHighlight(true);
-                            setTimeout(() => setCartHighlight(false), 600);
-                          }}
-                          className={`px-3 py-2 rounded-xl border ${
-                            !FORCE_CLOSED
-                              ? "border-neutral-200 bg-neutral-50"
-                              : "border-neutral-200 text-neutral-400 cursor-not-allowed"
-                          }`}
-                          disabled={FORCE_CLOSED}
-                        >
-                          +
-                        </button>
-                      </div>
-                    </div>
-                  </article>
-                ))}
-              </div>
-            </div>
-
-            {cat.id === "combos" && (
-              <PokesSection
-                cart={cart}
-                dispatch={dispatch}
-                isOpen={isOpen}
-                earlyDiscountActive={earlyDiscountActive}
-                showCartPeek={showCartPeek}
-                setCartHighlight={setCartHighlight}
-              />
-            )}
-          </React.Fragment>
+              {cat.id === "combos" && (
+                <PokesSection
+                  cart={cart}
+                  dispatch={dispatch}
+                  isOpen={isOpen}
+                  earlyDiscountActive={earlyDiscountActive}
+                  showCartPeek={showCartPeek}
+                  setCartHighlight={setCartHighlight}
+                />
+              )}
+            </React.Fragment>
           ))}
         </section>
 
@@ -1202,7 +1792,9 @@ export default function SectoCafePedidos() {
             ref={cartRef}
             className={
               "border border-neutral-200 rounded-2xl p-4 sticky top-20 bg-white transition-shadow " +
-              (cartHighlight ? "shadow-[0_0_0_1px_rgba(0,0,0,0.6)]" : "")
+              (cartHighlight
+                ? "shadow-[0_0_0_1px_rgba(0,0,0,0.6)]"
+                : "")
             }
           >
             <h2 className="text-sm tracking-[0.2em] text-neutral-500">
@@ -1222,24 +1814,44 @@ export default function SectoCafePedidos() {
                   className="flex items-center justify-between text-sm"
                 >
                   <div className="pr-2">
-                    <p className="text-neutral-800">{item.name}</p>
-                    <p className="text-neutral-500">x{qty}</p>
+                    <p className="text-neutral-800">
+                      {item.name}
+                    </p>
+                    <p className="text-neutral-500">
+                      x{qty}
+                    </p>
                   </div>
 
                   <div className="flex items-center gap-2">
                     <div className="text-neutral-700">
-                      <PromoPrice price={item.price * qty} active={earlyDiscountActive} />
+                      <PromoPrice
+                        price={item.price * qty}
+                        active={earlyDiscountActive}
+                      />
                     </div>
+
                     <button
                       type="button"
                       aria-label={`Quitar ${item.name} del carrito`}
                       onClick={() => {
-                        dispatch({ type: "removeAll", item });
+                        dispatch({
+                          type: "removeAll",
+                          item,
+                        });
+
                         setComboSelections((prev) => {
                           const next = { ...prev };
+
                           Object.keys(next)
-                            .filter((key) => key.startsWith(`${item.id}-`))
-                            .forEach((key) => delete next[key]);
+                            .filter((key) =>
+                              key.startsWith(
+                                `${item.id}-`
+                              )
+                            )
+                            .forEach((key) => {
+                              delete next[key];
+                            });
+
                           return next;
                         });
                       }}
@@ -1252,65 +1864,114 @@ export default function SectoCafePedidos() {
               ))}
             </div>
 
-
             {comboInstances.length > 0 && (
               <div className="mt-4 space-y-4">
                 <div>
                   <h3 className="text-xs tracking-[0.16em] text-neutral-500">
                     ELEGÍ LOS ROLLS
                   </h3>
+
                   <p className="text-xs text-neutral-400 mt-1">
-                    Completá las opciones de cada combo antes de enviar.
+                    Completá las opciones de cada combo
+                    antes de enviar.
                   </p>
                 </div>
 
-                {comboInstances.map(({ item, index, key, config }) => {
-                  const selection = comboSelections[key] || { rolls: [], drinks: [] };
+                {comboInstances.map(
+                  ({ item, index, key, config }) => {
+                    const selection =
+                      comboSelections[key] || {
+                        rolls: [],
+                        drinks: [],
+                      };
 
-                  return (
-                    <div key={key} className="rounded-xl border border-neutral-200 p-3 space-y-2">
-                      <div className="text-sm font-medium text-neutral-800">
-                        {item.name}{cart[item.id]?.qty > 1 ? ` #${index + 1}` : ""}
+                    return (
+                      <div
+                        key={key}
+                        className="rounded-xl border border-neutral-200 p-3 space-y-2"
+                      >
+                        <div className="text-sm font-medium text-neutral-800">
+                          {item.name}
+                          {cart[item.id]?.qty > 1
+                            ? ` #${index + 1}`
+                            : ""}
+                        </div>
+
+                        {Array.from({
+                          length: config.rolls,
+                        }).map((_, rollIndex) => (
+                          <select
+                            key={`roll-${rollIndex}`}
+                            value={
+                              selection.rolls?.[
+                                rollIndex
+                              ] || ""
+                            }
+                            onChange={(e) =>
+                              setComboChoice(
+                                key,
+                                "rolls",
+                                rollIndex,
+                                e.target.value
+                              )
+                            }
+                            className="w-full bg-white border border-neutral-200 rounded-xl p-2 text-sm"
+                          >
+                            <option value="">
+                              Elegí roll {rollIndex + 1}
+                            </option>
+
+                            {ROLL_OPTIONS.map((roll) => (
+                              <option
+                                key={roll.id}
+                                value={roll.id}
+                              >
+                                {roll.name}
+                              </option>
+                            ))}
+                          </select>
+                        ))}
+
+                        {Array.from({
+                          length: config.drinks,
+                        }).map((_, drinkIndex) => (
+                          <select
+                            key={`drink-${drinkIndex}`}
+                            value={
+                              selection.drinks?.[
+                                drinkIndex
+                              ] || ""
+                            }
+                            onChange={(e) =>
+                              setComboChoice(
+                                key,
+                                "drinks",
+                                drinkIndex,
+                                e.target.value
+                              )
+                            }
+                            className="w-full bg-white border border-neutral-200 rounded-xl p-2 text-sm"
+                          >
+                            <option value="">
+                              Elegí bebida {drinkIndex + 1}
+                            </option>
+
+                            {DRINK_OPTIONS.map(
+                              (drink) => (
+                                <option
+                                  key={drink.id}
+                                  value={drink.id}
+                                >
+                                  {drink.name}
+                                </option>
+                              )
+                            )}
+                          </select>
+                        ))}
                       </div>
-
-                      {Array.from({ length: config.rolls }).map((_, rollIndex) => (
-                        <select
-                          key={`roll-${rollIndex}`}
-                          value={selection.rolls?.[rollIndex] || ""}
-                          onChange={(e) =>
-                            setComboChoice(key, "rolls", rollIndex, e.target.value)
-                          }
-                          className="w-full bg-white border border-neutral-200 rounded-xl p-2 text-sm"
-                        >
-                          <option value="">Elegí roll {rollIndex + 1}</option>
-                          {ROLL_OPTIONS.map((roll) => (
-                            <option key={roll.id} value={roll.id}>
-                              {roll.name}
-                            </option>
-                          ))}
-                        </select>
-                      ))}
-
-                      {Array.from({ length: config.drinks }).map((_, drinkIndex) => (
-                        <select
-                          key={`drink-${drinkIndex}`}
-                          value={selection.drinks?.[drinkIndex] || ""}
-                          onChange={(e) =>
-                            setComboChoice(key, "drinks", drinkIndex, e.target.value)
-                          }
-                          className="w-full bg-white border border-neutral-200 rounded-xl p-2 text-sm"
-                        >
-                          <option value="">Elegí bebida {drinkIndex + 1}</option>
-                          {DRINK_OPTIONS.map((drink) => (
-                            <option key={drink.id} value={drink.id}>
-                              {drink.name}
-                            </option>
-                          ))}
-                        </select>
-                      ))}
-                    </div>
-                  );
-                })}
+                    );
+                  }
+                )}
               </div>
             )}
 
@@ -1323,7 +1984,9 @@ export default function SectoCafePedidos() {
                     ? "bg-neutral-100 border-neutral-300"
                     : "border-neutral-200"
                 }`}
-                onClick={() => setMethod("delivery")}
+                onClick={() =>
+                  setMethod("delivery")
+                }
               >
                 Delivery
               </button>
@@ -1334,7 +1997,9 @@ export default function SectoCafePedidos() {
                     ? "bg-neutral-100 border-neutral-300"
                     : "border-neutral-200"
                 }`}
-                onClick={() => setMethod("pickup")}
+                onClick={() =>
+                  setMethod("pickup")
+                }
               >
                 Retiro
               </button>
@@ -1345,18 +2010,31 @@ export default function SectoCafePedidos() {
                 <label className="text-xs text-neutral-500">
                   Zona de entrega
                 </label>
-                {subtotal >= FREE_DELIVERY_MINIMUM && (
-                  <p className="text-xs font-semibold text-neutral-900">Envío gratis a todas las zonas por superar $1.500 en productos.</p>
+
+                {hasFreeDelivery && (
+                  <p className="text-xs font-semibold text-neutral-900">
+                    Envío gratis a todas las zonas por
+                    superar $1.500 después de descuentos.
+                  </p>
                 )}
 
                 <select
                   value={zone}
-                  onChange={(e) => setZone(e.target.value)}
+                  onChange={(e) =>
+                    setZone(e.target.value)
+                  }
                   className="w-full bg-white border border-neutral-200 rounded-xl p-2"
                 >
                   {ZONES.map((z) => (
-                    <option key={z.id} value={z.id}>
-                      {z.name} — {subtotal >= FREE_DELIVERY_MINIMUM || z.fee === 0 ? "GRATIS" : currency(z.fee)}
+                    <option
+                      key={z.id}
+                      value={z.id}
+                    >
+                      {z.name} —{" "}
+                      {hasFreeDelivery ||
+                      z.fee === 0
+                        ? "GRATIS"
+                        : currency(z.fee)}
                     </option>
                   ))}
                 </select>
@@ -1367,7 +2045,9 @@ export default function SectoCafePedidos() {
 
                 <input
                   value={address}
-                  onChange={(e) => setAddress(e.target.value)}
+                  onChange={(e) =>
+                    setAddress(e.target.value)
+                  }
                   placeholder="Calle, número, apto, referencia"
                   className="w-full bg-white border border-neutral-200 rounded-xl p-2 placeholder-neutral-400"
                 />
@@ -1376,20 +2056,30 @@ export default function SectoCafePedidos() {
 
             <div className="grid grid-cols-2 gap-2 mt-3">
               <div>
-                <label className="text-xs text-neutral-500">Nombre</label>
+                <label className="text-xs text-neutral-500">
+                  Nombre
+                </label>
+
                 <input
                   value={name}
-                  onChange={(e) => setName(e.target.value)}
+                  onChange={(e) =>
+                    setName(e.target.value)
+                  }
                   placeholder="Tu nombre"
                   className="w-full bg-white border border-neutral-200 rounded-xl p-2 placeholder-neutral-400"
                 />
               </div>
 
               <div>
-                <label className="text-xs text-neutral-500">Teléfono</label>
+                <label className="text-xs text-neutral-500">
+                  Teléfono
+                </label>
+
                 <input
                   value={phone}
-                  onChange={(e) => setPhone(e.target.value)}
+                  onChange={(e) =>
+                    setPhone(e.target.value)
+                  }
                   placeholder="09xxxxxxx"
                   className="w-full bg-white border border-neutral-200 rounded-xl p-2 placeholder-neutral-400"
                 />
@@ -1397,7 +2087,9 @@ export default function SectoCafePedidos() {
             </div>
 
             <div className="mt-3">
-              <label className="text-xs text-neutral-500">¿Cuándo lo querés?</label>
+              <label className="text-xs text-neutral-500">
+                ¿Cuándo lo querés?
+              </label>
 
               <div className="grid grid-cols-2 gap-2 mt-1">
                 <select
@@ -1405,31 +2097,84 @@ export default function SectoCafePedidos() {
                   value={selectedDate}
                   onChange={(e) => {
                     const next = e.target.value;
+
                     setDeliveryDate(next);
-                    setTime(next === today && asapAvailable ? "asap" : (hoursForDate(next)[0] || ""));
+
+                    setTime(
+                      next === today && asapAvailable
+                        ? "asap"
+                        : (hoursForDate(next)[0] || "")
+                    );
                   }}
                   className="w-full bg-white border border-neutral-200 rounded-xl p-2"
                 >
                   {availableDates.map((d) => (
-                    <option key={d} value={d}>
-                      {d === today ? "Hoy" : d === advanceISODate(today, 1) ? "Mañana" : formatDeliveryDate(d)}
+                    <option
+                      key={d}
+                      value={d}
+                    >
+                      {d === today
+                        ? "Hoy"
+                        : d === advanceISODate(today, 1)
+                          ? "Mañana"
+                          : formatDeliveryDate(d)}
                     </option>
                   ))}
                 </select>
+
                 <select
                   aria-label="Horario de entrega"
                   value={time}
-                  onChange={(e) => setTime(e.target.value)}
+                  onChange={(e) =>
+                    setTime(e.target.value)
+                  }
                   className="w-full bg-white border border-neutral-200 rounded-xl p-2"
                 >
-                  {selectedDate === today && asapAvailable && <option value="asap">Lo antes posible · salida {asapDeparture}</option>}
-                  {availableHours.map((h) => <option key={h} value={h}>{h}</option>)}
-                  {availableHours.length === 0 && !(selectedDate === today && asapAvailable) && <option value="">Elegí otro día</option>}
+                  {selectedDate === today &&
+                    asapAvailable && (
+                      <option value="asap">
+                        Lo antes posible · salida{" "}
+                        {asapDeparture}
+                      </option>
+                    )}
+
+                  {availableHours.map((h) => (
+                    <option
+                      key={h}
+                      value={h}
+                    >
+                      {h}
+                    </option>
+                  ))}
+
+                  {availableHours.length === 0 &&
+                    !(
+                      selectedDate === today &&
+                      asapAvailable
+                    ) && (
+                      <option value="">
+                        Elegí otro día
+                      </option>
+                    )}
                 </select>
               </div>
-              {earlyDiscountActive && <p className="text-xs font-semibold text-green-700 mt-2">✓ 10% OFF aplicado · {selectedDate === today ? "pedido antes de las 18:00" : "pedido para otro día"}</p>}
-              <p className="text-xs text-neutral-500 mt-1">Lo antes posible se asigna a la siguiente salida · Salidas de 19:00 a 00:00.</p>
-              {(isEveningDeparture || time === "asap") && (
+
+              {earlyDiscountActive && (
+                <p className="text-xs font-semibold text-green-700 mt-2">
+                  ✓ 10% OFF aplicado ·{" "}
+                  {selectedDate === today
+                    ? "pedido antes de las 18:00"
+                    : "pedido para otro día"}
+                </p>
+              )}
+
+              <p className="text-xs text-neutral-500 mt-1">
+                Lo antes posible se asigna a la siguiente
+                salida · Salidas de 19:00 a 00:00.
+              </p>
+
+              {(isEveningDeparture ||
+                time === "asap") && (
                 <p className="mt-2 text-xs font-medium text-neutral-800">
                   {departureNote}
                 </p>
@@ -1437,11 +2182,15 @@ export default function SectoCafePedidos() {
             </div>
 
             <div className="mt-3">
-              <label className="text-xs text-neutral-500">Notas</label>
+              <label className="text-xs text-neutral-500">
+                Notas
+              </label>
 
               <textarea
                 value={notes}
-                onChange={(e) => setNotes(e.target.value)}
+                onChange={(e) =>
+                  setNotes(e.target.value)
+                }
                 placeholder="Timbre roto, indicaciones de entrega, etc."
                 className="w-full bg-white border border-neutral-200 rounded-xl p-2 placeholder-neutral-400"
                 rows={2}
@@ -1450,14 +2199,30 @@ export default function SectoCafePedidos() {
 
             {method === "delivery" && (
               <div className="rounded-xl border border-neutral-200 bg-neutral-50 px-3 py-3 text-xs">
-                {subtotal >= FREE_DELIVERY_MINIMUM ? (
-                  <p className="font-semibold text-neutral-900">✓ ¡Conseguiste envío gratis!</p>
+                {hasFreeDelivery ? (
+                  <p className="font-semibold text-neutral-900">
+                    ✓ ¡Conseguiste envío gratis!
+                  </p>
                 ) : (
                   <>
-                    <p className="font-semibold text-neutral-900">Envío gratis desde {currency(FREE_DELIVERY_MINIMUM)}</p>
-                    <p className="mt-1 text-neutral-600">Agregá {currency(FREE_DELIVERY_MINIMUM - subtotal)} en productos para conseguirlo.</p>
+                    <p className="font-semibold text-neutral-900">
+                      Envío gratis desde{" "}
+                      {currency(FREE_DELIVERY_MINIMUM)}
+                    </p>
+
+                    <p className="mt-1 text-neutral-600">
+                      Agregá{" "}
+                      {currency(missingForFreeDelivery)}{" "}
+                      en productos para conseguirlo.
+                    </p>
+
                     <div className="mt-2 h-1.5 rounded-full bg-neutral-200 overflow-hidden">
-                      <div className="h-full bg-neutral-900 rounded-full" style={{ width: `${Math.min(100, subtotal / FREE_DELIVERY_MINIMUM * 100)}%` }} />
+                      <div
+                        className="h-full bg-neutral-900 rounded-full"
+                        style={{
+                          width: `${freeDeliveryProgress}%`,
+                        }}
+                      />
                     </div>
                   </>
                 )}
@@ -1466,37 +2231,63 @@ export default function SectoCafePedidos() {
 
             <div className="text-sm space-y-1 mt-4">
               <div className="flex justify-between">
-                <span className="text-neutral-500">Subtotal</span>
-                <span>{currency(subtotal)}</span>
+                <span className="text-neutral-500">
+                  Subtotal
+                </span>
+                <span>
+                  {currency(subtotal)}
+                </span>
               </div>
 
               {discount > 0 && (
                 <div className="flex justify-between font-medium text-neutral-900">
-                  <span>Promo antes de las 18 · 10% OFF</span>
-                  <span>−{currency(discount)}</span>
+                  <span>
+                    Promo antes de las 18 · 10% OFF
+                  </span>
+
+                  <span>
+                    −{currency(discount)}
+                  </span>
                 </div>
               )}
 
               {method === "delivery" && (
-                <>
-                  <div className="flex justify-between">
-                    <span className="text-neutral-500">Envío</span>
-                    <span>{fee === 0 ? "GRATIS" : currency(fee)}</span>
-                  </div>
-                </>
+                <div className="flex justify-between">
+                  <span className="text-neutral-500">
+                    Envío
+                  </span>
+
+                  <span>
+                    {fee === 0
+                      ? "GRATIS"
+                      : currency(fee)}
+                  </span>
+                </div>
               )}
 
               <div className="flex justify-between text-neutral-900 font-medium">
                 <span>Total</span>
-                <span>{currency(total)}</span>
+                <span>
+                  {currency(total)}
+                </span>
               </div>
             </div>
 
             <div className="grid grid-cols-1 gap-2 mt-4">
-              <div className="rounded-xl border border-amber-300 bg-amber-50 p-3 text-sm text-amber-950" role="alert">
-                <strong>Un último paso para confirmar</strong>
-                <p className="mt-1">Al abrir WhatsApp, enviá el mensaje para completar tu pedido.</p>
+              <div
+                className="rounded-xl border border-amber-300 bg-amber-50 p-3 text-sm text-amber-950"
+                role="alert"
+              >
+                <strong>
+                  Un último paso para confirmar
+                </strong>
+
+                <p className="mt-1">
+                  Al abrir WhatsApp, enviá el mensaje
+                  para completar tu pedido.
+                </p>
               </div>
+
               <button
                 onClick={() => sendOrder(false)}
                 disabled={!canSendNow}
@@ -1506,11 +2297,16 @@ export default function SectoCafePedidos() {
                     : "bg-neutral-100 text-neutral-600"
                 }`}
               >
-                {sending ? "Preparando WhatsApp..." : "Confirmar por WhatsApp"}
+                {sending
+                  ? "Preparando WhatsApp..."
+                  : "Confirmar por WhatsApp"}
               </button>
 
               <button
-                onClick={() => { dispatch({ type: "clear" }); setComboSelections({}); }}
+                onClick={() => {
+                  dispatch({ type: "clear" });
+                  setComboSelections({});
+                }}
                 className="w-full rounded-2xl py-2 text-sm border border-neutral-200"
               >
                 Vaciar carrito
@@ -1518,33 +2314,40 @@ export default function SectoCafePedidos() {
 
               {!isOpen && (
                 <p className="text-xs text-neutral-500 mt-1">
-                  El local está cerrado ahora, pero podés programar un pedido para los próximos días.
+                  El local está cerrado ahora, pero
+                  podés programar un pedido para los
+                  próximos días.
                 </p>
               )}
 
               <p className="text-xs text-neutral-500 mt-1">
-                Pagás por transferencia o al recibir (efectivo | POS).
+                Pagás por transferencia o al recibir
+                (efectivo | POS).
               </p>
             </div>
           </div>
         </aside>
+
       </main>
 
       {items.length > 0 && (
         <div
           className={
             "lg:hidden fixed right-3 top-24 z-50 w-[340px] max-w-[90vw] max-h-[78vh] overflow-y-auto rounded-2xl border border-neutral-200 bg-white shadow-lg p-4 transition-transform duration-300 " +
-            (cartPeek ? "translate-x-0" : "translate-x-[120%]")
+            (cartPeek
+              ? "translate-x-0"
+              : "translate-x-[120%]")
           }
-          style={{ WebkitTapHighlightColor: "transparent" }}
+          style={{
+            WebkitTapHighlightColor: "transparent",
+          }}
         >
           <div className="flex items-start justify-between gap-3">
             <div>
               <div className="text-sm tracking-[0.2em] text-neutral-500">
                 TU PEDIDO
               </div>
-              <div className="text-xs text-neutral-400 mt-1">
-              </div>
+              <div className="text-xs text-neutral-400 mt-1"></div>
             </div>
 
             <button
@@ -1559,26 +2362,49 @@ export default function SectoCafePedidos() {
           <div className="mt-3 max-h-[34vh] overflow-auto pr-1">
             <div className="space-y-2">
               {items.map(({ item, qty }) => (
-                <div key={item.id} className="flex justify-between gap-3 text-sm">
+                <div
+                  key={item.id}
+                  className="flex justify-between gap-3 text-sm"
+                >
                   <div className="text-neutral-800 leading-tight">
-                    <div className="font-medium">{item.name}</div>
-                    <div className="text-neutral-500">x{qty}</div>
+                    <div className="font-medium">
+                      {item.name}
+                    </div>
+                    <div className="text-neutral-500">
+                      x{qty}
+                    </div>
                   </div>
 
                   <div className="flex items-center gap-2 whitespace-nowrap">
                     <div className="text-neutral-700">
-                      <PromoPrice price={item.price * qty} active={earlyDiscountActive} />
+                      <PromoPrice
+                        price={item.price * qty}
+                        active={earlyDiscountActive}
+                      />
                     </div>
+
                     <button
                       type="button"
                       aria-label={`Quitar ${item.name} del carrito`}
                       onClick={() => {
-                        dispatch({ type: "removeAll", item });
+                        dispatch({
+                          type: "removeAll",
+                          item,
+                        });
+
                         setComboSelections((prev) => {
                           const next = { ...prev };
+
                           Object.keys(next)
-                            .filter((key) => key.startsWith(`${item.id}-`))
-                            .forEach((key) => delete next[key]);
+                            .filter((key) =>
+                              key.startsWith(
+                                `${item.id}-`
+                              )
+                            )
+                            .forEach((key) => {
+                              delete next[key];
+                            });
+
                           return next;
                         });
                       }}
@@ -1592,92 +2418,165 @@ export default function SectoCafePedidos() {
             </div>
           </div>
 
-
           {comboInstances.length > 0 && (
             <div className="mt-3 pt-3 border-t border-neutral-200 space-y-3">
               <div>
                 <div className="text-xs tracking-[0.16em] text-neutral-500">
                   ELEGÍ TUS ROLLS
                 </div>
+
                 <div className="text-[11px] text-neutral-400 mt-1">
                   Completá las opciones antes de enviar.
                 </div>
               </div>
 
-              {comboInstances.map(({ item, index, key, config }) => {
-                const selection = comboSelections[key] || { rolls: [], drinks: [] };
+              {comboInstances.map(
+                ({ item, index, key, config }) => {
+                  const selection =
+                    comboSelections[key] || {
+                      rolls: [],
+                      drinks: [],
+                    };
 
-                return (
-                  <div key={key} className="rounded-xl border border-neutral-200 p-3 space-y-2">
-                    <div className="text-sm font-medium text-neutral-800">
-                      {item.name}{cart[item.id]?.qty > 1 ? ` #${index + 1}` : ""}
+                  return (
+                    <div
+                      key={key}
+                      className="rounded-xl border border-neutral-200 p-3 space-y-2"
+                    >
+                      <div className="text-sm font-medium text-neutral-800">
+                        {item.name}
+                        {cart[item.id]?.qty > 1
+                          ? ` #${index + 1}`
+                          : ""}
+                      </div>
+
+                      {Array.from({
+                        length: config.rolls,
+                      }).map((_, rollIndex) => (
+                        <select
+                          key={`mobile-roll-${rollIndex}`}
+                          value={
+                            selection.rolls?.[
+                              rollIndex
+                            ] || ""
+                          }
+                          onChange={(e) =>
+                            setComboChoice(
+                              key,
+                              "rolls",
+                              rollIndex,
+                              e.target.value
+                            )
+                          }
+                          className="w-full bg-white border border-neutral-200 rounded-xl p-2 text-sm"
+                        >
+                          <option value="">
+                            Elegí roll {rollIndex + 1}
+                          </option>
+
+                          {ROLL_OPTIONS.map((roll) => (
+                            <option
+                              key={roll.id}
+                              value={roll.id}
+                            >
+                              {roll.name}
+                            </option>
+                          ))}
+                        </select>
+                      ))}
+
+                      {Array.from({
+                        length: config.drinks,
+                      }).map((_, drinkIndex) => (
+                        <select
+                          key={`mobile-drink-${drinkIndex}`}
+                          value={
+                            selection.drinks?.[
+                              drinkIndex
+                            ] || ""
+                          }
+                          onChange={(e) =>
+                            setComboChoice(
+                              key,
+                              "drinks",
+                              drinkIndex,
+                              e.target.value
+                            )
+                          }
+                          className="w-full bg-white border border-neutral-200 rounded-xl p-2 text-sm"
+                        >
+                          <option value="">
+                            Elegí bebida {drinkIndex + 1}
+                          </option>
+
+                          {DRINK_OPTIONS.map(
+                            (drink) => (
+                              <option
+                                key={drink.id}
+                                value={drink.id}
+                              >
+                                {drink.name}
+                              </option>
+                            )
+                          )}
+                        </select>
+                      ))}
                     </div>
-
-                    {Array.from({ length: config.rolls }).map((_, rollIndex) => (
-                      <select
-                        key={`mobile-roll-${rollIndex}`}
-                        value={selection.rolls?.[rollIndex] || ""}
-                        onChange={(e) =>
-                          setComboChoice(key, "rolls", rollIndex, e.target.value)
-                        }
-                        className="w-full bg-white border border-neutral-200 rounded-xl p-2 text-sm"
-                      >
-                        <option value="">Elegí roll {rollIndex + 1}</option>
-                        {ROLL_OPTIONS.map((roll) => (
-                          <option key={roll.id} value={roll.id}>
-                            {roll.name}
-                          </option>
-                        ))}
-                      </select>
-                    ))}
-
-                    {Array.from({ length: config.drinks }).map((_, drinkIndex) => (
-                      <select
-                        key={`mobile-drink-${drinkIndex}`}
-                        value={selection.drinks?.[drinkIndex] || ""}
-                        onChange={(e) =>
-                          setComboChoice(key, "drinks", drinkIndex, e.target.value)
-                        }
-                        className="w-full bg-white border border-neutral-200 rounded-xl p-2 text-sm"
-                      >
-                        <option value="">Elegí bebida {drinkIndex + 1}</option>
-                        {DRINK_OPTIONS.map((drink) => (
-                          <option key={drink.id} value={drink.id}>
-                            {drink.name}
-                          </option>
-                        ))}
-                      </select>
-                    ))}
-                  </div>
-                );
-              })}
+                  );
+                }
+              )}
             </div>
           )}
 
           <div className="mt-3 pt-3 border-t border-neutral-200 text-sm space-y-3">
             {method === "delivery" && (
               <div className="rounded-xl border border-neutral-200 bg-neutral-50 px-3 py-3 text-xs">
-                {subtotal >= FREE_DELIVERY_MINIMUM ? (
-                  <p className="font-semibold text-neutral-900">✓ ¡Conseguiste envío gratis!</p>
+                {hasFreeDelivery ? (
+                  <p className="font-semibold text-neutral-900">
+                    ✓ ¡Conseguiste envío gratis!
+                  </p>
                 ) : (
                   <>
-                    <p className="font-semibold text-neutral-900">Envío gratis desde {currency(FREE_DELIVERY_MINIMUM)}</p>
-                    <p className="mt-1 text-neutral-600">Agregá {currency(FREE_DELIVERY_MINIMUM - subtotal)} en productos para conseguirlo.</p>
+                    <p className="font-semibold text-neutral-900">
+                      Envío gratis desde{" "}
+                      {currency(FREE_DELIVERY_MINIMUM)}
+                    </p>
+
+                    <p className="mt-1 text-neutral-600">
+                      Agregá{" "}
+                      {currency(missingForFreeDelivery)}{" "}
+                      en productos para conseguirlo.
+                    </p>
+
                     <div className="mt-2 h-1.5 rounded-full bg-neutral-200 overflow-hidden">
-                      <div className="h-full bg-neutral-900 rounded-full" style={{ width: `${Math.min(100, subtotal / FREE_DELIVERY_MINIMUM * 100)}%` }} />
+                      <div
+                        className="h-full bg-neutral-900 rounded-full"
+                        style={{
+                          width: `${freeDeliveryProgress}%`,
+                        }}
+                      />
                     </div>
                   </>
                 )}
               </div>
             )}
+
             {discount > 0 && (
               <div className="flex justify-between text-xs font-medium">
-                <span>10% OFF antes de las 18</span>
-                <span>−{currency(discount)}</span>
+                <span>
+                  10% OFF antes de las 18
+                </span>
+                <span>
+                  −{currency(discount)}
+                </span>
               </div>
             )}
+
             <div className="flex justify-between">
-              <span className="text-neutral-500">Total</span>
+              <span className="text-neutral-500">
+                Total
+              </span>
+
               <span className="text-neutral-900 font-medium">
                 {currency(total)}
               </span>
@@ -1696,7 +2595,9 @@ export default function SectoCafePedidos() {
                 type="button"
                 onClick={() => {
                   if (!combosComplete) return;
+
                   setCartPeek(false);
+
                   if (cartRef.current) {
                     cartRef.current.scrollIntoView({
                       behavior: "smooth",
@@ -1711,12 +2612,15 @@ export default function SectoCafePedidos() {
                     : "bg-neutral-100 text-neutral-400 cursor-not-allowed"
                 }`}
               >
-                {combosComplete ? "Terminar pedido" : "Completá tu combo"}
+                {combosComplete
+                  ? "Terminar pedido"
+                  : "Completá tu combo"}
               </button>
             </div>
 
             <p className="text-[11px] text-neutral-500">
-              Vas a completar nombre, teléfono y dirección antes de enviarlo.
+              Vas a completar nombre, teléfono y
+              dirección antes de enviarlo.
             </p>
           </div>
         </div>
@@ -1738,4 +2642,3 @@ export default function SectoCafePedidos() {
       </footer>
     </div>
   );
-}

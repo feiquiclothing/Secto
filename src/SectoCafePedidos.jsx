@@ -290,6 +290,18 @@ const MENU = [
     id: "combos",
     name: "COMBOS",
     items: [
+     {
+        id: "c03",
+        name: "Combo doble",
+        price: 760,
+        img: "/Photos/combo doble.jpeg",
+      },
+      {
+        id: "c04",
+        name: "Combo triple",
+        price: 1060,
+        img: "/Photos/combo triple.jpg",
+      },
       {
         id: "c01",
         name: "Combo individual",
@@ -302,18 +314,8 @@ const MENU = [
         price: 940,
         img: "/Photos/combo pareja.jpeg",
       },
-      {
-        id: "c03",
-        name: "Combo doble",
-        price: 760,
-        img: "/Photos/combo doble.jpeg",
-      },
-      {
-        id: "c04",
-        name: "Combo triple",
-        price: 1060,
-        img: "/Photos/combo triple.jpg",
-      },
+      
+      
       {
         id: "c05",
         name: "3x2 Phila hot roll",
@@ -1874,7 +1876,7 @@ export default function SectoCafePedidos() {
           <div>
             <p className="text-xs tracking-[0.18em] text-neutral-300">
               {isSpecialPromoToday()
-                ? "SOLO HOY · PROMOCIÓN ESPECIAL"
+                ? "RESERVÁ TU CENA CON ANTICIPACIÓN"
                 : "RESERVÁ TU CENA CON ANTICIPACIÓN"}
             </p>
 

@@ -2542,8 +2542,7 @@ export default function SectoCafePedidos() {
               {!isOpen && (
                 <p className="text-xs text-neutral-500 mt-1">
                   El local está cerrado ahora, pero
-                  podés programar un pedido para los
-                  próximos días.
+                  podés programar tu pedido.
                 </p>
               )}
 

@@ -1,15 +1,21 @@
 
-import React, { useMemo, useReducer, useState, useRef, useEffect } from "react";
+import React, {
+  useMemo,
+  useReducer,
+  useState,
+  useRef,
+  useEffect,
+} from "react";
 
 /**
  * Secto Café – Página de pedidos
+ * Promo especial: 31/10/2026
+ * Pokes temporalmente desactivados.
  */
 
 // ===== CONFIG =====
 const PHONE_URUGUAY = "099079595";
 const ORDERS_ENDPOINT = "/api/secto";
-
-// Galería de fotos (opcional)
 const GALLERY = [];
 
 // ===== APERTURA =====
@@ -21,30 +27,16 @@ const ASAP_CUTOFF_MINUTES = 23 * 60 + 30;
 const FORCE_OPEN = false;
 const FORCE_CLOSED = false;
 
-function getNowInTZ() {
-  const now = new Date();
+// ===== PROMOCIONES =====
+const EARLY_DISCOUNT_PERCENT = 10;
+const EARLY_DISCOUNT_END_HOUR = 18;
 
-  const weekdayStr = new Intl.DateTimeFormat("en-US", {
-    timeZone: TZ,
-    weekday: "short",
-  }).format(now);
+const SPECIAL_PROMO_DATE = "2026-10-31";
+const SPECIAL_PROMO_PERCENT = 20;
 
-  const dayMap = {
-    Sun: 0, Mon: 1, Tue: 2, Wed: 3,
-    Thu: 4, Fri: 5, Sat: 6,
-  };
-  const day = dayMap[weekdayStr];
-
-  const hourStr = new Intl.DateTimeFormat("en-US", {
-    timeZone: TZ,
-    hour: "2-digit",
-    hour12: false,
-  }).format(now);
-
-  const hour = Number(hourStr);
-
-  return { day, hour };
-}
+// Los pokes se conservan en el código,
+// pero no aparecen en la carta.
+const POKES_ENABLED = false;
 
 function montevideoParts(date = new Date()) {
   const parts = new Intl.DateTimeFormat("en-US", {
@@ -59,7 +51,9 @@ function montevideoParts(date = new Date()) {
   }).formatToParts(date);
 
   const value = (key) =>
-    Number(parts.find((p) => p.type === key)?.value || 0);
+    Number(
+      parts.find((p) => p.type === key)?.value || 0
+    );
 
   return {
     year: value("year"),
@@ -71,20 +65,59 @@ function montevideoParts(date = new Date()) {
   };
 }
 
+function getNowInTZ() {
+  const now = new Date();
+
+  const weekdayStr = new Intl.DateTimeFormat(
+    "en-US",
+    {
+      timeZone: TZ,
+      weekday: "short",
+    }
+  ).format(now);
+
+  const dayMap = {
+    Sun: 0,
+    Mon: 1,
+    Tue: 2,
+    Wed: 3,
+    Thu: 4,
+    Fri: 5,
+    Sat: 6,
+  };
+
+  const { hour } = montevideoParts(now);
+
+  return {
+    day: dayMap[weekdayStr],
+    hour,
+  };
+}
+
 function todayInMontevideo() {
-  const { year, month, date } = montevideoParts();
-  return `${year}-${String(month).padStart(2, "0")}-${String(date).padStart(2, "0")}`;
+  const { year, month, date } =
+    montevideoParts();
+
+  return [
+    year,
+    String(month).padStart(2, "0"),
+    String(date).padStart(2, "0"),
+  ].join("-");
 }
 
 function advanceISODate(iso, days) {
-  const [year, month, date] = iso.split("-").map(Number);
+  const [year, month, date] =
+    iso.split("-").map(Number);
+
   return new Date(
     Date.UTC(year, month - 1, date + days)
   ).toISOString().slice(0, 10);
 }
 
 function isBusinessDate(iso) {
-  const [year, month, date] = iso.split("-").map(Number);
+  const [year, month, date] =
+    iso.split("-").map(Number);
+
   const weekday = new Date(
     Date.UTC(year, month - 1, date)
   ).getUTCDay();
@@ -102,23 +135,68 @@ function scheduleDates() {
 }
 
 function formatDeliveryDate(iso) {
-  const [year, month, date] = iso.split("-").map(Number);
+  const [year, month, date] =
+    iso.split("-").map(Number);
 
   return new Intl.DateTimeFormat("es-UY", {
     weekday: "short",
     day: "numeric",
     month: "short",
     timeZone: "UTC",
-  }).format(new Date(Date.UTC(year, month - 1, date)));
+  }).format(
+    new Date(Date.UTC(year, month - 1, date))
+  );
 }
 
 function hoursForDate(iso) {
-  if (!iso || !isBusinessDate(iso)) return [];
-  return iso === todayInMontevideo() ? futureHours() : HOURS;
+  if (!iso || !isBusinessDate(iso)) {
+    return [];
+  }
+
+  return iso === todayInMontevideo()
+    ? futureHours()
+    : HOURS;
+}
+
+// ===== DESCUENTO DINÁMICO =====
+
+function getDiscountPercent(deliveryDate) {
+  const today = todayInMontevideo();
+  const { hour } = montevideoParts();
+
+  // Promoción especial:
+  // 20% únicamente el 31/10 antes de las 18,
+  // para pedidos del mismo día.
+  if (
+    today === SPECIAL_PROMO_DATE &&
+    deliveryDate === today &&
+    hour < EARLY_DISCOUNT_END_HOUR
+  ) {
+    return SPECIAL_PROMO_PERCENT;
+  }
+
+  // Descuento habitual:
+  // 10% anticipado para hoy o días futuros.
+  if (
+    deliveryDate > today ||
+    (
+      deliveryDate === today &&
+      hour < EARLY_DISCOUNT_END_HOUR
+    )
+  ) {
+    return EARLY_DISCOUNT_PERCENT;
+  }
+
+  return 0;
+}
+
+function isEarlyDiscountActive(deliveryDate) {
+  return getDiscountPercent(deliveryDate) > 0;
 }
 
 function promoRemainingSeconds() {
   const now = montevideoParts();
+
   const secondsNow =
     now.hour * 3600 +
     now.minute * 60 +
@@ -126,50 +204,29 @@ function promoRemainingSeconds() {
 
   return Math.max(
     0,
-    EARLY_DISCOUNT_END_HOUR * 3600 - secondsNow
+    EARLY_DISCOUNT_END_HOUR * 3600 -
+      secondsNow
   );
 }
 
 function countdownText(seconds) {
   const h = Math.floor(seconds / 3600);
   const m = Math.floor((seconds % 3600) / 60);
-  const sec = seconds % 60;
+  const s = seconds % 60;
 
-  return `${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}:${String(sec).padStart(2, "0")}`;
+  return [
+    h,
+    m,
+    s,
+  ].map((n) =>
+    String(n).padStart(2, "0")
+  ).join(":");
 }
 
-function PromoPrice({ price, active, className = "" }) {
-  return active ? (
-    <span className={className}>
-      <span className="line-through text-neutral-400 mr-2">
-        {currency(price)}
-      </span>
-      <span className="font-semibold text-neutral-900">
-        {currency(
-          Math.round(
-            price * (1 - EARLY_DISCOUNT_PERCENT / 100)
-          )
-        )}
-      </span>
-    </span>
-  ) : (
-    <span className={className}>
-      {currency(price)}
-    </span>
-  );
-}
-
-function isEarlyDiscountActive(deliveryDate) {
-  // Hoy: antes de las 18.
-  // Días futuros: siempre.
-  const today = todayInMontevideo();
-
+function isSpecialPromoToday() {
   return (
-    (deliveryDate && deliveryDate > today) ||
-    (
-      deliveryDate === today &&
-      montevideoParts().hour < EARLY_DISCOUNT_END_HOUR
-    )
+    todayInMontevideo() ===
+    SPECIAL_PROMO_DATE
   );
 }
 
@@ -183,7 +240,51 @@ function isOpenBySchedule() {
   );
 }
 
-// ===== MENU =====
+const currency = (uy) =>
+  new Intl.NumberFormat("es-UY", {
+    style: "currency",
+    currency: "UYU",
+  }).format(uy);
+
+// ===== PRECIOS PROMOCIONALES =====
+
+function PromoPrice({
+  price,
+  active,
+  discountPercent,
+  className = "",
+}) {
+  const percent =
+    discountPercent ??
+    (active ? EARLY_DISCOUNT_PERCENT : 0);
+
+  if (percent <= 0) {
+    return (
+      <span className={className}>
+        {currency(price)}
+      </span>
+    );
+  }
+
+  const finalPrice = Math.round(
+    price * (1 - percent / 100)
+  );
+
+  return (
+    <span className={className}>
+      <span className="line-through text-neutral-400 mr-2">
+        {currency(price)}
+      </span>
+
+      <span className="font-semibold text-neutral-900">
+        {currency(finalPrice)}
+      </span>
+    </span>
+  );
+}
+
+// ===== MENÚ =====
+
 const MENU = [
   {
     id: "combos",
@@ -356,12 +457,15 @@ const MENU = [
 ];
 
 // ===== ZONAS =====
+
 const FREE_DELIVERY_MINIMUM = 1500;
-const EARLY_DISCOUNT_PERCENT = 10;
-const EARLY_DISCOUNT_END_HOUR = 18;
 
 const ZONES = [
-  { id: "cv", name: "Ciudad Vieja", fee: 0 },
+  {
+    id: "cv",
+    name: "Ciudad Vieja",
+    fee: 0,
+  },
   {
     id: "centro",
     name: "Centro / Cordón / Aguada",
@@ -380,34 +484,6 @@ const ZONES = [
 ];
 
 // ===== HORARIOS =====
-function buildHours(
-  start = "12:00",
-  end = "23:59",
-  stepMin = 60
-) {
-  const toMin = (h) => {
-    const [H, M] = h.split(":").map(Number);
-    return H * 60 + M;
-  };
-
-  const fromMin = (m) => {
-    const H = String(Math.floor(m / 60)).padStart(2, "0");
-    const M = String(m % 60).padStart(2, "0");
-    return `${H}:${M}`;
-  };
-
-  const out = [];
-
-  for (
-    let m = toMin(start);
-    m <= toMin(end);
-    m += stepMin
-  ) {
-    out.push(fromMin(m));
-  }
-
-  return out;
-}
 
 const HOURS = [
   "19:00",
@@ -426,37 +502,21 @@ const COMBO_CONFIG = {
 };
 
 const ROLL_OPTIONS =
-  MENU.find((cat) => cat.id === "rolls")?.items.map(
-    (item) => ({
+  MENU.find((cat) => cat.id === "rolls")
+    ?.items.map((item) => ({
       id: item.id,
       name: item.name.split(" - ")[0],
-    })
-  ) || [];
+    })) || [];
 
 const DRINK_OPTIONS =
-  MENU.find((cat) => cat.id === "bebidas")?.items.map(
-    (item) => ({
+  MENU.find((cat) => cat.id === "bebidas")
+    ?.items.map((item) => ({
       id: item.id,
       name: item.name,
-    })
-  ) || [];
+    })) || [];
 
 function getCurrentMinutesInTZ() {
-  const parts = new Intl.DateTimeFormat("en-US", {
-    timeZone: TZ,
-    hour: "2-digit",
-    minute: "2-digit",
-    hour12: false,
-  }).formatToParts(new Date());
-
-  const hour = Number(
-    parts.find((p) => p.type === "hour")?.value || 0
-  );
-
-  const minute = Number(
-    parts.find((p) => p.type === "minute")?.value || 0
-  );
-
+  const { hour, minute } = montevideoParts();
   return hour * 60 + minute;
 }
 
@@ -466,9 +526,10 @@ function futureHours() {
   return HOURS.filter((h) => {
     const [H, M] = h.split(":").map(Number);
 
-    // 00:00 es la última salida de la noche elegida.
     const departureMinutes =
-      h === "00:00" ? 24 * 60 : H * 60 + M;
+      h === "00:00"
+        ? 24 * 60
+        : H * 60 + M;
 
     return (
       nowMin < ASAP_CUTOFF_MINUTES &&
@@ -481,36 +542,42 @@ function nextAsapDeparture() {
   return futureHours()[0] || null;
 }
 
-const currency = (uy) =>
-  new Intl.NumberFormat("es-UY", {
-    style: "currency",
-    currency: "UYU",
-  }).format(uy);
+ // ===== CARRITO =====
 
-// ===== CARRITO =====
 function reducer(state, action) {
   const next = { ...state };
 
   if (action.type === "add") {
     const key = action.item.id;
+
     const delta =
-      typeof action.qty === "number" && action.qty > 0
+      typeof action.qty === "number" &&
+      action.qty > 0
         ? action.qty
         : 1;
 
-    const qty = (state[key]?.qty || 0) + delta;
-    next[key] = { item: action.item, qty };
+    const qty =
+      (state[key]?.qty || 0) + delta;
+
+    next[key] = {
+      item: action.item,
+      qty,
+    };
   }
 
   if (action.type === "remove") {
     const key = action.item.id;
+
     const qty = Math.max(
       0,
       (state[key]?.qty || 0) - 1
     );
 
     if (qty > 0) {
-      next[key] = { item: action.item, qty };
+      next[key] = {
+        item: action.item,
+        qty,
+      };
     } else {
       delete next[key];
     }
@@ -527,11 +594,14 @@ function reducer(state, action) {
   return next;
 }
 
+// ===== WHATSAPP =====
+
 function buildWhatsAppText(order) {
   const {
     items,
     subtotal,
     discount = 0,
+    discountPercent = 0,
     zone,
     fee,
     total,
@@ -547,7 +617,9 @@ function buildWhatsAppText(order) {
 
   const header =
     "Pedido Secto Cafe — " +
-    new Date().toLocaleString("es-UY");
+    new Date().toLocaleString("es-UY", {
+      timeZone: TZ,
+    });
 
   const lines = items.map(
     ({ item, qty }) =>
@@ -565,13 +637,15 @@ function buildWhatsAppText(order) {
 
       if (combo.rolls?.length) {
         details.push(
-          "Rolls: " + combo.rolls.join(" / ")
+          "Rolls: " +
+          combo.rolls.join(" / ")
         );
       }
 
       if (combo.drinks?.length) {
         details.push(
-          "Bebidas: " + combo.drinks.join(" / ")
+          "Bebidas: " +
+          combo.drinks.join(" / ")
         );
       }
 
@@ -587,7 +661,8 @@ function buildWhatsAppText(order) {
   );
 
   const zona =
-    ZONES.find((z) => z.id === zone)?.name || "";
+    ZONES.find((z) => z.id === zone)
+      ?.name || "";
 
   const info = [
     "Metodo: " +
@@ -603,14 +678,9 @@ function buildWhatsAppText(order) {
         ")"
       : null,
 
-    "Entrega: " +
-      (time === "asap"
-        ? "Lo antes posible (hoy)"
-        : time),
+    "Entrega: " + time,
 
-    method === "delivery" &&
-    time !== "asap" &&
-    /(?:^|\s)(?:1[89]|2[0-3]):\d{2}$/.test(time)
+    method === "delivery"
       ? "Importante: horario de salida del local, no de entrega."
       : null,
 
@@ -621,7 +691,9 @@ function buildWhatsAppText(order) {
       ? "Direccion: " + address
       : null,
 
-    notes ? "Notas: " + notes : null,
+    notes
+      ? "Notas: " + notes
+      : null,
 
     paid
       ? "Estado: Pagado"
@@ -636,24 +708,32 @@ function buildWhatsAppText(order) {
     ...comboLines,
     "",
     "Subtotal: " + currency(subtotal),
+
     ...(discount > 0
       ? [
-          "Descuento antes de las 18:00 (10%): -" +
+          "Descuento anticipado (" +
+            discountPercent +
+            "%): -" +
             currency(discount),
         ]
       : []),
+
     "Envio: " +
       (method === "delivery"
         ? fee === 0
           ? "GRATIS"
           : currency(fee)
         : "Retiro en local"),
+
     "Total: " + currency(total),
+    "",
     ...info,
   ].join("\n");
 }
 
 // ===== POKES =====
+// Conservamos toda la configuración.
+// POKES_ENABLED = false los oculta de la carta.
 
 const FIXED_POKES = [
   {
@@ -686,11 +766,26 @@ const POKE_BASES = [
 ];
 
 const POKE_PROTEINS = [
-  { name: "Boniato asado", extraPrice: 80 },
-  { name: "Edamame", extraPrice: 80 },
-  { name: "Garbanzos", extraPrice: 80 },
-  { name: "Seitan tonkatsu (mila)", extraPrice: 100 },
-  { name: "Tofu", extraPrice: 80 },
+  {
+    name: "Boniato asado",
+    extraPrice: 80,
+  },
+  {
+    name: "Edamame",
+    extraPrice: 80,
+  },
+  {
+    name: "Garbanzos",
+    extraPrice: 80,
+  },
+  {
+    name: "Seitan tonkatsu (mila)",
+    extraPrice: 100,
+  },
+  {
+    name: "Tofu",
+    extraPrice: 80,
+  },
 ];
 
 const POKE_TOPPINGS = [
@@ -719,16 +814,23 @@ const POKE_SAUCES = [
   "Teriyaki",
 ];
 
+// ===== POKE PERSONALIZADO =====
+
 function PokeBuilder({
   onAdd,
   isOpen,
   earlyDiscountActive,
+  discountPercent = 0,
 }) {
   const [base, setBase] = useState("");
-  const [proteins, setProteins] = useState([]);
-  const [toppings, setToppings] = useState([]);
-  const [sauces, setSauces] = useState([]);
-  const [feedback, setFeedback] = useState("");
+  const [proteins, setProteins] =
+    useState([]);
+  const [toppings, setToppings] =
+    useState([]);
+  const [sauces, setSauces] =
+    useState([]);
+  const [feedback, setFeedback] =
+    useState("");
 
   const toggleInArray = (value, setFn) => {
     setFn((prev) =>
@@ -738,21 +840,22 @@ function PokeBuilder({
     );
   };
 
-  // La primera proteína está incluida.
-  // Las siguientes suman su precio correspondiente.
   const extraProteinTotal = proteins
     .slice(1)
     .reduce((sum, name) => {
       const found = POKE_PROTEINS.find(
         (p) => p.name === name
       );
-      return sum + (found?.extraPrice || 0);
+
+      return (
+        sum + (found?.extraPrice || 0)
+      );
     }, 0);
 
-  // El sésamo es gratis y no ocupa un topping.
-  const chargeableToppings = toppings.filter(
-    (t) => t !== "Sésamo"
-  );
+  const chargeableToppings =
+    toppings.filter(
+      (t) => t !== "Sésamo"
+    );
 
   const extraToppingCount = Math.max(
     0,
@@ -760,16 +863,17 @@ function PokeBuilder({
   );
 
   const extraToppingTotal =
-    extraToppingCount * POKE_EXTRA_TOPPING;
+    extraToppingCount *
+    POKE_EXTRA_TOPPING;
 
-  // Dos salsas incluidas.
   const extraSauceCount = Math.max(
     0,
     sauces.length - 2
   );
 
   const extraSauceTotal =
-    extraSauceCount * POKE_EXTRA_SAUCE;
+    extraSauceCount *
+    POKE_EXTRA_SAUCE;
 
   const unitPrice =
     POKE_BASE_PRICE +
@@ -784,13 +888,21 @@ function PokeBuilder({
     sauces.length >= 1;
 
   const handleAdd = () => {
-    if (!canAdd || FORCE_CLOSED) return;
+    if (
+      !canAdd ||
+      FORCE_CLOSED ||
+      !POKES_ENABLED
+    ) {
+      return;
+    }
 
     const description =
       "Armá tu poke — Base: " +
       base +
       " | Proteína" +
-      (proteins.length > 1 ? "s" : "") +
+      (proteins.length > 1
+        ? "s"
+        : "") +
       ": " +
       proteins.join(", ") +
       " | Toppings: " +
@@ -811,7 +923,9 @@ function PokeBuilder({
     setToppings([]);
     setSauces([]);
 
-    setFeedback("Poke agregado al pedido");
+    setFeedback(
+      "Poke agregado al pedido"
+    );
 
     setTimeout(() => {
       setFeedback("");
@@ -827,7 +941,8 @@ function PokeBuilder({
           </h3>
 
           <p className="text-xs text-neutral-500 mt-1">
-            1 proteína · 5 toppings · 2 salsas incluidas
+            1 proteína · 5 toppings ·
+            2 salsas incluidas
           </p>
         </div>
 
@@ -865,7 +980,9 @@ function PokeBuilder({
                   type="radio"
                   name="poke-base"
                   checked={base === option}
-                  onChange={() => setBase(option)}
+                  onChange={() =>
+                    setBase(option)
+                  }
                   className="accent-black"
                 />
               </label>
@@ -874,187 +991,173 @@ function PokeBuilder({
         </div>
 
         <div>
-          <div className="flex items-baseline justify-between gap-3 mb-2">
-            <p className="text-xs text-neutral-500 uppercase tracking-[0.15em]">
-              Proteína · 1 incluida
-            </p>
-
-            <span className="text-[11px] text-neutral-400">
-              {proteins.length > 1
-                ? `${proteins.length - 1} extra`
-                : "sin extras"}
-            </span>
-          </div>
+          <p className="text-xs text-neutral-500 uppercase tracking-[0.15em] mb-2">
+            Proteína · 1 incluida
+          </p>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-            {POKE_PROTEINS.map((option) => {
-              const selected = proteins.includes(
-                option.name
-              );
+            {POKE_PROTEINS.map(
+              (option) => {
+                const selected =
+                  proteins.includes(
+                    option.name
+                  );
 
-              const index = proteins.indexOf(
-                option.name
-              );
+                const index =
+                  proteins.indexOf(
+                    option.name
+                  );
 
-              const isExtra = selected && index > 0;
+                const isExtra =
+                  selected &&
+                  index > 0;
 
-              return (
-                <button
-                  key={option.name}
-                  type="button"
-                  onClick={() =>
-                    toggleInArray(
-                      option.name,
-                      setProteins
-                    )
-                  }
-                  className={
-                    "flex items-center justify-between text-xs border rounded-xl px-3 py-2 text-left " +
-                    (selected
-                      ? "bg-neutral-900 text-white border-neutral-900"
-                      : "border-neutral-200 text-neutral-700")
-                  }
-                >
-                  <span>{option.name}</span>
+                return (
+                  <button
+                    key={option.name}
+                    type="button"
+                    onClick={() =>
+                      toggleInArray(
+                        option.name,
+                        setProteins
+                      )
+                    }
+                    className={
+                      "flex items-center justify-between text-xs border rounded-xl px-3 py-2 text-left " +
+                      (selected
+                        ? "bg-neutral-900 text-white border-neutral-900"
+                        : "border-neutral-200 text-neutral-700")
+                    }
+                  >
+                    <span>
+                      {option.name}
+                    </span>
 
-                  <span>
-                    {isExtra
-                      ? `+ ${currency(option.extraPrice)}`
-                      : selected
-                        ? "✓"
-                        : "+"}
-                  </span>
-                </button>
-              );
-            })}
+                    <span>
+                      {isExtra
+                        ? `+ ${currency(option.extraPrice)}`
+                        : selected
+                          ? "✓"
+                          : "+"}
+                    </span>
+                  </button>
+                );
+              }
+            )}
           </div>
         </div>
 
         <div>
-          <div className="flex items-baseline justify-between gap-3 mb-2">
-            <p className="text-xs text-neutral-500 uppercase tracking-[0.15em]">
-              Toppings · 5 incluidos
-            </p>
-
-            <span className="text-[11px] text-neutral-400">
-              {chargeableToppings.length}/5
-              {extraToppingCount > 0
-                ? ` · ${extraToppingCount} extra`
-                : ""}
-            </span>
-          </div>
+          <p className="text-xs text-neutral-500 uppercase tracking-[0.15em] mb-2">
+            Toppings · 5 incluidos
+          </p>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-            {POKE_TOPPINGS.map((option) => {
-              const selected = toppings.includes(
-                option
-              );
+            {POKE_TOPPINGS.map(
+              (option) => {
+                const selected =
+                  toppings.includes(option);
 
-              const chargeableIndex =
-                option === "Sésamo"
-                  ? -1
-                  : chargeableToppings.indexOf(
-                      option
-                    );
+                const chargeableIndex =
+                  option === "Sésamo"
+                    ? -1
+                    : chargeableToppings.indexOf(
+                        option
+                      );
 
-              const isExtra =
-                selected &&
-                option !== "Sésamo" &&
-                chargeableIndex >= 5;
+                const isExtra =
+                  selected &&
+                  option !== "Sésamo" &&
+                  chargeableIndex >= 5;
 
-              return (
-                <button
-                  key={option}
-                  type="button"
-                  onClick={() =>
-                    toggleInArray(
-                      option,
-                      setToppings
-                    )
-                  }
-                  className={
-                    "flex items-center justify-between text-xs border rounded-xl px-3 py-2 text-left " +
-                    (selected
-                      ? "bg-neutral-900 text-white border-neutral-900"
-                      : "border-neutral-200 text-neutral-700")
-                  }
-                >
-                  <span>
-                    {option}
-                    {option === "Sésamo"
-                      ? " · gratis"
-                      : ""}
-                  </span>
+                return (
+                  <button
+                    key={option}
+                    type="button"
+                    onClick={() =>
+                      toggleInArray(
+                        option,
+                        setToppings
+                      )
+                    }
+                    className={
+                      "flex items-center justify-between text-xs border rounded-xl px-3 py-2 text-left " +
+                      (selected
+                        ? "bg-neutral-900 text-white border-neutral-900"
+                        : "border-neutral-200 text-neutral-700")
+                    }
+                  >
+                    <span>
+                      {option}
+                      {option === "Sésamo"
+                        ? " · gratis"
+                        : ""}
+                    </span>
 
-                  <span>
-                    {isExtra
-                      ? `+ ${currency(POKE_EXTRA_TOPPING)}`
-                      : selected
-                        ? "✓"
-                        : "+"}
-                  </span>
-                </button>
-              );
-            })}
+                    <span>
+                      {isExtra
+                        ? `+ ${currency(POKE_EXTRA_TOPPING)}`
+                        : selected
+                          ? "✓"
+                          : "+"}
+                    </span>
+                  </button>
+                );
+              }
+            )}
           </div>
         </div>
 
         <div>
-          <div className="flex items-baseline justify-between gap-3 mb-2">
-            <p className="text-xs text-neutral-500 uppercase tracking-[0.15em]">
-              Salsas · 2 incluidas
-            </p>
-
-            <span className="text-[11px] text-neutral-400">
-              {sauces.length}/2
-              {extraSauceCount > 0
-                ? ` · ${extraSauceCount} extra`
-                : ""}
-            </span>
-          </div>
+          <p className="text-xs text-neutral-500 uppercase tracking-[0.15em] mb-2">
+            Salsas · 2 incluidas
+          </p>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-            {POKE_SAUCES.map((option) => {
-              const selected = sauces.includes(
-                option
-              );
+            {POKE_SAUCES.map(
+              (option) => {
+                const selected =
+                  sauces.includes(option);
 
-              const index = sauces.indexOf(
-                option
-              );
+                const index =
+                  sauces.indexOf(option);
 
-              const isExtra =
-                selected && index >= 2;
+                const isExtra =
+                  selected &&
+                  index >= 2;
 
-              return (
-                <button
-                  key={option}
-                  type="button"
-                  onClick={() =>
-                    toggleInArray(
-                      option,
-                      setSauces
-                    )
-                  }
-                  className={
-                    "flex items-center justify-between text-xs border rounded-xl px-3 py-2 text-left " +
-                    (selected
-                      ? "bg-neutral-900 text-white border-neutral-900"
-                      : "border-neutral-200 text-neutral-700")
-                  }
-                >
-                  <span>{option}</span>
+                return (
+                  <button
+                    key={option}
+                    type="button"
+                    onClick={() =>
+                      toggleInArray(
+                        option,
+                        setSauces
+                      )
+                    }
+                    className={
+                      "flex items-center justify-between text-xs border rounded-xl px-3 py-2 text-left " +
+                      (selected
+                        ? "bg-neutral-900 text-white border-neutral-900"
+                        : "border-neutral-200 text-neutral-700")
+                    }
+                  >
+                    <span>
+                      {option}
+                    </span>
 
-                  <span>
-                    {isExtra
-                      ? `+ ${currency(POKE_EXTRA_SAUCE)}`
-                      : selected
-                        ? "✓"
-                        : "+"}
-                  </span>
-                </button>
-              );
-            })}
+                    <span>
+                      {isExtra
+                        ? `+ ${currency(POKE_EXTRA_SAUCE)}`
+                        : selected
+                          ? "✓"
+                          : "+"}
+                    </span>
+                  </button>
+                );
+              }
+            )}
           </div>
         </div>
 
@@ -1068,6 +1171,7 @@ function PokeBuilder({
               <PromoPrice
                 price={unitPrice}
                 active={earlyDiscountActive}
+                discountPercent={discountPercent}
               />
             </span>
           </div>
@@ -1075,21 +1179,21 @@ function PokeBuilder({
           <button
             type="button"
             onClick={handleAdd}
-            disabled={!canAdd || FORCE_CLOSED}
-            className={
-              "w-full rounded-2xl py-3 text-sm " +
-              (canAdd && !FORCE_CLOSED
-                ? "bg-black text-white"
-                : "bg-neutral-100 text-neutral-400 cursor-not-allowed")
+            disabled={
+              !canAdd ||
+              FORCE_CLOSED ||
+              !POKES_ENABLED
             }
+            className="w-full rounded-2xl py-3 text-sm bg-black text-white disabled:bg-neutral-100 disabled:text-neutral-400"
           >
             Agregar poke al pedido
           </button>
 
           {!canAdd && (
             <p className="text-[11px] text-neutral-400 mt-2">
-              Elegí base, al menos 1 proteína,
-              1 topping y 1 salsa.
+              Elegí base, al menos
+              1 proteína, 1 topping
+              y 1 salsa.
             </p>
           )}
 
@@ -1111,77 +1215,77 @@ function PokesSection({
   showCartPeek,
   setCartHighlight,
   earlyDiscountActive,
+  discountPercent,
 }) {
+  if (!POKES_ENABLED) return null;
+
   return (
     <div>
       <div className="flex items-baseline justify-between mb-3">
         <h2 className="text-sm tracking-[0.2em] text-neutral-500">
           POKES
         </h2>
-
-        <span className="h-[1px] flex-1 ml-4 bg-neutral-200"></span>
+        <span className="h-[1px] flex-1 ml-4 bg-neutral-200" />
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         {FIXED_POKES.map((item) => (
           <article
             key={item.id}
-            className="group border border-neutral-200 rounded-2xl overflow-hidden bg-white"
+            className="border border-neutral-200 rounded-2xl overflow-hidden bg-white"
           >
-            {typeof item.img === "string" &&
-            item.img.trim().length > 0 ? (
+            {item.img && (
               <div className="aspect-[4/3] overflow-hidden">
                 <img
                   src={item.img}
                   alt={item.name}
                   className="w-full h-full object-cover"
                   loading="lazy"
-                  decoding="async"
                 />
               </div>
-            ) : null}
+            )}
 
             <div className="p-4">
-              <h3 className="text-neutral-900 leading-tight">
+              <h3 className="text-neutral-900">
                 {item.name}
               </h3>
 
-              <p className="text-sm text-neutral-500 mt-2 leading-relaxed">
+              <p className="text-sm text-neutral-500 mt-2">
                 {item.description}
               </p>
 
-              {item.tags?.length > 0 && (
-                <p className="text-[11px] text-neutral-400 mt-2">
-                  {item.tags.join(" · ")}
-                </p>
-              )}
+              <p className="text-[11px] text-neutral-400 mt-2">
+                {item.tags?.join(" · ")}
+              </p>
 
-              <div className="mt-3 flex items-center justify-between gap-4">
-                <p className="text-sm text-neutral-500">
-                  <PromoPrice
-                    price={item.price}
-                    active={earlyDiscountActive}
-                  />
-                </p>
+              <div className="mt-3 flex items-center justify-between gap-3">
+                <PromoPrice
+                  price={item.price}
+                  active={earlyDiscountActive}
+                  discountPercent={discountPercent}
+                />
 
                 <div className="flex items-center gap-2">
                   <button
+                    type="button"
                     onClick={() =>
                       dispatch({
                         type: "remove",
                         item,
                       })
                     }
-                    className="px-3 py-2 rounded-xl border border-neutral-200"
+                    className="px-3 py-2 rounded-xl border"
                   >
                     -
                   </button>
 
-                  <span className="w-6 text-center text-neutral-600">
+                  <span>
                     {cart[item.id]?.qty || 0}
                   </span>
 
                   <button
+                    type="button"
+                    disabled={FORCE_CLOSED}
                     onClick={() => {
                       dispatch({
                         type: "add",
@@ -1196,12 +1300,7 @@ function PokesSection({
                         600
                       );
                     }}
-                    className={`px-3 py-2 rounded-xl border ${
-                      !FORCE_CLOSED
-                        ? "border-neutral-200 bg-neutral-50"
-                        : "border-neutral-200 text-neutral-400 cursor-not-allowed"
-                    }`}
-                    disabled={FORCE_CLOSED}
+                    className="px-3 py-2 rounded-xl border"
                   >
                     +
                   </button>
@@ -1216,6 +1315,7 @@ function PokesSection({
         <PokeBuilder
           isOpen={isOpen}
           earlyDiscountActive={earlyDiscountActive}
+          discountPercent={discountPercent}
           onAdd={(item, qty) => {
             dispatch({
               type: "add",
@@ -1248,22 +1348,33 @@ export default function SectoCafePedidos() {
   const [address, setAddress] = useState("");
   const [notes, setNotes] = useState("");
   const [time, setTime] = useState("asap");
-  const [deliveryDate, setDeliveryDate] = useState(todayInMontevideo);
-  const [comboSelections, setComboSelections] = useState({});
+
+  const [deliveryDate, setDeliveryDate] =
+    useState(todayInMontevideo);
+
+  const [comboSelections, setComboSelections] =
+    useState({});
 
   const cartRef = useRef(null);
-  const [cartHighlight, setCartHighlight] = useState(false);
-  const [cartPeek, setCartPeek] = useState(false);
-  const [sending, setSending] = useState(false);
-  const [clockTick, setClockTick] = useState(0);
 
-  // Actualizar horarios, descuentos y apertura
-  // mientras el cliente tiene la página abierta.
+  const [cartHighlight, setCartHighlight] =
+    useState(false);
+
+  const [cartPeek, setCartPeek] =
+    useState(false);
+
+  const [sending, setSending] =
+    useState(false);
+
+  const [clockTick, setClockTick] =
+    useState(0);
+
+  // Actualización en tiempo real.
   useEffect(() => {
-    const timer = setInterval(
-      () => setClockTick((n) => n + 1),
-      1000
-    );
+    const timer = setInterval(() => {
+      setClockTick((n) => n + 1);
+    }, 1000);
+
     return () => clearInterval(timer);
   }, []);
 
@@ -1277,6 +1388,7 @@ export default function SectoCafePedidos() {
 
     items.forEach(({ item, qty }) => {
       const config = COMBO_CONFIG[item.id];
+
       if (!config) return;
 
       for (let i = 0; i < qty; i += 1) {
@@ -1292,14 +1404,22 @@ export default function SectoCafePedidos() {
     return result;
   }, [items]);
 
-  const setComboChoice = (key, type, index, value) => {
+  const setComboChoice = (
+    key,
+    type,
+    index,
+    value
+  ) => {
     setComboSelections((prev) => {
       const current = prev[key] || {
         rolls: [],
         drinks: [],
       };
 
-      const nextValues = [...(current[type] || [])];
+      const nextValues = [
+        ...(current[type] || []),
+      ];
+
       nextValues[index] = value;
 
       return {
@@ -1314,7 +1434,9 @@ export default function SectoCafePedidos() {
 
   const combosComplete = comboInstances.every(
     ({ key, config }) => {
-      const selection = comboSelections[key] || {};
+      const selection =
+        comboSelections[key] || {};
+
       const rolls = selection.rolls || [];
       const drinks = selection.drinks || [];
 
@@ -1339,76 +1461,93 @@ export default function SectoCafePedidos() {
     [items]
   );
 
+  // ===== FECHAS Y DESCUENTOS =====
+
   const today = todayInMontevideo();
   const availableDates = scheduleDates();
 
-  const selectedDate = availableDates.includes(deliveryDate)
-    ? deliveryDate
-    : (availableDates[0] || today);
+  const selectedDate =
+    availableDates.includes(deliveryDate)
+      ? deliveryDate
+      : availableDates[0] || today;
 
-  // Hoy antes de las 18: 10% OFF.
-  // Otro día: 10% OFF incluso si se pide después de las 18.
+  // Hoy 31/10: 20% hasta las 18.
+  // Días futuros: 10%.
+  // Desde mañana: 10% habitual.
+  const discountPercent =
+    getDiscountPercent(selectedDate);
+
   const earlyDiscountActive =
-    selectedDate > today ||
-    (
-      selectedDate === today &&
-      montevideoParts().hour < EARLY_DISCOUNT_END_HOUR
-    );
+    discountPercent > 0;
 
-  const discount = earlyDiscountActive
-    ? Math.round(
-        subtotal * EARLY_DISCOUNT_PERCENT / 100
-      )
-    : 0;
+  const discount = Math.round(
+    subtotal * discountPercent / 100
+  );
 
-  const discountedSubtotal = subtotal - discount;
+  const discountedSubtotal =
+    subtotal - discount;
 
-  // ===== ENVÍO GRATIS CORREGIDO =====
-  // Se activa desde $1.500 DESPUÉS del descuento.
+  // ===== ENVÍO GRATIS =====
+
   const hasFreeDelivery =
-    discountedSubtotal >= FREE_DELIVERY_MINIMUM;
+    discountedSubtotal >=
+    FREE_DELIVERY_MINIMUM;
 
   const fee = useMemo(() => {
     if (
       method !== "delivery" ||
-      discountedSubtotal >= FREE_DELIVERY_MINIMUM
+      discountedSubtotal >=
+        FREE_DELIVERY_MINIMUM
     ) {
       return 0;
     }
 
-    return ZONES.find(
-      (z) => z.id === zone
-    )?.fee || 0;
-  }, [method, zone, discountedSubtotal]);
+    return (
+      ZONES.find((z) => z.id === zone)
+        ?.fee || 0
+    );
+  }, [
+    method,
+    zone,
+    discountedSubtotal,
+  ]);
 
-  const total = discountedSubtotal + fee;
+  const total =
+    discountedSubtotal + fee;
 
-  // Cuánto falta agregar en productos para alcanzar
-  // $1.500 finales, contemplando el descuento.
-  const missingForFreeDelivery = hasFreeDelivery
-    ? 0
-    : Math.max(
-        0,
-        Math.ceil(
-          FREE_DELIVERY_MINIMUM /
-            (earlyDiscountActive
-              ? 1 - EARLY_DISCOUNT_PERCENT / 100
-              : 1)
-          - subtotal
-        )
-      );
+  const missingForFreeDelivery =
+    hasFreeDelivery
+      ? 0
+      : Math.max(
+          0,
+          Math.ceil(
+            FREE_DELIVERY_MINIMUM /
+              (1 - discountPercent / 100) -
+              subtotal
+          )
+        );
 
   const freeDeliveryProgress = Math.min(
     100,
-    (discountedSubtotal / FREE_DELIVERY_MINIMUM) * 100
+    (
+      discountedSubtotal /
+      FREE_DELIVERY_MINIMUM
+    ) * 100
   );
 
-  const scheduleOpen = isOpenBySchedule();
-  const asapDeparture = nextAsapDeparture();
+  // ===== HORARIOS =====
+
+  const scheduleOpen =
+    isOpenBySchedule();
+
+  const asapDeparture =
+    nextAsapDeparture();
+
   const asapAvailable =
     scheduleOpen && !!asapDeparture;
 
-  const availableHours = hoursForDate(selectedDate);
+  const availableHours =
+    hoursForDate(selectedDate);
 
   const isEveningDeparture =
     method === "delivery" &&
@@ -1420,7 +1559,8 @@ export default function SectoCafePedidos() {
 
   const validTime =
     time === "asap"
-      ? selectedDate === today && asapAvailable
+      ? selectedDate === today &&
+        asapAvailable
       : availableHours.includes(time);
 
   useEffect(() => {
@@ -1428,16 +1568,22 @@ export default function SectoCafePedidos() {
       setDeliveryDate(selectedDate);
     }
 
-    if (time === "asap" && !asapAvailable) {
-      setTime(availableHours[0] || "");
+    if (
+      time === "asap" &&
+      !asapAvailable
+    ) {
+      setTime(
+        availableHours[0] || ""
+      );
     } else if (
       time !== "asap" &&
       !availableHours.includes(time)
     ) {
       setTime(
-        selectedDate === today && asapAvailable
+        selectedDate === today &&
+          asapAvailable
           ? "asap"
-          : (availableHours[0] || "")
+          : availableHours[0] || ""
       );
     }
   }, [
@@ -1455,8 +1601,8 @@ export default function SectoCafePedidos() {
 
   const canSend =
     subtotal > 0 &&
-    name &&
-    phone &&
+    name.trim().length > 0 &&
+    phone.trim().length > 0 &&
     validTime &&
     combosComplete &&
     (
@@ -1465,77 +1611,96 @@ export default function SectoCafePedidos() {
     );
 
   const canSendNow =
-    canSend && !FORCE_CLOSED && !sending;
+    canSend &&
+    !FORCE_CLOSED &&
+    !sending;
 
   const showCartPeek = () => {
     setCartPeek(true);
   };
 
-  const getOrder = (extra = {}) => ({
-    items,
-    subtotal,
-    discount,
-    discountedSubtotal,
-    zone,
-    fee,
-    total,
-    method,
-    name,
-    phone,
-    address,
-    notes,
+  // ===== CREAR PEDIDO =====
 
-    time: `${
-      (time === "asap" ? asapDeparture : time) === "00:00"
-        ? advanceISODate(selectedDate, 1)
-        : selectedDate
-    } ${time === "asap" ? asapDeparture : time}`,
-
-    // deliveryDate es el día de servicio.
-    // A las 00:00, la fecha real es la siguiente.
-    deliveryDate:
-      time === "asap"
-        ? todayInMontevideo()
-        : selectedDate,
-
-    serviceSlot:
+  const getOrder = (extra = {}) => {
+    const selectedSlot =
       time === "asap"
         ? asapDeparture
-        : time,
+        : time;
 
-    requestedAsap: time === "asap",
+    const actualDepartureDate =
+      selectedSlot === "00:00"
+        ? advanceISODate(selectedDate, 1)
+        : selectedDate;
 
-    comboSelections: comboInstances.map(
-      ({ item, key }) => {
-        const selection = comboSelections[key] || {};
+    return {
+      items,
+      subtotal,
+      discount,
+      discountPercent,
+      discountedSubtotal,
+      zone,
+      fee,
+      total,
+      method,
+      name,
+      phone,
+      address,
+      notes,
 
-        return {
-          comboId: item.id,
-          comboName: item.name,
+      time:
+        actualDepartureDate +
+        " " +
+        selectedSlot,
 
-          rolls: (selection.rolls || []).map(
-            (id) =>
-              ROLL_OPTIONS.find(
-                (r) => r.id === id
-              )?.name || id
-          ),
+      deliveryDate:
+        time === "asap"
+          ? todayInMontevideo()
+          : selectedDate,
 
-          drinks: (selection.drinks || []).map(
-            (id) =>
-              DRINK_OPTIONS.find(
-                (d) => d.id === id
-              )?.name || id
-          ),
-        };
-      }
-    ),
+      serviceSlot: selectedSlot,
+      requestedAsap: time === "asap",
 
-    ...extra,
-  });
+      comboSelections:
+        comboInstances.map(
+          ({ item, key }) => {
+            const selection =
+              comboSelections[key] || {};
+
+            return {
+              comboId: item.id,
+              comboName: item.name,
+
+              rolls:
+                (selection.rolls || []).map(
+                  (id) =>
+                    ROLL_OPTIONS.find(
+                      (r) => r.id === id
+                    )?.name || id
+                ),
+
+              drinks:
+                (selection.drinks || []).map(
+                  (id) =>
+                    DRINK_OPTIONS.find(
+                      (d) => d.id === id
+                    )?.name || id
+                ),
+            };
+          }
+        ),
+
+      ...extra,
+    };
+  };
+
+  // ===== WHATSAPP =====
 
   const getWhatsAppUrl = (order) => {
-    const text = buildWhatsAppText(order);
-    const encoded = encodeURIComponent(text);
+    const text =
+      buildWhatsAppText(order);
+
+    const encoded =
+      encodeURIComponent(text);
 
     const phoneDigits =
       PHONE_URUGUAY.replace(/\D/g, "");
@@ -1549,7 +1714,8 @@ export default function SectoCafePedidos() {
   };
 
   const openWhatsAppWithOrder = (order) => {
-    window.location.href = getWhatsAppUrl(order);
+    window.location.href =
+      getWhatsAppUrl(order);
   };
 
   useEffect(() => {
@@ -1557,6 +1723,8 @@ export default function SectoCafePedidos() {
       setCartPeek(false);
     }
   }, [items.length]);
+
+  // ===== ENVIAR A KITCHEN =====
 
   const sendOrder = async (paid = false) => {
     if (!canSendNow || !validTime) {
@@ -1566,9 +1734,39 @@ export default function SectoCafePedidos() {
       return;
     }
 
-    setClockTick((n) => n + 1);
+    // Revalidar el descuento al enviar.
+    // Evita aplicar 20% si ya pasaron las 18.
+    const currentDiscountPercent =
+      getDiscountPercent(selectedDate);
+
+    const currentDiscount = Math.round(
+      subtotal *
+        currentDiscountPercent /
+        100
+    );
+
+    const currentDiscountedSubtotal =
+      subtotal - currentDiscount;
+
+    const currentFee =
+      method !== "delivery" ||
+      currentDiscountedSubtotal >=
+        FREE_DELIVERY_MINIMUM
+        ? 0
+        : ZONES.find(
+            (z) => z.id === zone
+          )?.fee || 0;
 
     const order = getOrder({
+      discount: currentDiscount,
+      discountPercent:
+        currentDiscountPercent,
+      discountedSubtotal:
+        currentDiscountedSubtotal,
+      fee: currentFee,
+      total:
+        currentDiscountedSubtotal +
+        currentFee,
       paid,
       createdAt: Date.now(),
       source: "web",
@@ -1577,22 +1775,32 @@ export default function SectoCafePedidos() {
     try {
       setSending(true);
 
-      const res = await fetch(ORDERS_ENDPOINT, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          action: "new_order",
-          order,
-        }),
-      });
+      const res = await fetch(
+        ORDERS_ENDPOINT,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type":
+              "application/json",
+          },
+          body: JSON.stringify({
+            action: "new_order",
+            order,
+          }),
+        }
+      );
 
-      const data = await res.json().catch(() => null);
+      const data = await res
+        .json()
+        .catch(() => null);
 
-      if (!res.ok || data?.ok === false) {
+      if (
+        !res.ok ||
+        data?.ok === false
+      ) {
         throw new Error(
-          data?.error || "No se pudo guardar el pedido"
+          data?.error ||
+          "No se pudo guardar el pedido"
         );
       }
 
@@ -1603,19 +1811,25 @@ export default function SectoCafePedidos() {
     } catch (err) {
       alert(
         "No se pudo registrar el pedido para impresión: " +
-        (err?.message || err)
+          (err?.message || err)
       );
     } finally {
       setSending(false);
     }
   };
 
+  // ===== INTERFAZ =====
+
   return (
     <div className="min-h-screen bg-white text-neutral-800">
+
       <header className="sticky top-0 z-40 border-b border-neutral-200 bg-white/90 backdrop-blur">
         <div className="max-w-6xl mx-auto px-4 py-3 flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <a href="/" aria-label="Inicio Secto Cafe">
+            <a
+              href="/"
+              aria-label="Inicio Secto Cafe"
+            >
               <img
                 src="/logo-secto.png"
                 alt="Secto Cafe"
@@ -1629,7 +1843,6 @@ export default function SectoCafePedidos() {
                   ? "Sushi vegano — pedidos abiertos hasta las 23:30"
                   : "Sushi vegano — programá tu pedido"}
               </p>
-              <h1 className="text-lg text-neutral-900"></h1>
             </div>
           </div>
 
@@ -1639,48 +1852,60 @@ export default function SectoCafePedidos() {
         </div>
       </header>
 
-      {GALLERY?.length > 0 && (
+      {GALLERY.length > 0 && (
         <section className="max-w-6xl mx-auto px-4 pt-6">
-          <div className="columns-1 sm:columns-2 lg:columns-3 gap-4 [column-fill:_balance]">
+          <div className="columns-1 sm:columns-2 lg:columns-3 gap-4">
             {GALLERY.map((src, i) => (
               <img
                 key={i}
                 src={src}
                 alt="Secto Café"
-                className="mb-4 w-full rounded-2xl border border-neutral-900 object-cover hover:opacity-90 transition"
+                className="mb-4 w-full rounded-2xl border border-neutral-900 object-cover"
               />
             ))}
           </div>
         </section>
       )}
 
+      {/* BANNER DE PROMOCIÓN */}
+
       <section className="max-w-6xl mx-auto px-4 pt-5">
         <div className="rounded-2xl bg-neutral-950 text-white px-5 py-4 flex flex-wrap items-center justify-between gap-2">
           <div>
             <p className="text-xs tracking-[0.18em] text-neutral-300">
-              Reservá tu cena antes de las 18hs y recibí
+              {isSpecialPromoToday()
+                ? "SOLO HOY · PROMOCIÓN ESPECIAL"
+                : "RESERVÁ TU CENA CON ANTICIPACIÓN"}
             </p>
 
             <p className="text-lg font-semibold">
-              10% OFF ADICIONAL EN TU PEDIDO
+              {isSpecialPromoToday() &&
+              montevideoParts().hour <
+                EARLY_DISCOUNT_END_HOUR
+                ? "20% OFF EN PEDIDOS PARA HOY"
+                : "10% OFF EN PEDIDOS ANTICIPADOS"}
             </p>
 
-            <p className="text-xs text-neutral-300">
-              Se aplica al hacer el pedido antes de las
-              18:00, incluso si programás para mañana u
-              otro día.
+            <p className="text-xs text-neutral-300 mt-1">
+              {isSpecialPromoToday()
+                ? "20% OFF para pedidos de hoy realizados antes de las 18:00. Pedidos para otros días: 10% OFF."
+                : "10% OFF antes de las 18:00 para hoy, o al programar pedidos para otro día."}
             </p>
           </div>
 
           <span className="text-sm font-medium tabular-nums">
-            {montevideoParts().hour < EARLY_DISCOUNT_END_HOUR
-              ? `TERMINA EN ${countdownText(promoRemainingSeconds())}`
-              : "PEDIDOS PROGRAMADOS HASTA 7 DÍAS"}
+            {montevideoParts().hour <
+            EARLY_DISCOUNT_END_HOUR
+              ? `TERMINA EN ${countdownText(
+                  promoRemainingSeconds()
+                )}`
+              : "PROGRAMÁ TU PEDIDO"}
           </span>
         </div>
       </section>
 
       <main className="max-w-6xl mx-auto px-4 py-8 grid grid-cols-1 lg:grid-cols-3 gap-8">
+
         <section className="lg:col-span-2 space-y-8">
           {MENU.map((cat) => (
             <React.Fragment key={cat.id}>
@@ -1689,7 +1914,8 @@ export default function SectoCafePedidos() {
                   <h2 className="text-sm tracking-[0.2em] text-neutral-500">
                     {cat.name}
                   </h2>
-                  <span className="h-[1px] flex-1 ml-4 bg-neutral-200"></span>
+
+                  <span className="h-[1px] flex-1 ml-4 bg-neutral-200" />
                 </div>
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -1698,8 +1924,7 @@ export default function SectoCafePedidos() {
                       key={item.id}
                       className="group border border-neutral-200 rounded-2xl overflow-hidden bg-white"
                     >
-                      {typeof item.img === "string" &&
-                      item.img.trim().length > 0 ? (
+                      {item.img && (
                         <div className="aspect-[4/3] overflow-hidden">
                           <img
                             src={item.img}
@@ -1709,7 +1934,7 @@ export default function SectoCafePedidos() {
                             decoding="async"
                           />
                         </div>
-                      ) : null}
+                      )}
 
                       <div className="p-4 flex items-start justify-between gap-4">
                         <div>
@@ -1721,12 +1946,14 @@ export default function SectoCafePedidos() {
                             <PromoPrice
                               price={item.price}
                               active={earlyDiscountActive}
+                              discountPercent={discountPercent}
                             />
                           </p>
                         </div>
 
                         <div className="flex items-center gap-2">
                           <button
+                            type="button"
                             onClick={() =>
                               dispatch({
                                 type: "remove",
@@ -1743,6 +1970,7 @@ export default function SectoCafePedidos() {
                           </span>
 
                           <button
+                            type="button"
                             onClick={() => {
                               dispatch({
                                 type: "add",
@@ -1753,16 +1981,13 @@ export default function SectoCafePedidos() {
                               setCartHighlight(true);
 
                               setTimeout(
-                                () => setCartHighlight(false),
+                                () =>
+                                  setCartHighlight(false),
                                 600
                               );
                             }}
-                            className={`px-3 py-2 rounded-xl border ${
-                              !FORCE_CLOSED
-                                ? "border-neutral-200 bg-neutral-50"
-                                : "border-neutral-200 text-neutral-400 cursor-not-allowed"
-                            }`}
                             disabled={FORCE_CLOSED}
+                            className="px-3 py-2 rounded-xl border border-neutral-200 bg-neutral-50 disabled:opacity-40"
                           >
                             +
                           </button>
@@ -1773,19 +1998,23 @@ export default function SectoCafePedidos() {
                 </div>
               </div>
 
-              {cat.id === "combos" && (
-                <PokesSection
-                  cart={cart}
-                  dispatch={dispatch}
-                  isOpen={isOpen}
-                  earlyDiscountActive={earlyDiscountActive}
-                  showCartPeek={showCartPeek}
-                  setCartHighlight={setCartHighlight}
-                />
-              )}
+              {cat.id === "combos" &&
+                POKES_ENABLED && (
+                  <PokesSection
+                    cart={cart}
+                    dispatch={dispatch}
+                    isOpen={isOpen}
+                    earlyDiscountActive={earlyDiscountActive}
+                    discountPercent={discountPercent}
+                    showCartPeek={showCartPeek}
+                    setCartHighlight={setCartHighlight}
+                  />
+                )}
             </React.Fragment>
           ))}
         </section>
+
+        {/* ===== CARRITO PRINCIPAL ===== */}
 
         <aside className="lg:col-span-1">
           <div
@@ -1817,6 +2046,7 @@ export default function SectoCafePedidos() {
                     <p className="text-neutral-800">
                       {item.name}
                     </p>
+
                     <p className="text-neutral-500">
                       x{qty}
                     </p>
@@ -1827,6 +2057,7 @@ export default function SectoCafePedidos() {
                       <PromoPrice
                         price={item.price * qty}
                         active={earlyDiscountActive}
+                        discountPercent={discountPercent}
                       />
                     </div>
 
@@ -1855,7 +2086,7 @@ export default function SectoCafePedidos() {
                           return next;
                         });
                       }}
-                      className="w-7 h-7 rounded-full border border-neutral-200 text-neutral-400 hover:text-neutral-900 hover:border-neutral-400 flex items-center justify-center"
+                      className="w-7 h-7 rounded-full border border-neutral-200 text-neutral-400 hover:text-neutral-900 flex items-center justify-center"
                     >
                       ×
                     </button>
@@ -1863,6 +2094,8 @@ export default function SectoCafePedidos() {
                 </div>
               ))}
             </div>
+
+            {/* ===== OPCIONES DE COMBOS ===== */}
 
             {comboInstances.length > 0 && (
               <div className="mt-4 space-y-4">
@@ -1956,16 +2189,14 @@ export default function SectoCafePedidos() {
                               Elegí bebida {drinkIndex + 1}
                             </option>
 
-                            {DRINK_OPTIONS.map(
-                              (drink) => (
-                                <option
-                                  key={drink.id}
-                                  value={drink.id}
-                                >
-                                  {drink.name}
-                                </option>
-                              )
-                            )}
+                            {DRINK_OPTIONS.map((drink) => (
+                              <option
+                                key={drink.id}
+                                value={drink.id}
+                              >
+                                {drink.name}
+                              </option>
+                            ))}
                           </select>
                         ))}
                       </div>
@@ -1977,29 +2208,29 @@ export default function SectoCafePedidos() {
 
             <hr className="my-4 border-neutral-200" />
 
+            {/* ===== MÉTODO DE ENTREGA ===== */}
+
             <div className="grid grid-cols-2 gap-2 text-sm mb-3">
               <button
+                type="button"
                 className={`rounded-xl p-2 border ${
                   method === "delivery"
                     ? "bg-neutral-100 border-neutral-300"
                     : "border-neutral-200"
                 }`}
-                onClick={() =>
-                  setMethod("delivery")
-                }
+                onClick={() => setMethod("delivery")}
               >
                 Delivery
               </button>
 
               <button
+                type="button"
                 className={`rounded-xl p-2 border ${
                   method === "pickup"
                     ? "bg-neutral-100 border-neutral-300"
                     : "border-neutral-200"
                 }`}
-                onClick={() =>
-                  setMethod("pickup")
-                }
+                onClick={() => setMethod("pickup")}
               >
                 Retiro
               </button>
@@ -2013,8 +2244,8 @@ export default function SectoCafePedidos() {
 
                 {hasFreeDelivery && (
                   <p className="text-xs font-semibold text-neutral-900">
-                    Envío gratis a todas las zonas por
-                    superar $1.500 después de descuentos.
+                    Envío gratis por superar $1.500
+                    después de descuentos.
                   </p>
                 )}
 
@@ -2026,13 +2257,9 @@ export default function SectoCafePedidos() {
                   className="w-full bg-white border border-neutral-200 rounded-xl p-2"
                 >
                   {ZONES.map((z) => (
-                    <option
-                      key={z.id}
-                      value={z.id}
-                    >
+                    <option key={z.id} value={z.id}>
                       {z.name} —{" "}
-                      {hasFreeDelivery ||
-                      z.fee === 0
+                      {hasFreeDelivery || z.fee === 0
                         ? "GRATIS"
                         : currency(z.fee)}
                     </option>
@@ -2054,6 +2281,8 @@ export default function SectoCafePedidos() {
               </div>
             )}
 
+            {/* ===== DATOS DEL CLIENTE ===== */}
+
             <div className="grid grid-cols-2 gap-2 mt-3">
               <div>
                 <label className="text-xs text-neutral-500">
@@ -2062,9 +2291,7 @@ export default function SectoCafePedidos() {
 
                 <input
                   value={name}
-                  onChange={(e) =>
-                    setName(e.target.value)
-                  }
+                  onChange={(e) => setName(e.target.value)}
                   placeholder="Tu nombre"
                   className="w-full bg-white border border-neutral-200 rounded-xl p-2 placeholder-neutral-400"
                 />
@@ -2077,14 +2304,14 @@ export default function SectoCafePedidos() {
 
                 <input
                   value={phone}
-                  onChange={(e) =>
-                    setPhone(e.target.value)
-                  }
+                  onChange={(e) => setPhone(e.target.value)}
                   placeholder="09xxxxxxx"
                   className="w-full bg-white border border-neutral-200 rounded-xl p-2 placeholder-neutral-400"
                 />
               </div>
             </div>
+
+            {/* ===== FECHA Y HORARIO ===== */}
 
             <div className="mt-3">
               <label className="text-xs text-neutral-500">
@@ -2103,16 +2330,13 @@ export default function SectoCafePedidos() {
                     setTime(
                       next === today && asapAvailable
                         ? "asap"
-                        : (hoursForDate(next)[0] || "")
+                        : hoursForDate(next)[0] || ""
                     );
                   }}
                   className="w-full bg-white border border-neutral-200 rounded-xl p-2"
                 >
                   {availableDates.map((d) => (
-                    <option
-                      key={d}
-                      value={d}
-                    >
+                    <option key={d} value={d}>
                       {d === today
                         ? "Hoy"
                         : d === advanceISODate(today, 1)
@@ -2139,10 +2363,7 @@ export default function SectoCafePedidos() {
                     )}
 
                   {availableHours.map((h) => (
-                    <option
-                      key={h}
-                      value={h}
-                    >
+                    <option key={h} value={h}>
                       {h}
                     </option>
                   ))}
@@ -2161,7 +2382,7 @@ export default function SectoCafePedidos() {
 
               {earlyDiscountActive && (
                 <p className="text-xs font-semibold text-green-700 mt-2">
-                  ✓ 10% OFF aplicado ·{" "}
+                  ✓ {discountPercent}% OFF aplicado ·{" "}
                   {selectedDate === today
                     ? "pedido antes de las 18:00"
                     : "pedido para otro día"}
@@ -2181,6 +2402,8 @@ export default function SectoCafePedidos() {
               )}
             </div>
 
+            {/* ===== NOTAS ===== */}
+
             <div className="mt-3">
               <label className="text-xs text-neutral-500">
                 Notas
@@ -2197,8 +2420,10 @@ export default function SectoCafePedidos() {
               />
             </div>
 
+            {/* ===== ENVÍO GRATIS ===== */}
+
             {method === "delivery" && (
-              <div className="rounded-xl border border-neutral-200 bg-neutral-50 px-3 py-3 text-xs">
+              <div className="rounded-xl border border-neutral-200 bg-neutral-50 px-3 py-3 text-xs mt-3">
                 {hasFreeDelivery ? (
                   <p className="font-semibold text-neutral-900">
                     ✓ ¡Conseguiste envío gratis!
@@ -2229,20 +2454,20 @@ export default function SectoCafePedidos() {
               </div>
             )}
 
+            {/* ===== TOTALES ===== */}
+
             <div className="text-sm space-y-1 mt-4">
               <div className="flex justify-between">
                 <span className="text-neutral-500">
                   Subtotal
                 </span>
-                <span>
-                  {currency(subtotal)}
-                </span>
+                <span>{currency(subtotal)}</span>
               </div>
 
               {discount > 0 && (
                 <div className="flex justify-between font-medium text-neutral-900">
                   <span>
-                    Promo antes de las 18 · 10% OFF
+                    Promo anticipada · {discountPercent}% OFF
                   </span>
 
                   <span>
@@ -2267,11 +2492,11 @@ export default function SectoCafePedidos() {
 
               <div className="flex justify-between text-neutral-900 font-medium">
                 <span>Total</span>
-                <span>
-                  {currency(total)}
-                </span>
+                <span>{currency(total)}</span>
               </div>
             </div>
+
+            {/* ===== CONFIRMACIÓN ===== */}
 
             <div className="grid grid-cols-1 gap-2 mt-4">
               <div
@@ -2289,6 +2514,7 @@ export default function SectoCafePedidos() {
               </div>
 
               <button
+                type="button"
                 onClick={() => sendOrder(false)}
                 disabled={!canSendNow}
                 className={`w-full rounded-2xl py-3 text-center ${
@@ -2303,6 +2529,7 @@ export default function SectoCafePedidos() {
               </button>
 
               <button
+                type="button"
                 onClick={() => {
                   dispatch({ type: "clear" });
                   setComboSelections({});
@@ -2327,8 +2554,9 @@ export default function SectoCafePedidos() {
             </div>
           </div>
         </aside>
-
       </main>
+
+      {/* ===== CARRITO MÓVIL ===== */}
 
       {items.length > 0 && (
         <div
@@ -2347,7 +2575,6 @@ export default function SectoCafePedidos() {
               <div className="text-sm tracking-[0.2em] text-neutral-500">
                 TU PEDIDO
               </div>
-              <div className="text-xs text-neutral-400 mt-1"></div>
             </div>
 
             <button
@@ -2370,6 +2597,7 @@ export default function SectoCafePedidos() {
                     <div className="font-medium">
                       {item.name}
                     </div>
+
                     <div className="text-neutral-500">
                       x{qty}
                     </div>
@@ -2380,6 +2608,7 @@ export default function SectoCafePedidos() {
                       <PromoPrice
                         price={item.price * qty}
                         active={earlyDiscountActive}
+                        discountPercent={discountPercent}
                       />
                     </div>
 
@@ -2408,7 +2637,7 @@ export default function SectoCafePedidos() {
                           return next;
                         });
                       }}
-                      className="w-7 h-7 rounded-full border border-neutral-200 text-neutral-400 hover:text-neutral-900 hover:border-neutral-400 flex items-center justify-center"
+                      className="w-7 h-7 rounded-full border border-neutral-200 text-neutral-400 hover:text-neutral-900 flex items-center justify-center"
                     >
                       ×
                     </button>
@@ -2417,6 +2646,8 @@ export default function SectoCafePedidos() {
               ))}
             </div>
           </div>
+
+          {/* ===== COMBOS MÓVIL ===== */}
 
           {comboInstances.length > 0 && (
             <div className="mt-3 pt-3 border-t border-neutral-200 space-y-3">
@@ -2509,16 +2740,14 @@ export default function SectoCafePedidos() {
                             Elegí bebida {drinkIndex + 1}
                           </option>
 
-                          {DRINK_OPTIONS.map(
-                            (drink) => (
-                              <option
-                                key={drink.id}
-                                value={drink.id}
-                              >
-                                {drink.name}
-                              </option>
-                            )
-                          )}
+                          {DRINK_OPTIONS.map((drink) => (
+                            <option
+                              key={drink.id}
+                              value={drink.id}
+                            >
+                              {drink.name}
+                            </option>
+                          ))}
                         </select>
                       ))}
                     </div>
@@ -2527,6 +2756,8 @@ export default function SectoCafePedidos() {
               )}
             </div>
           )}
+
+          {/* ===== TOTAL MÓVIL ===== */}
 
           <div className="mt-3 pt-3 border-t border-neutral-200 text-sm space-y-3">
             {method === "delivery" && (
@@ -2564,8 +2795,9 @@ export default function SectoCafePedidos() {
             {discount > 0 && (
               <div className="flex justify-between text-xs font-medium">
                 <span>
-                  10% OFF antes de las 18
+                  {discountPercent}% OFF anticipado
                 </span>
+
                 <span>
                   −{currency(discount)}
                 </span>
@@ -2626,6 +2858,8 @@ export default function SectoCafePedidos() {
         </div>
       )}
 
+      {/* ===== BOTÓN FLOTANTE MÓVIL ===== */}
+
       {items.length > 0 && !cartPeek && (
         <button
           type="button"
@@ -2636,9 +2870,12 @@ export default function SectoCafePedidos() {
         </button>
       )}
 
+      {/* ===== FOOTER ===== */}
+
       <footer className="max-w-6xl mx-auto px-4 pb-10 text-xs text-neutral-500">
         <hr className="border-neutral-200 mb-4" />
         © {new Date().getFullYear()} - Secto Cafe · Lun - Sab | 18 a 00 hs
       </footer>
     </div>
   );
+}

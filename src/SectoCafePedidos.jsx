@@ -1555,7 +1555,7 @@ export default function SectoCafePedidos() {
     /^\d{2}:\d{2}$/.test(time);
 
   const departureNote =
-    "Los horarios indicados son de salida del local, no de llegada. La salida de las 00:00 es la medianoche posterior al día elegido.";
+    "Los horarios indicados son de salida del local, no de llegada";
 
   const validTime =
     time === "asap"
@@ -1888,7 +1888,7 @@ export default function SectoCafePedidos() {
 
             <p className="text-xs text-neutral-300 mt-1">
               {isSpecialPromoToday()
-                ? "20% OFF para pedidos de hoy realizados antes de las 18:00. Pedidos para otros días: 10% OFF."
+                ? "20% OFF para pedidos de hoy realizados antes de las 18:00."
                 : "10% OFF antes de las 18:00 para hoy, o al programar pedidos para otro día."}
             </p>
           </div>

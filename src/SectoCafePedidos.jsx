@@ -1879,22 +1879,23 @@ export default function SectoCafePedidos() {
         </section>
       )}
 
-      {/* Banner corto: los porcentajes específicos están en cada producto */}
+      {/* Banner: descuento actual y cómo obtener el anticipado */}
       <section className="max-w-6xl mx-auto px-4 pt-5">
         <div className="rounded-2xl bg-neutral-950 text-white px-5 py-4">
           <p className="text-lg font-semibold">PEDÍ DIRECTO, PAGÁ MENOS.</p>
           <p className="text-sm text-neutral-200 mt-1">
             {earlyDiscountActive
-              ? "20% OFF en toda la carta · 40% OFF en destacados."
-              : "10% OFF en toda la carta · 30% OFF en destacados."}
+              ? "20% OFF en toda la carta · 40% OFF en destacados"
+              : "10% OFF en toda la carta · 30% OFF en destacados"}
           </p>
           <p className="text-xs text-neutral-300 mt-2">
-            {selectedDate > today
-              ? "Descuento anticipado por elegir otro día."
-              : earlyDiscountActive
-                ? `Descuento anticipado por pedir antes de las 18:00 · ${countdownText(promoRemainingSeconds())}`
-                : "Para obtener el descuento anticipado, elegí una fecha futura."}
+            Pedí antes de las 18:00 o programá para otro día y conseguí hasta 40% OFF.
           </p>
+          {selectedDate === today && earlyDiscountActive && (
+            <p className="text-xs font-semibold text-neutral-100 mt-2">
+              Descuento anticipado activo · Quedan {countdownText(promoRemainingSeconds())}
+            </p>
+          )}
         </div>
       </section>
 

@@ -171,6 +171,20 @@ function getDiscountPercent(deliveryDate) {
   return 10;
 }
 
+// Descuentos por producto, expresados en puntos porcentuales sobre
+// el precio ORIGINAL de PedidosYa (nunca descuentos encadenados).
+function getItemDiscountPercent(item, deliveryDate) {
+  const early = getDiscountPercent(deliveryDate) === 20;
+  if (item.id === "c03") return early ? 20 : 15; // Doble
+  if (item.id === "c04") return early ? 30 : 20; // Triple
+  if (item.id === "c05") return early ? 25 : 20; // 3x2 Phila Hot
+  return early ? 20 : 10;
+}
+
+function discountedItemPrice(item, deliveryDate) {
+  return Math.round(item.price * (1 - getItemDiscountPercent(item, deliveryDate) / 100));
+}
+
 function isEarlyDiscountActive(deliveryDate) {
   return getDiscountPercent(deliveryDate) > 0;
 }
@@ -278,19 +292,19 @@ const MENU = [
      {
         id: "c03",
         name: "Combo doble",
-        price: 680,
+        price: 850,
         img: "/Photos/combo doble.jpeg",
       },
       {
         id: "c04",
         name: "Combo triple",
-        price: 1032,
+        price: 1290,
         img: "/Photos/combo triple.jpg",
       },
       {
         id: "c01",
         name: "Combo individual",
-        price: 540,
+        price: 640,
         img: "/Photos/combo ind.jpeg",
       },
       {
@@ -304,7 +318,7 @@ const MENU = [
       {
         id: "c05",
         name: "3x2 Phila hot roll",
-        price: 955.5,
+        price: 1470,
         img: "/Photos/3x2.jpeg",
       },
     ],
@@ -1466,12 +1480,11 @@ export default function SectoCafePedidos() {
   const earlyDiscountActive =
     discountPercent > 0;
 
-  const discount = Math.round(
-    subtotal * discountPercent / 100
+  const discountedSubtotal = items.reduce(
+    (sum, { item, qty }) => sum + discountedItemPrice(item, selectedDate) * qty,
+    0
   );
-
-  const discountedSubtotal =
-    subtotal - discount;
+  const discount = subtotal - discountedSubtotal;
 
   // ===== ENVÍO GRATIS =====
 
@@ -1506,11 +1519,7 @@ export default function SectoCafePedidos() {
       ? 0
       : Math.max(
           0,
-          Math.ceil(
-            FREE_DELIVERY_MINIMUM /
-              (1 - discountPercent / 100) -
-              subtotal
-          )
+          Math.ceil(FREE_DELIVERY_MINIMUM - discountedSubtotal)
         );
 
   const freeDeliveryProgress = Math.min(
@@ -1622,7 +1631,7 @@ export default function SectoCafePedidos() {
       items,
       subtotal,
       discount,
-      discountPercent,
+      discountPercent: subtotal ? Math.round(discount / subtotal * 100) : 0,
       discountedSubtotal,
       zone,
       fee,
@@ -1725,14 +1734,12 @@ export default function SectoCafePedidos() {
     const currentDiscountPercent =
       getDiscountPercent(selectedDate);
 
-    const currentDiscount = Math.round(
-      subtotal *
-        currentDiscountPercent /
-        100
+    const currentDiscountedSubtotal = items.reduce(
+      (sum, { item, qty }) =>
+        sum + discountedItemPrice(item, selectedDate) * qty,
+      0
     );
-
-    const currentDiscountedSubtotal =
-      subtotal - currentDiscount;
+    const currentDiscount = subtotal - currentDiscountedSubtotal;
 
     const currentFee =
       method !== "delivery" ||
@@ -1745,8 +1752,7 @@ export default function SectoCafePedidos() {
 
     const order = getOrder({
       discount: currentDiscount,
-      discountPercent:
-        currentDiscountPercent,
+      discountPercent: subtotal ? Math.round(currentDiscount / subtotal * 100) : 0,
       discountedSubtotal:
         currentDiscountedSubtotal,
       fee: currentFee,
@@ -1859,9 +1865,9 @@ export default function SectoCafePedidos() {
           <div className="rounded-2xl bg-neutral-950 text-white px-5 py-4 space-y-3">
             <p className="text-xs tracking-[0.18em] text-neutral-300">SECTO CAFÉ · PEDIDOS DIRECTOS</p>
             <p className="text-lg font-semibold">PEDÍ DIRECTO, PAGÁ MENOS.</p>
-            <p className="text-sm">10% menos que los precios de referencia de PedidosYa mostrados en la carta.</p>
+            <p className="text-sm">Precios especiales frente a los precios de lista de PedidosYa. Hasta 20% OFF hoy y hasta 30% OFF anticipando.</p>
             <div className="rounded-xl bg-neutral-800 px-4 py-3">
-              <p className="font-semibold">20% OFF anticipando</p>
+              <p className="font-semibold">Hasta 30% OFF anticipando</p>
               <p className="text-xs text-neutral-300 mt-1">Pedí hoy antes de las 18:00 o programá para otro día.</p>
               <p className="text-sm font-semibold tabular-nums mt-2">TERMINA EN {countdownText(promoRemainingSeconds())}</p>
             </div>
@@ -1869,7 +1875,7 @@ export default function SectoCafePedidos() {
         ) : (
           <div className="rounded-xl bg-neutral-950 text-white px-5 py-3 text-center">
             <p className="font-semibold text-sm">PEDÍ DIRECTO, PAGÁ MENOS.</p>
-            <p className="text-xs text-neutral-300 mt-1">10% menos que PedidosYa · 20% OFF programando para otro día</p>
+            <p className="text-xs text-neutral-300 mt-1">Desde 10% OFF en la carta · Hasta 30% OFF anticipando</p>
           </div>
         )}
       </section>
@@ -1912,8 +1918,8 @@ export default function SectoCafePedidos() {
                             {item.name}
                           </h3>
                           <div className="flex flex-wrap items-center gap-2 mt-2">
-                            <span className="inline-flex rounded-md bg-black px-2 py-1 text-[11px] font-bold tracking-wide text-white">
-                              {discountPercent}% OFF
+                            <span className="inline-flex rounded-md px-2 py-1 text-[11px] font-bold tracking-wide text-neutral-900" style={{ backgroundColor: "#b6b6b6" }}>
+                              {getItemDiscountPercent(item, selectedDate)}% OFF
                             </span>
                             {["c03", "c04", "c05"].includes(item.id) && (
                               <span className="text-[11px] font-medium text-neutral-600">
@@ -1926,7 +1932,7 @@ export default function SectoCafePedidos() {
                             <PromoPrice
                               price={item.price}
                               active={earlyDiscountActive}
-                              discountPercent={discountPercent}
+                              discountPercent={getItemDiscountPercent(item, selectedDate)}
                             />
                           </p>
                         </div>
@@ -2037,7 +2043,7 @@ export default function SectoCafePedidos() {
                       <PromoPrice
                         price={item.price * qty}
                         active={earlyDiscountActive}
-                        discountPercent={discountPercent}
+                        discountPercent={getItemDiscountPercent(item, selectedDate)}
                       />
                     </div>
 
@@ -2362,7 +2368,7 @@ export default function SectoCafePedidos() {
 
               {earlyDiscountActive && (
                 <p className="text-xs font-semibold text-green-700 mt-2">
-                  ✓ {discountPercent}% OFF aplicado ·{" "}
+                  ✓ Descuento anticipado aplicado (hasta 30% OFF) ·{" "}
                   {selectedDate === today
                     ? "pedido antes de las 18:00"
                     : "pedido para otro día"}
@@ -2587,7 +2593,7 @@ export default function SectoCafePedidos() {
                       <PromoPrice
                         price={item.price * qty}
                         active={earlyDiscountActive}
-                        discountPercent={discountPercent}
+                        discountPercent={getItemDiscountPercent(item, selectedDate)}
                       />
                     </div>
 
@@ -2774,7 +2780,7 @@ export default function SectoCafePedidos() {
             {discount > 0 && (
               <div className="flex justify-between text-xs font-medium">
                 <span>
-                  {discountPercent}% OFF anticipado
+                  Descuentos aplicados
                 </span>
 
                 <span>

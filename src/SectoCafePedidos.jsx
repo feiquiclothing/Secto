@@ -208,7 +208,7 @@ function discountedItemPrice(item, deliveryDate) {
 }
 
 function isEarlyDiscountActive(deliveryDate) {
-  return getDiscountPercent(deliveryDate) > 0;
+  return isAdvanceOrder(deliveryDate);
 }
 
 function promoRemainingSeconds() {
@@ -1498,7 +1498,7 @@ export default function SectoCafePedidos() {
     getDiscountPercent(selectedDate);
 
   const earlyDiscountActive =
-    discountPercent > 0;
+    isAdvanceOrder(selectedDate);
 
   const discountedSubtotal = items.reduce(
     (sum, { item, qty }) => sum + discountedItemPrice(item, selectedDate) * qty,
@@ -1883,12 +1883,18 @@ export default function SectoCafePedidos() {
       <section className="max-w-6xl mx-auto px-4 pt-5">
         <div className="rounded-2xl bg-neutral-950 text-white px-5 py-4">
           <p className="text-lg font-semibold">PEDÍ DIRECTO, PAGÁ MENOS.</p>
-          <p className="text-sm text-neutral-200 mt-1">10% OFF en toda la carta · 30% OFF en destacados.</p>
-          {montevideoParts().hour < EARLY_DISCOUNT_END_HOUR && (
-            <p className="text-xs text-neutral-200 mt-2">
-              Anticipá: 20% y hasta 40% OFF · {countdownText(promoRemainingSeconds())}
-            </p>
-          )}
+          <p className="text-sm text-neutral-200 mt-1">
+            {earlyDiscountActive
+              ? "20% OFF en toda la carta · 40% OFF en destacados."
+              : "10% OFF en toda la carta · 30% OFF en destacados."}
+          </p>
+          <p className="text-xs text-neutral-300 mt-2">
+            {selectedDate > today
+              ? "Descuento anticipado por elegir otro día."
+              : earlyDiscountActive
+                ? `Descuento anticipado por pedir antes de las 18:00 · ${countdownText(promoRemainingSeconds())}`
+                : "Para obtener el descuento anticipado, elegí una fecha futura."}
+          </p>
         </div>
       </section>
 
@@ -2382,10 +2388,10 @@ export default function SectoCafePedidos() {
 
               {earlyDiscountActive && (
                 <p className="text-xs font-semibold text-green-700 mt-2">
-                  ✓ Descuento anticipado aplicado (hasta 40% OFF) ·{" "}
+                  ✓ Anticipado aplicado: 20% en productos generales y 40% en destacados ·{" "}
                   {selectedDate === today
-                    ? "pedido antes de las 18:00"
-                    : "pedido para otro día"}
+                    ? "pedido realizado antes de las 18:00"
+                    : "pedido programado para otro día"}
                 </p>
               )}
 

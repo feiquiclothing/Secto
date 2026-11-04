@@ -164,30 +164,11 @@ function getDiscountPercent(deliveryDate) {
   const today = todayInMontevideo();
   const { hour } = montevideoParts();
 
-  // Promoción especial:
-  // 20% únicamente el 31/10 antes de las 18,
-  // para pedidos del mismo día.
-  if (
-    today === SPECIAL_PROMO_DATE &&
-    deliveryDate === today &&
-    hour < EARLY_DISCOUNT_END_HOUR
-  ) {
-    return SPECIAL_PROMO_PERCENT;
-  }
-
-  // Descuento habitual:
-  // 10% anticipado para hoy o días futuros.
-  if (
-    deliveryDate > today ||
-    (
-      deliveryDate === today &&
-      hour < EARLY_DISCOUNT_END_HOUR
-    )
-  ) {
-    return EARLY_DISCOUNT_PERCENT;
-  }
-
-  return 0;
+  // Pedidos futuros: 20% a cualquier hora.
+  // Pedidos para hoy: 20% antes de las 18, 10% después.
+  if (deliveryDate > today) return 20;
+  if (deliveryDate === today && hour < EARLY_DISCOUNT_END_HOUR) return 20;
+  return 10;
 }
 
 function isEarlyDiscountActive(deliveryDate) {
@@ -713,7 +694,7 @@ function buildWhatsAppText(order) {
 
     ...(discount > 0
       ? [
-          "Descuento anticipado (" +
+          "Descuento web (" +
             discountPercent +
             "%): -" +
             currency(discount),
@@ -1473,9 +1454,8 @@ export default function SectoCafePedidos() {
       ? deliveryDate
       : availableDates[0] || today;
 
-  // Hoy 31/10: 20% hasta las 18.
-  // Días futuros: 10%.
-  // Desde mañana: 10% habitual.
+  // Hoy: 20% antes de las 18, luego 10%.
+  // Días futuros: 20% a cualquier hora.
   const discountPercent =
     getDiscountPercent(selectedDate);
 
@@ -1737,7 +1717,7 @@ export default function SectoCafePedidos() {
     }
 
     // Revalidar el descuento al enviar.
-    // Evita aplicar 20% si ya pasaron las 18.
+    // Aplica el porcentaje vigente al momento de enviar.
     const currentDiscountPercent =
       getDiscountPercent(selectedDate);
 
@@ -1870,43 +1850,25 @@ export default function SectoCafePedidos() {
       )}
 
       {/* BANNER DE PROMOCIÓN */}
-
-      {montevideoParts().hour < EARLY_DISCOUNT_END_HOUR && (
       <section className="max-w-6xl mx-auto px-4 pt-5">
-        <div className="rounded-2xl bg-neutral-950 text-white px-5 py-4 flex flex-wrap items-center justify-between gap-2">
-          <div>
-            <p className="text-xs tracking-[0.18em] text-neutral-300">
-              {isSpecialPromoToday()
-                ? "RESERVÁ TU CENA CON ANTICIPACIÓN"
-                : "RESERVÁ TU CENA CON ANTICIPACIÓN"}
-            </p>
-
-            <p className="text-lg font-semibold">
-              {isSpecialPromoToday() &&
-              montevideoParts().hour <
-                EARLY_DISCOUNT_END_HOUR
-                ? "20% OFF EN PEDIDOS PARA HOY"
-                : "10% OFF EN PEDIDOS ANTICIPADOS"}
-            </p>
-
-            <p className="text-xs text-neutral-300 mt-1">
-              {isSpecialPromoToday()
-                ? "20% OFF para pedidos de hoy realizados antes de las 18:00."
-                : "10% OFF antes de las 18:00 para hoy, o al programar pedidos para otro día."}
-            </p>
+        {montevideoParts().hour < EARLY_DISCOUNT_END_HOUR ? (
+          <div className="rounded-2xl bg-neutral-950 text-white px-5 py-4 space-y-3">
+            <p className="text-xs tracking-[0.18em] text-neutral-300">SECTO CAFÉ · PEDIDOS DIRECTOS</p>
+            <p className="text-lg font-semibold">PEDÍ DIRECTO, PAGÁ MENOS.</p>
+            <p className="text-sm">10% OFF permanente en nuestra web.</p>
+            <div className="rounded-xl bg-neutral-800 px-4 py-3">
+              <p className="font-semibold">20% OFF anticipando</p>
+              <p className="text-xs text-neutral-300 mt-1">Pedí hoy antes de las 18:00 o programá para otro día.</p>
+              <p className="text-sm font-semibold tabular-nums mt-2">TERMINA EN {countdownText(promoRemainingSeconds())}</p>
+            </div>
           </div>
-
-          <span className="text-sm font-medium tabular-nums">
-            {montevideoParts().hour <
-            EARLY_DISCOUNT_END_HOUR
-              ? `TERMINA EN ${countdownText(
-                  promoRemainingSeconds()
-                )}`
-              : "PROGRAMÁ TU PEDIDO"}
-          </span>
-        </div>
+        ) : (
+          <div className="rounded-xl bg-neutral-950 text-white px-5 py-3 text-center">
+            <p className="font-semibold text-sm">PEDÍ DIRECTO, PAGÁ MENOS.</p>
+            <p className="text-xs text-neutral-300 mt-1">10% OFF permanente · 20% OFF programando para otro día</p>
+          </div>
+        )}
       </section>
-      )}
 
       <main className="max-w-6xl mx-auto px-4 py-8 grid grid-cols-1 lg:grid-cols-3 gap-8">
 

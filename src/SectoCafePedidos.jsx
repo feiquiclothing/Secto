@@ -1871,6 +1871,7 @@ export default function SectoCafePedidos() {
 
       {/* BANNER DE PROMOCIÓN */}
 
+      {montevideoParts().hour < EARLY_DISCOUNT_END_HOUR && (
       <section className="max-w-6xl mx-auto px-4 pt-5">
         <div className="rounded-2xl bg-neutral-950 text-white px-5 py-4 flex flex-wrap items-center justify-between gap-2">
           <div>
@@ -1905,6 +1906,7 @@ export default function SectoCafePedidos() {
           </span>
         </div>
       </section>
+      )}
 
       <main className="max-w-6xl mx-auto px-4 py-8 grid grid-cols-1 lg:grid-cols-3 gap-8">
 

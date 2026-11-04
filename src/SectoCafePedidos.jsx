@@ -196,6 +196,13 @@ function getItemDiscountPercent(item, deliveryDate) {
 }
 
 function discountedItemPrice(item, deliveryDate) {
+  // 3x2: el total siempre equivale a dos Hot Rolls con el mismo descuento.
+  // Se redondea cada roll antes de multiplicar, igual que en la carta.
+  if (item.id === "c05") {
+    const hotRoll = MENU.find((section) => section.id === "rolls")
+      ?.items.find((roll) => roll.id === "r04");
+    if (hotRoll) return 2 * discountedItemPrice(hotRoll, deliveryDate);
+  }
   const percent = getItemDiscountPercent(item, deliveryDate);
   return Math.round(item.price * (100 - percent) / 100);
 }
@@ -334,7 +341,7 @@ const MENU = [
       {
         id: "c05",
         name: "3x2 Phila hot roll",
-        price: 1470,
+        price: 980, // Precio de referencia: 2 × $490. Precio final ligado al Hot Roll
         img: "/Photos/3x2.jpeg",
       },
     ],

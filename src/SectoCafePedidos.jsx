@@ -1911,6 +1911,16 @@ export default function SectoCafePedidos() {
                           <h3 className="text-neutral-900 leading-tight">
                             {item.name}
                           </h3>
+                          <div className="flex flex-wrap items-center gap-2 mt-2">
+                            <span className="inline-flex rounded-md bg-black px-2 py-1 text-[11px] font-bold tracking-wide text-white">
+                              {discountPercent}% OFF
+                            </span>
+                            {["c03", "c04", "c05"].includes(item.id) && (
+                              <span className="text-[11px] font-medium text-neutral-600">
+                                Combo destacado
+                              </span>
+                            )}
+                          </div>
 
                           <p className="text-sm text-neutral-500 mt-1">
                             <PromoPrice

@@ -266,6 +266,10 @@ function PromoPrice({
 
 // ===== MENÚ =====
 
+// Precios de referencia: importes visibles de PedidosYa en las capturas del usuario.
+// El 10% y el 20% se calculan sobre estos valores.
+// Phila Hot: $490 sin beneficio Plus (el precio Plus de $392 no es general).
+// Productos sin precio verificable en capturas conservan el precio anterior.
 const MENU = [
   {
     id: "combos",
@@ -274,25 +278,25 @@ const MENU = [
      {
         id: "c03",
         name: "Combo doble",
-        price: 760,
+        price: 680,
         img: "/Photos/combo doble.jpeg",
       },
       {
         id: "c04",
         name: "Combo triple",
-        price: 1060,
+        price: 1032,
         img: "/Photos/combo triple.jpg",
       },
       {
         id: "c01",
         name: "Combo individual",
-        price: 570,
+        price: 540,
         img: "/Photos/combo ind.jpeg",
       },
       {
         id: "c02",
         name: "Combo pareja",
-        price: 940,
+        price: 1050,
         img: "/Photos/combo pareja.jpeg",
       },
       
@@ -300,7 +304,7 @@ const MENU = [
       {
         id: "c05",
         name: "3x2 Phila hot roll",
-        price: 880,
+        price: 955.5,
         img: "/Photos/3x2.jpeg",
       },
     ],
@@ -312,61 +316,61 @@ const MENU = [
       {
         id: "r01",
         name: "Mango Roll - Mango | Palta | Pepino | Sésamo | Salsa Mango",
-        price: 410,
+        price: 460,
         img: "/Photos/mango.jpg",
       },
       {
         id: "r02",
         name: "Green Roll - Palta | Pepino | Rúcula | Philadelphia vegano | Sésamo",
-        price: 410,
+        price: 460,
         img: "/Photos/green.jpg",
       },
       {
         id: "r03",
         name: "Philadelphia Roll - Boniato | Palta | Philadelphia vegano | Sésamo",
-        price: 410,
+        price: 460,
         img: "/Photos/phila.jpg",
       },
       {
         id: "r04",
         name: "Philadelphia Hot Roll - Boniato | Palta | Philadelphia vegano | Sésamo | Frito en panko | Taré | Verdeo",
-        price: 440,
+        price: 490,
         img: "/Photos/hotroll.jpg",
       },
       {
         id: "r05",
         name: "Sweet Crunch - Boniato | Mango | Philadelphia vegano | Quinoa frita | Batayaki | Boniato frito",
-        price: 440,
+        price: 490,
         img: "/Photos/sweet.jpg",
       },
       {
         id: "r06",
         name: "Tempura Veggie - Zucchini tempura | Palta | Philadelphia vegano | Sésamo | Verdeo",
-        price: 430,
+        price: 480,
         img: "/Photos/tempura.jpg",
       },
       {
         id: "r07",
         name: "Spicy carrot - Boniato | Palta | Philadelphia vegano | Spicy carrot | Verdeo",
-        price: 440,
+        price: 490,
         img: "/Photos/spicy.jpg",
       },
       {
         id: "r08",
         name: "Nori furai - Boniato | Palta | Spicy carrot | Verdeo | Sésamo",
-        price: 440,
+        price: 490,
         img: "/Photos/nori.jpg",
       },
       {
         id: "r09",
         name: "Creamy Tomato - Tomate seco | Palta | Rúcula | Philadelphia vegano | Batayaki | Verdeo",
-        price: 430,
+        price: 480,
         img: "/Photos/creamy.jpg",
       },
       {
         id: "r10",
         name: "Teriyaki Roll - Boniato tempura | Mango | Quinoa frita | Verdeo | Teriyaki",
-        price: 430,
+        price: 480,
         img: "/Photos/teri.jpg",
       },
     ],
@@ -390,19 +394,19 @@ const MENU = [
       {
         id: "e01",
         name: "Salsa de soja",
-        price: 60,
+        price: 70,
         img: "/Photos/soja.jpeg",
       },
       {
         id: "e03",
         name: "Wasabi",
-        price: 60,
+        price: 70,
         img: "/Photos/wasabi.jpeg",
       },
       {
         id: "e04",
         name: "Gari (Jengibre)",
-        price: 60,
+        price: 70,
         img: "/Photos/gari.jpeg",
       },
     ],
@@ -414,25 +418,25 @@ const MENU = [
       {
         id: "b03",
         name: "Coca Cola 600cc",
-        price: 130,
+        price: 150,
         img: "/Photos/coca.png",
       },
       {
         id: "b02",
         name: "Coca Cola Zero 600cc",
-        price: 130,
+        price: 150,
         img: "/Photos/coca zero.png",
       },
       {
         id: "b05",
         name: "Sprite 600cc",
-        price: 130,
+        price: 150,
         img: "/Photos/sprite.png",
       },
       {
         id: "b06",
         name: "Sprite Zero 600cc",
-        price: 130,
+        price: 150,
         img: "/Photos/sprite zero.png",
       },
     ],
@@ -1855,7 +1859,7 @@ export default function SectoCafePedidos() {
           <div className="rounded-2xl bg-neutral-950 text-white px-5 py-4 space-y-3">
             <p className="text-xs tracking-[0.18em] text-neutral-300">SECTO CAFÉ · PEDIDOS DIRECTOS</p>
             <p className="text-lg font-semibold">PEDÍ DIRECTO, PAGÁ MENOS.</p>
-            <p className="text-sm">10% OFF permanente en nuestra web.</p>
+            <p className="text-sm">10% menos que los precios de referencia de PedidosYa mostrados en la carta.</p>
             <div className="rounded-xl bg-neutral-800 px-4 py-3">
               <p className="font-semibold">20% OFF anticipando</p>
               <p className="text-xs text-neutral-300 mt-1">Pedí hoy antes de las 18:00 o programá para otro día.</p>
@@ -1865,7 +1869,7 @@ export default function SectoCafePedidos() {
         ) : (
           <div className="rounded-xl bg-neutral-950 text-white px-5 py-3 text-center">
             <p className="font-semibold text-sm">PEDÍ DIRECTO, PAGÁ MENOS.</p>
-            <p className="text-xs text-neutral-300 mt-1">10% OFF permanente · 20% OFF programando para otro día</p>
+            <p className="text-xs text-neutral-300 mt-1">10% menos que PedidosYa · 20% OFF programando para otro día</p>
           </div>
         )}
       </section>

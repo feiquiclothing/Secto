@@ -172,15 +172,15 @@ function getDiscountPercent(deliveryDate) {
 }
 
 // Todos los porcentajes se aplican al precio de lista de PedidosYa.
-// Los destacados tienen 20% normal y 30% anticipado.
+// Los destacados tienen 30% normal y 40% anticipado.
 // El descuento anticipado se aplica antes de las 18 para hoy,
 // o a cualquier hora si se elige una fecha futura.
 const FEATURED_DISCOUNTS = {
-  c03: { normal: 20, early: 30 }, // Combo doble
-  c04: { normal: 20, early: 30 }, // Combo triple
-  c05: { normal: 20, early: 30 }, // 3x2 Phila Hot
-  c01: { normal: 20, early: 30 }, // Combo individual
-  r04: { normal: 20, early: 30 }, // Philadelphia Hot Roll
+  c03: { normal: 30, early: 40 }, // Combo doble
+  c04: { normal: 30, early: 40 }, // Combo triple
+  c05: { normal: 30, early: 40 }, // 3x2 Phila Hot
+  c01: { normal: 30, early: 40 }, // Combo individual
+  r04: { normal: 30, early: 40 }, // Philadelphia Hot Roll
 };
 
 function isAdvanceOrder(deliveryDate) {
@@ -1486,7 +1486,7 @@ export default function SectoCafePedidos() {
       : availableDates[0] || today;
 
   // Base PedidosYa: 10% normal, 20% anticipado.
-  // Destacados: 20% normal, 30% anticipado.
+  // Destacados: 30% normal, 40% anticipado.
   const discountPercent =
     getDiscountPercent(selectedDate);
 
@@ -1876,10 +1876,10 @@ export default function SectoCafePedidos() {
       <section className="max-w-6xl mx-auto px-4 pt-5">
         <div className="rounded-2xl bg-neutral-950 text-white px-5 py-4">
           <p className="text-lg font-semibold">PEDÍ DIRECTO, PAGÁ MENOS.</p>
-          <p className="text-sm text-neutral-200 mt-1">10% OFF en toda la carta · 20% OFF en destacados.</p>
+          <p className="text-sm text-neutral-200 mt-1">10% OFF en toda la carta · 30% OFF en destacados.</p>
           {montevideoParts().hour < EARLY_DISCOUNT_END_HOUR && (
             <p className="text-xs text-neutral-200 mt-2">
-              Antes de las 18:00: 20% y 30% OFF · {countdownText(promoRemainingSeconds())}
+              Anticipá: 20% y hasta 40% OFF · {countdownText(promoRemainingSeconds())}
             </p>
           )}
         </div>
@@ -2375,7 +2375,7 @@ export default function SectoCafePedidos() {
 
               {earlyDiscountActive && (
                 <p className="text-xs font-semibold text-green-700 mt-2">
-                  ✓ Descuento anticipado aplicado (hasta 30% OFF) ·{" "}
+                  ✓ Descuento anticipado aplicado (hasta 40% OFF) ·{" "}
                   {selectedDate === today
                     ? "pedido antes de las 18:00"
                     : "pedido para otro día"}

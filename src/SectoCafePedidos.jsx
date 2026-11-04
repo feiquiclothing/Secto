@@ -1845,7 +1845,7 @@ export default function SectoCafePedidos() {
             <div className="leading-tight">
               <p className="text-xs tracking-[0.25em] text-neutral-500">
                 {isOpen
-                  ? "Sushi vegano - pedidos abiertos hasta las 23:30"
+                  ? "Sushi vegano - pedidos abiertos"
                   : "Sushi vegano - programá tu pedido"}
               </p>
             </div>

@@ -164,22 +164,23 @@ function getDiscountPercent(deliveryDate) {
   const today = todayInMontevideo();
   const { hour } = montevideoParts();
 
-  // Pedidos futuros: 20% a cualquier hora.
+  // Pedidos futuros: descuento anticipado a cualquier hora.
   // Pedidos para hoy: 20% antes de las 18, 10% después.
   if (deliveryDate > today) return 20;
   if (deliveryDate === today && hour < EARLY_DISCOUNT_END_HOUR) return 20;
   return 10;
 }
 
-// Descuentos por producto, expresados en puntos porcentuales sobre
-// el precio ORIGINAL de PedidosYa (nunca descuentos encadenados).
-// Precios web elegidos para superar las promociones habituales de PedidosYa.
-// Base de comparación: precio de lista sin descuento, guardado en item.price.
-const FEATURED_WEB_PRICES = {
-  c03: { normal: 650, early: 595 }, // Doble: PY promo $680
-  c04: { normal: 990, early: 903 }, // Triple: PY promo $1032
-  c05: { normal: 920, early: 850 }, // 3x2: PY promo $955,50
-  c01: { normal: 520, early: 480 }, // Individual: PY promo $540
+// Todos los porcentajes se aplican al precio de lista de PedidosYa.
+// Los destacados tienen 20% normal y 30% anticipado.
+// El descuento anticipado se aplica antes de las 18 para hoy,
+// o a cualquier hora si se elige una fecha futura.
+const FEATURED_DISCOUNTS = {
+  c03: { normal: 20, early: 30 }, // Combo doble
+  c04: { normal: 20, early: 30 }, // Combo triple
+  c05: { normal: 20, early: 30 }, // 3x2 Phila Hot
+  c01: { normal: 20, early: 30 }, // Combo individual
+  r04: { normal: 20, early: 30 }, // Philadelphia Hot Roll
 };
 
 function isAdvanceOrder(deliveryDate) {
@@ -188,15 +189,15 @@ function isAdvanceOrder(deliveryDate) {
     (deliveryDate === today && montevideoParts().hour < EARLY_DISCOUNT_END_HOUR);
 }
 
-function discountedItemPrice(item, deliveryDate) {
-  const featured = FEATURED_WEB_PRICES[item.id];
-  if (featured) return featured[isAdvanceOrder(deliveryDate) ? "early" : "normal"];
-  return Math.round(item.price * (isAdvanceOrder(deliveryDate) ? 0.8 : 0.9));
+function getItemDiscountPercent(item, deliveryDate) {
+  const advance = isAdvanceOrder(deliveryDate);
+  const featured = FEATURED_DISCOUNTS[item.id];
+  return featured ? featured[advance ? "early" : "normal"] : advance ? 20 : 10;
 }
 
-function getItemDiscountPercent(item, deliveryDate) {
-  // El porcentaje siempre corresponde al precio REAL mostrado.
-  return Math.floor((1 - discountedItemPrice(item, deliveryDate) / item.price) * 100);
+function discountedItemPrice(item, deliveryDate) {
+  const percent = getItemDiscountPercent(item, deliveryDate);
+  return Math.round(item.price * (100 - percent) / 100);
 }
 
 function isEarlyDiscountActive(deliveryDate) {
@@ -1484,8 +1485,8 @@ export default function SectoCafePedidos() {
       ? deliveryDate
       : availableDates[0] || today;
 
-  // Hoy: 20% antes de las 18, luego 10%.
-  // Días futuros: 20% a cualquier hora.
+  // Base PedidosYa: 10% normal, 20% anticipado.
+  // Destacados: 20% normal, 30% anticipado.
   const discountPercent =
     getDiscountPercent(selectedDate);
 
@@ -1871,22 +1872,16 @@ export default function SectoCafePedidos() {
         </section>
       )}
 
-      {/* BANNER: beneficio permanente + anticipación, sin promesas ambiguas */}
+      {/* Banner corto: los porcentajes específicos están en cada producto */}
       <section className="max-w-6xl mx-auto px-4 pt-5">
-        <div className="rounded-2xl bg-neutral-950 text-white px-5 py-4 space-y-2">
+        <div className="rounded-2xl bg-neutral-950 text-white px-5 py-4">
           <p className="text-lg font-semibold">PEDÍ DIRECTO, PAGÁ MENOS.</p>
-          <p className="text-sm text-neutral-200">Precios web más bajos que las promociones habituales de PedidosYa en nuestros combos destacados.</p>
-          <p className="text-sm font-semibold">10% OFF en el resto de la carta · Descuentos especiales en combos.</p>
-          {montevideoParts().hour < EARLY_DISCOUNT_END_HOUR ? (
-            <div className="rounded-xl bg-neutral-800 px-3 py-3">
-              <p className="font-semibold">¡Anticipá y pagá todavía menos!</p>
-              <p className="text-xs text-neutral-200 mt-1">Pedí para hoy antes de las 18:00 o elegí otro día: 20% OFF en la carta general y precios especiales anticipados en combos.</p>
-              <p className="text-xs font-semibold tabular-nums mt-2">PARA HOY: {countdownText(promoRemainingSeconds())} restantes</p>
-            </div>
-          ) : (
-            <p className="text-xs text-neutral-200">¿Querés ahorrar más? Elegí mañana u otro día y se activan los precios anticipados.</p>
+          <p className="text-sm text-neutral-200 mt-1">10% OFF en toda la carta · 20% OFF en destacados.</p>
+          {montevideoParts().hour < EARLY_DISCOUNT_END_HOUR && (
+            <p className="text-xs text-neutral-200 mt-2">
+              Antes de las 18:00: 20% y 30% OFF · {countdownText(promoRemainingSeconds())}
+            </p>
           )}
-          <p className="text-[11px] text-neutral-400">Los porcentajes de cada producto se calculan sobre el precio original de lista.</p>
         </div>
       </section>
 
@@ -2055,7 +2050,7 @@ export default function SectoCafePedidos() {
                         price={item.price * qty}
                         active={earlyDiscountActive}
                         discountPercent={getItemDiscountPercent(item, selectedDate)}
-                              finalPrice={discountedItemPrice(item, selectedDate)}
+                              finalPrice={discountedItemPrice(item, selectedDate) * qty}
                       />
                     </div>
 
@@ -2606,7 +2601,7 @@ export default function SectoCafePedidos() {
                         price={item.price * qty}
                         active={earlyDiscountActive}
                         discountPercent={getItemDiscountPercent(item, selectedDate)}
-                              finalPrice={discountedItemPrice(item, selectedDate)}
+                              finalPrice={discountedItemPrice(item, selectedDate) * qty}
                       />
                     </div>
 

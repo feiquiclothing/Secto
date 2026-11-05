@@ -172,15 +172,15 @@ function getDiscountPercent(deliveryDate) {
 }
 
 // Todos los porcentajes se aplican al precio de lista de PedidosYa.
-// Los destacados tienen 30% normal y 40% anticipado.
+// Los destacados tienen 25% normal y 30% anticipado.
 // El descuento anticipado se aplica antes de las 18 para hoy,
 // o a cualquier hora si se elige una fecha futura.
 const FEATURED_DISCOUNTS = {
-  c03: { normal: 30, early: 40 }, // Combo doble
-  c04: { normal: 30, early: 40 }, // Combo triple
-  c05: { normal: 30, early: 40 }, // 3x2 Phila Hot
-  c01: { normal: 30, early: 40 }, // Combo individual
-  r04: { normal: 30, early: 40 }, // Philadelphia Hot Roll
+  c03: { normal: 25, early: 30 }, // Combo doble
+  c04: { normal: 25, early: 30 }, // Combo triple
+  c05: { normal: 25, early: 30 }, // 3x2 Phila Hot
+  c01: { normal: 25, early: 30 }, // Combo individual
+  r04: { normal: 25, early: 30 }, // Philadelphia Hot Roll
 };
 
 function isAdvanceOrder(deliveryDate) {
@@ -482,7 +482,7 @@ const MENU = [
 
 // ===== ZONAS =====
 
-const FREE_DELIVERY_MINIMUM = 1500;
+const FREE_DELIVERY_MINIMUM = 1800;
 
 const ZONES = [
   {
@@ -1493,7 +1493,7 @@ export default function SectoCafePedidos() {
       : availableDates[0] || today;
 
   // Base PedidosYa: 10% normal, 20% anticipado.
-  // Destacados: 30% normal, 40% anticipado.
+  // Destacados: 25% normal, 30% anticipado.
   const discountPercent =
     getDiscountPercent(selectedDate);
 
@@ -1885,11 +1885,11 @@ export default function SectoCafePedidos() {
           <p className="text-lg font-semibold">PEDÍ DIRECTO, PAGÁ MENOS.</p>
           <p className="text-sm text-neutral-200 mt-1">
             {earlyDiscountActive
-              ? "20% OFF en toda la carta · 40% OFF en destacados"
-              : "10% OFF en toda la carta · 30% OFF en destacados"}
+              ? "20% OFF en toda la carta · 30% OFF en destacados"
+              : "10% OFF en toda la carta · 25% OFF en destacados"}
           </p>
           <p className="text-xs text-neutral-300 mt-2">
-            Pedí antes de las 18:00 o programá para otro día y conseguí hasta 40% OFF.
+            Pedí antes de las 18:00 o programá para otro día y conseguí hasta 30% OFF.
           </p>
           {selectedDate === today && earlyDiscountActive && (
             <p className="text-xs font-semibold text-neutral-100 mt-2">
@@ -2251,7 +2251,7 @@ export default function SectoCafePedidos() {
 
                 {hasFreeDelivery && (
                   <p className="text-xs font-semibold text-neutral-900">
-                    Envío gratis por superar $1.500
+                    Envío gratis desde $1.800
                     después de descuentos.
                   </p>
                 )}
@@ -2389,7 +2389,7 @@ export default function SectoCafePedidos() {
 
               {earlyDiscountActive && (
                 <p className="text-xs font-semibold text-green-700 mt-2">
-                  ✓ Anticipado aplicado: 20% en productos generales y 40% en destacados ·{" "}
+                  ✓ Anticipado aplicado: 20% en productos generales y 30% en destacados ·{" "}
                   {selectedDate === today
                     ? "pedido realizado antes de las 18:00"
                     : "pedido programado para otro día"}

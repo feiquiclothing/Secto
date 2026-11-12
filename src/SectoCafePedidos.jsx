@@ -30,7 +30,7 @@ const FORCE_CLOSED = false;
 // ===== PROMOCIONES =====
 const EARLY_DISCOUNT_PERCENT = 10;
 // Interruptor de promoción anticipada: true = activa, false = solo precios normales.
-const ENABLE_EARLY_DISCOUNT = false;
+const ENABLE_EARLY_DISCOUNT = true;
 const EARLY_DISCOUNT_END_HOUR = 18;
 
 const SPECIAL_PROMO_DATE = "2026-10-31";

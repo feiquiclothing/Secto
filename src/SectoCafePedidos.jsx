@@ -29,6 +29,8 @@ const FORCE_CLOSED = false;
 
 // ===== PROMOCIONES =====
 const EARLY_DISCOUNT_PERCENT = 10;
+// Interruptor de promoción anticipada: true = activa, false = solo precios normales.
+const ENABLE_EARLY_DISCOUNT = false;
 const EARLY_DISCOUNT_END_HOUR = 18;
 
 const SPECIAL_PROMO_DATE = "2026-10-31";
@@ -161,6 +163,7 @@ function hoursForDate(iso) {
 // ===== DESCUENTO DINÁMICO =====
 
 function getDiscountPercent(deliveryDate) {
+  if (!ENABLE_EARLY_DISCOUNT) return 10;
   const today = todayInMontevideo();
   const { hour } = montevideoParts();
 
@@ -183,6 +186,7 @@ const FEATURED_DISCOUNTS = {
 };
 
 function isAdvanceOrder(deliveryDate) {
+  if (!ENABLE_EARLY_DISCOUNT) return false;
   const today = todayInMontevideo();
   return deliveryDate > today ||
     (deliveryDate === today && montevideoParts().hour < EARLY_DISCOUNT_END_HOUR);
@@ -1888,7 +1892,9 @@ export default function SectoCafePedidos() {
               : "10% OFF en toda la carta · 25% OFF en destacados"}
           </p>
           <p className="text-xs text-neutral-300 mt-2">
-            Pedí antes de las 18:00 o programá para otro día y conseguí hasta 30% OFF.
+            {ENABLE_EARLY_DISCOUNT
+              ? "Pedí antes de las 18:00 o programá para otro día y conseguí hasta 30% OFF."
+              : "Descuentos directos en toda la carta."}
           </p>
           {selectedDate === today && earlyDiscountActive && (
             <p className="text-xs font-semibold text-neutral-100 mt-2">

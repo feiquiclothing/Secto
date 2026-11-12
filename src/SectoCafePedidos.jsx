@@ -172,15 +172,14 @@ function getDiscountPercent(deliveryDate) {
 }
 
 // Todos los porcentajes se aplican al precio de lista de PedidosYa.
-// Los destacados tienen 25% normal y 30% anticipado.
+// Los combos destacados tienen 25% normal y 30% anticipado.
+// El Hot Roll y su 3x2 usan 10% normal y 20% anticipado.
 // El descuento anticipado se aplica antes de las 18 para hoy,
 // o a cualquier hora si se elige una fecha futura.
 const FEATURED_DISCOUNTS = {
   c03: { normal: 25, early: 30 }, // Combo doble
   c04: { normal: 25, early: 30 }, // Combo triple
-  c05: { normal: 25, early: 30 }, // 3x2 Phila Hot
   c01: { normal: 25, early: 30 }, // Combo individual
-  r04: { normal: 25, early: 30 }, // Philadelphia Hot Roll
 };
 
 function isAdvanceOrder(deliveryDate) {
@@ -196,7 +195,7 @@ function getItemDiscountPercent(item, deliveryDate) {
 }
 
 function discountedItemPrice(item, deliveryDate) {
-  // 3x2: el total siempre equivale a dos Hot Rolls con el mismo descuento.
+  // 3x2: el total siempre equivale a dos Hot Rolls con el descuento general.
   // Se redondea cada roll antes de multiplicar, igual que en la carta.
   if (item.id === "c05") {
     const hotRoll = MENU.find((section) => section.id === "rolls")
@@ -482,7 +481,7 @@ const MENU = [
 
 // ===== ZONAS =====
 
-const FREE_DELIVERY_MINIMUM = 1800;
+const FREE_DELIVERY_MINIMUM = 1500;
 
 const ZONES = [
   {

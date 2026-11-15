@@ -251,6 +251,9 @@ export default function Ticket() {
   const {
     items = [],
     subtotal = 0,
+    discount,
+    discountedSubtotal,
+    zone,
     fee = 0,
     total = 0,
     name,
@@ -264,6 +267,24 @@ export default function Ticket() {
     rawText,
     comboSelections = [],
   } = order;
+
+  // La zona llega como ID desde la página de pedidos.
+  const ZONE_NAMES = {
+    cv: "Ciudad Vieja",
+    centro: "Centro / Cordón / Aguada",
+    pocitos: "Parque Rodó / Punta Carretas / Pocitos",
+    otras: "Otras zonas coordinar",
+  };
+  const deliveryZone = ZONE_NAMES[zone] || (typeof zone === "string" && zone.trim() ? zone : "ZONA NO REGISTRADA");
+  const originalSubtotal = Number(subtotal) || 0;
+  const finalSubtotal = Number.isFinite(Number(discountedSubtotal)) && discountedSubtotal !== undefined && discountedSubtotal !== null
+    ? Number(discountedSubtotal)
+    : Number(total || 0) - Number(fee || 0);
+  const appliedDiscount = Number.isFinite(Number(discount)) && discount !== undefined && discount !== null
+    ? Number(discount)
+    : Math.max(0, originalSubtotal - finalSubtotal);
+  const isFreeDeliveryByMinimum = method === "delivery" && Number(fee) === 0 && finalSubtotal >= 1500;
+  const isFreeDeliveryByZone = method === "delivery" && Number(fee) === 0 && zone === "cv";
 
   const displayName = name || customer || "-";
 
@@ -307,7 +328,12 @@ export default function Ticket() {
         <div>Nombre: {displayName}</div>
         <div>Tel: {phone || "-"}</div>
 
-        {method === "delivery" ? <div>Dir: {address || "-"}</div> : null}
+        {method === "delivery" ? (
+          <>
+            <div className="b">Zona: {deliveryZone}</div>
+            <div>Dir: {address || "-"}</div>
+          </>
+        ) : null}
         {notes ? <div>Notas: {notes}</div> : null}
 
         {isWhatsApp && rawText ? (
@@ -342,10 +368,25 @@ export default function Ticket() {
               <div className="r">{currency(subtotal)}</div>
             </div>
 
+            {appliedDiscount > 0 ? (
+              <div className="row">
+                <div className="l">Descuento web</div>
+                <div className="r">-{currency(appliedDiscount)}</div>
+              </div>
+            ) : null}
+
+            <div className="row">
+              <div className="l">Productos con descuento</div>
+              <div className="r">{currency(finalSubtotal)}</div>
+            </div>
+
             <div className="row">
               <div className="l">Envio</div>
-              <div className="r">{currency(fee)}</div>
+              <div className="r">{method === "delivery" && Number(fee) === 0 ? "GRATIS" : method === "pickup" ? "RETIRO" : currency(fee)}</div>
             </div>
+            {isFreeDeliveryByMinimum ? <div className="m">Envío gratis por compra desde $1.500</div> : null}
+            {isFreeDeliveryByZone && !isFreeDeliveryByMinimum ? <div className="m">Envío gratis en Ciudad Vieja</div> : null}
+            {method === "delivery" && Number(fee) === 0 && !isFreeDeliveryByZone && !isFreeDeliveryByMinimum ? <div className="b">ATENCIÓN: envío $0 sin motivo verificable. Revisar zona.</div> : null}
 
             <div className="row b">
               <div className="l">TOTAL</div>

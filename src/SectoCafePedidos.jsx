@@ -1366,7 +1366,7 @@ function PokesSection({
 export default function SectoCafePedidos() {
   const [cart, dispatch] = useReducer(reducer, {});
   const [method, setMethod] = useState("delivery");
-  const [zone, setZone] = useState(ZONES[0].id);
+  const [zone, setZone] = useState("");
   const [name, setName] = useState("");
   const [phone, setPhone] = useState("");
   const [address, setAddress] = useState("");
@@ -1625,7 +1625,7 @@ export default function SectoCafePedidos() {
     combosComplete &&
     (
       method === "pickup" ||
-      address.trim().length > 0
+      (zone !== "" && address.trim().length > 0)
     );
 
   const canSendNow =
@@ -1763,6 +1763,12 @@ export default function SectoCafePedidos() {
       0
     );
     const currentDiscount = subtotal - currentDiscountedSubtotal;
+
+    // Protección adicional: no registrar delivery sin zona válida.
+    if (method === "delivery" && !ZONES.some((z) => z.id === zone)) {
+      alert("Seleccioná una zona de entrega antes de enviar el pedido.");
+      return;
+    }
 
     const currentFee =
       method !== "delivery" ||
@@ -2256,7 +2262,7 @@ export default function SectoCafePedidos() {
 
                 {hasFreeDelivery && (
                   <p className="text-xs font-semibold text-neutral-900">
-                    Envío gratis desde $1.800
+                    Envío gratis desde $1.500
                     después de descuentos.
                   </p>
                 )}
@@ -2268,6 +2274,7 @@ export default function SectoCafePedidos() {
                   }
                   className="w-full bg-white border border-neutral-200 rounded-xl p-2"
                 >
+                  <option value="" disabled>Elegí tu zona de entrega</option>
                   {ZONES.map((z) => (
                     <option key={z.id} value={z.id}>
                       {z.name} —{" "}

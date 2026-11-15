@@ -581,7 +581,7 @@ export default function Kitchen() {
           {filteredOrders.map(o=><div key={o.id} style={{borderTop:"1px solid #eee",padding:"10px 0"}}>
             <button onClick={()=>setExpandedId(old=>old===o.id?"":o.id)} style={{width:"100%",textAlign:"left",border:0,background:"white",cursor:"pointer",display:"flex",justifyContent:"space-between",gap:8}}><span><b>{o.id}</b><br/>{o.name || "Sin nombre"} · {departureHour(o)}</span><span>${Number(o.total||0).toLocaleString("es-UY")}<br/>{o.printed?"Impresa":"Pendiente"}</span></button>
             {expandedId===o.id && <div style={{padding:10,background:"#fafafa",whiteSpace:"pre-wrap",overflowWrap:"anywhere",fontSize:13}}>
-              <p>Teléfono: {o.phone || "—"}<br/>Entrega: {o.time || "—"}<br/>Dirección: {o.address || "—"}<br/>Notas: {o.notes || "—"}</p>
+              <p>Teléfono: {o.phone || "—"}<br/>Entrega: {o.time || "—"}<br/>Dirección: {o.address || "—"}<br/>Zona: {o.method === "delivery" ? ({cv:"Ciudad Vieja",centro:"Centro / Cordón / Aguada",pocitos:"Parque Rodó / Punta Carretas / Pocitos",otras:"Otras zonas coordinar"}[o.zone] || "SIN ZONA REGISTRADA") : "Retiro"}<br/>Envío: {o.method === "delivery" ? (Number(o.fee) === 0 ? "GRATIS" : `$${Number(o.fee || 0).toLocaleString("es-UY")}`) : "Retiro"}<br/>Notas: {o.notes || "—"}</p>
               {(o.items||[]).map((entry,i)=><div key={i}>{entry.qty} × {entry.item?.name || "Producto"}</div>)}
               {(o.comboSelections||[]).map((c,i)=><p key={i}>{c.comboName}: {(c.rolls||[]).join(" / ")} {(c.drinks||[]).join(" / ")}</p>)}
               <p><b>Total: ${Number(o.total||0).toLocaleString("es-UY")}</b></p>

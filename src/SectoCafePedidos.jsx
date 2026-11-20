@@ -9,7 +9,7 @@ import React, {
 
 /**
  * Secto Café – Página de pedidos
- * Promo especial: 31/10/2026
+ * Promociones Phila Hot: 3x2 permanente y 4x3 el 20/11/2026
  * Pokes temporalmente desactivados.
  */
 
@@ -33,6 +33,8 @@ const EARLY_DISCOUNT_PERCENT = 10;
 const ENABLE_EARLY_DISCOUNT = true;
 const EARLY_DISCOUNT_END_HOUR = 18;
 
+const FIXED_PROMO_PRICES = { c05: 990, c06: 1290 };
+const FOUR_BY_THREE_DATE = "2026-11-20";
 const SPECIAL_PROMO_DATE = "2026-10-31";
 const SPECIAL_PROMO_PERCENT = 20;
 
@@ -192,22 +194,23 @@ function isAdvanceOrder(deliveryDate) {
     (deliveryDate === today && montevideoParts().hour < EARLY_DISCOUNT_END_HOUR);
 }
 
+function isFourByThreeAvailable(deliveryDate) {
+  return todayInMontevideo() === FOUR_BY_THREE_DATE &&
+    deliveryDate === FOUR_BY_THREE_DATE;
+}
+
 function getItemDiscountPercent(item, deliveryDate) {
+  if (Object.prototype.hasOwnProperty.call(FIXED_PROMO_PRICES, item.id)) return 0;
   const advance = isAdvanceOrder(deliveryDate);
   const featured = FEATURED_DISCOUNTS[item.id];
   return featured ? featured[advance ? "early" : "normal"] : advance ? 20 : 10;
 }
 
 function discountedItemPrice(item, deliveryDate) {
-  // 3x2: el total siempre equivale a dos Hot Rolls con el descuento general.
-  // Se redondea cada roll antes de multiplicar, igual que en la carta.
-  if (item.id === "c05") {
-    const hotRoll = MENU.find((section) => section.id === "rolls")
-      ?.items.find((roll) => roll.id === "r04");
-    if (hotRoll) return 2 * discountedItemPrice(hotRoll, deliveryDate);
+  if (Object.prototype.hasOwnProperty.call(FIXED_PROMO_PRICES, item.id)) {
+    return FIXED_PROMO_PRICES[item.id];
   }
-  const percent = getItemDiscountPercent(item, deliveryDate);
-  return Math.round(item.price * (100 - percent) / 100);
+  return Math.round(item.price * (100 - getItemDiscountPercent(item, deliveryDate)) / 100);
 }
 
 function isEarlyDiscountActive(deliveryDate) {
@@ -343,16 +346,16 @@ const MENU = [
       
       {
         id: "c05",
-        name: "3x2 Phila hot roll",
-        price: 980, // Precio de referencia: 2 × $490. Precio final ligado al Hot Roll
+        name: "3x2 Phila Hot Roll · 30 piezas",
+        price: 990,
         img: "/Photos/3x2.jpeg",
       },
   
       
       {
         id: "c06",
-        name: "4x3 Phila hot roll",
-        price: 1320, // Precio de referencia: 2 × $490. Precio final ligado al Hot Roll
+        name: "4x3 Phila Hot Roll · 40 piezas",
+        price: 1290,
         img: "/Photos/4x3.jpg",
       },
     ],
@@ -663,7 +666,7 @@ function buildWhatsAppText(order) {
       " x" +
       qty +
       " — " +
-      currency(item.price * qty)
+      currency(discountedItemPrice(item, order.deliveryDate) * qty)
   );
 
   const comboLines = comboSelections.flatMap(
@@ -1516,6 +1519,11 @@ export default function SectoCafePedidos() {
     0
   );
   const discount = subtotal - discountedSubtotal;
+  const invalidFourByThree = Boolean(cart.c06) && !isFourByThreeAvailable(selectedDate);
+
+  useEffect(() => {
+    if (invalidFourByThree) dispatch({ type: "removeAll", item: { id: "c06" } });
+  }, [invalidFourByThree]);
 
   // ===== ENVÍO GRATIS =====
 
@@ -1631,6 +1639,7 @@ export default function SectoCafePedidos() {
     phone.trim().length > 0 &&
     validTime &&
     combosComplete &&
+    !invalidFourByThree &&
     (
       method === "pickup" ||
       (zone !== "" && address.trim().length > 0)
@@ -1753,6 +1762,11 @@ export default function SectoCafePedidos() {
   // ===== ENVIAR A KITCHEN =====
 
   const sendOrder = async (paid = false) => {
+    if (cart.c06 && !isFourByThreeAvailable(selectedDate)) {
+      dispatch({ type: "removeAll", item: { id: "c06" } });
+      alert("La promoción 4x3 solo está disponible para pedidos del 20/11/2026.");
+      return;
+    }
     if (!canSendNow || !validTime) {
       alert(
         "Revisá los datos del pedido. Completá nombre, teléfono, dirección/zona y todas las opciones de los combos."
@@ -1902,8 +1916,8 @@ export default function SectoCafePedidos() {
           <p className="text-lg font-semibold">PEDÍ DIRECTO, PAGÁ MENOS.</p>
           <p className="text-sm text-neutral-200 mt-1">
             {earlyDiscountActive
-              ? "20% OFF en toda la carta · 30% OFF en destacados"
-              : "10% OFF en toda la carta · 25% OFF en destacados"}
+              ? "Hasta 30% OFF en productos seleccionados"
+              : "Hasta 25% OFF en productos seleccionados"}
           </p>
           <p className="text-xs text-neutral-300 mt-2">
             {ENABLE_EARLY_DISCOUNT
@@ -1933,7 +1947,7 @@ export default function SectoCafePedidos() {
                 </div>
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  {cat.items.map((item) => (
+                  {cat.items.filter((item) => item.id !== "c06" || isFourByThreeAvailable(selectedDate)).map((item) => (
                     <article
                       key={item.id}
                       className="group border border-neutral-200 rounded-2xl overflow-hidden bg-white"
@@ -1957,9 +1971,9 @@ export default function SectoCafePedidos() {
                           </h3>
                           <div className="flex flex-wrap items-center gap-2 mt-2">
                             <span className="inline-flex rounded-md px-2 py-1 text-[11px] font-bold tracking-wide text-neutral-900" style={{ backgroundColor: "#b6b6b6" }}>
-                              {getItemDiscountPercent(item, selectedDate)}% OFF
+                              {item.id === "c05" ? "PROMO 3x2" : item.id === "c06" ? "PROMO 4x3" : `${getItemDiscountPercent(item, selectedDate)}% OFF`}
                             </span>
-                            {["c03", "c04", "c05"].includes(item.id) && (
+                            {["c03", "c04"].includes(item.id) && (
                               <span className="text-[11px] font-medium text-neutral-600">
                                 Combo destacado
                               </span>

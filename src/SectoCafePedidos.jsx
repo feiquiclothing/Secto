@@ -347,13 +347,13 @@ const MENU = [
         price: 980, // Precio de referencia: 2 × $490. Precio final ligado al Hot Roll
         img: "/Photos/3x2.jpeg",
       },
-    ],
-  },
-   {
+  
+      
+      {
         id: "c06",
         name: "4x3 Phila hot roll",
         price: 1320, // Precio de referencia: 2 × $490. Precio final ligado al Hot Roll
-        img: "/Photos/4x3.jpeg",
+        img: "/Photos/4x3.jpg",
       },
     ],
   },

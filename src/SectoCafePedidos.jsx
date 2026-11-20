@@ -349,6 +349,14 @@ const MENU = [
       },
     ],
   },
+   {
+        id: "c06",
+        name: "4x3 Phila hot roll",
+        price: 1320, // Precio de referencia: 2 × $490. Precio final ligado al Hot Roll
+        img: "/Photos/4x3.jpeg",
+      },
+    ],
+  },
   {
     id: "rolls",
     name: "ROLLS 10 piezas",

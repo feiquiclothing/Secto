@@ -25,7 +25,7 @@ const OPEN_HOUR_START = 18;
 const OPEN_HOUR_END = 24;
 const ASAP_CUTOFF_MINUTES = 23 * 60 + 30;
 const FORCE_OPEN = false;
-const FORCE_CLOSED = false;
+const FORCE_CLOSED = true;
 
 // ===== PROMOCIONES =====
 const EARLY_DISCOUNT_PERCENT = 10;
